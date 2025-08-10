@@ -1,0 +1,60 @@
+export interface ApiUserData {
+  bairro: string | null;
+  cep: string | null;
+  chave: string | null;
+  cidade: string | null;
+  complemento: string | null;
+  comprovante_comercio: string | null;
+  comprovante_endereco: string | null;
+  cpf: string;
+  criado: string;
+  data_divergencia: string | null;
+  data_finalizado: string | null;
+  descricao_comercio: string | null;
+  divergencias: string | null;
+  email: string | null;
+  endereco: string | null;
+  erro: string | null;
+  estado: string | null;
+  etapa: string;
+  face: string | null;
+  fachada: string | null;
+  foto_docveiculo: string | null;
+  foto_frente_doc: string | null;
+  foto_perfil_app: string | null;
+  foto_perfil_app2: string | null;
+  foto_veiculo: string | null;
+  foto_verso_doc: string | null;
+  ganhos_app: string | null;
+  id: number;
+  interior: string | null;
+  mei: string | null;
+  motivo_recusa: string | null;
+  nascimento: string;
+  nome: string;
+  numero: string | null;
+  pix: string | null;
+  placa: string | null;
+  profissao: string | null;
+  repescagem: string | null;
+  signature: string | null;
+  status: string;
+  termos: number;
+  tipo_comercio: string | null;
+  type: string;
+  url_reconhecimento: string | null;
+  validacoes: string | null;
+  video_comercio: string | null;
+  whatsapp: string | null;
+  whatsapp2: string | null;
+}
+
+export interface ApiUserResponse {
+  data: ApiUserData;
+  id: number;
+  name: string;
+  token: string;
+  token_type: string;
+  message: string;
+  success: boolean;
+}
