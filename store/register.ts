@@ -1,4 +1,5 @@
 import { AddressSchema } from "@/lib/address_validation";
+import { Etapas } from "@/utils";
 import { create } from "zustand";
 
 type RegisterAuth = {
@@ -6,6 +7,8 @@ type RegisterAuth = {
   phone: string | null;
   code: string | null;
   address: AddressSchema | null;
+  etapa: Etapas | null;
+  setEtapa: (etapa: Etapas) => void;
   setCpf: (cpf: string) => void;
   setPhone: (phone: string) => void;
   setCode: (code: string) => void;
@@ -19,6 +22,11 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   code: null,
   address: null,
   isLoading: true,
+  etapa: null,
+  setEtapa: (etapa) => {
+    set({ etapa });
+  },
+
   setCpf: (cpf) => {
     set({ cpf });
   },

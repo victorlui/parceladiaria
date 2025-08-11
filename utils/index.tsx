@@ -32,6 +32,8 @@ export async function requestPermissions () {
 
 
 export enum Etapas {
+  INICIO = 'Inicio',
+  REGISTRANDO_COMPROVANTE_ENDERECO = 'registrando_comprovante_endereco',
   REGISTRANDO_PROFISSAO = 'registrando_profissao',
   REGISTRANDO_EMAIL = 'registrando_email',
   REGISTRANDO_ENDERECO = 'registrando_endereco',
@@ -46,10 +48,19 @@ export enum Etapas {
   REGISTRANDO_INTERIOR_COMERCIO = 'registrando_interior_comercio',
   REGISTRANDO_VIDEO_COMERCIO = 'registrando_video_comercio',
   FINALIZADO = 'finalizado',
+  MOTORISTA_REGISTRANDO_FRENTE_CNH = 'registrando_frente_cnh',
+  MOTORISTA_REGISTRANDO_VERSO_CNH = 'registrando_verso_cnh',
+  MOTORISTA_REGISTRANDO_PLACA_VEICULO = 'registrando_placa_veiculo',
+  MOTORISTA_REGISTRANDO_DOCUMENTO_VEICULO = 'registrando_documento_veiculo',
+  MOTORISTA_REGISTRANDO_FOTO_VEICULO = 'registrando_foto_veiculo',
+  MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO = 'registrando_documento_proprietario',
+  MOTORISTA_REGISTRANDO_PRINT_ADICIONAL = 'registrando_print_adicional',
 }
 
 
 const routeMap: Record<Etapas, string> = {
+  [Etapas.INICIO]: "/(register)/birthday_screen",
+  [Etapas.REGISTRANDO_COMPROVANTE_ENDERECO]: "/(register)/address_document",
   [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/profile_selection",
   [Etapas.REGISTRANDO_EMAIL]: "/(register)/email_screen",
   [Etapas.REGISTRANDO_ENDERECO]: "/(register)/address_screen",
@@ -63,6 +74,14 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_FRENTE_COMERCIO]: "/(comerciante)/storefront_photo_screen",
   [Etapas.REGISTRANDO_INTERIOR_COMERCIO]: "/(comerciante)/storeinterior_photo_screen",
   [Etapas.REGISTRANDO_VIDEO_COMERCIO]: "/(comerciante)/storevideo_photo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista)/cnh_front_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista)/cnh_verso_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO]: "/(motorista)/placa_veiculo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_VEICULO]: "/(motorista)/document_veiculo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_FOTO_VEICULO]: "/(motorista)/vehicle_photo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO]: "/(motorista)/profile_photo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL]: "/(motorista)/additional_print_screen",
+
   [Etapas.FINALIZADO]: "/login",
 
 };

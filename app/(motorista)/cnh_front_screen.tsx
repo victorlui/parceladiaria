@@ -1,18 +1,19 @@
-import { Button } from "@/components/Button";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
-import DocumentIcon from "../../assets/icons/document.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
-import { Etapas } from "@/utils";
+import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
+import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { useRegisterAuthStore } from "@/store/register";
+import { Etapas } from "@/utils";
+import DocumentIcon from "../../assets/icons/document.svg";
 
-export default function AddressDocument() {
-  useDisableBackHandler();
+export default function CnhFrontScreen() {
+  const { etapa } = useRegisterAuthStore();
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
@@ -46,8 +47,8 @@ export default function AddressDocument() {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_PIX,
-          comprovante_endereco: finalUrl,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
+          foto_frente_doc: finalUrl,
         },
       });
     } catch (error) {
@@ -56,6 +57,7 @@ export default function AddressDocument() {
       setIsLoading(false);
     }
   };
+  console.log("etapa tela", etapa);
 
   return (
     <LayoutRegister
@@ -71,15 +73,12 @@ export default function AddressDocument() {
           size={100}
         />
         <View className="flex flex-col gap-3 my-5">
-          <Text className="text-xl font-bold">
-            Envio de Comprovante de Endereço
+          <Text className="text-2xl font-bold text-center text-[#33404F]">
+          Foto da frente da CNH
           </Text>
-          <Text className="text-base">
-            Para garantir a segurança e autenticidade do seu cadastro, é
-            necessário enviar uma foto válida do seu comprovante de endereço no
-            máximo 90 dias, contendo nome, endereço e data. Nossa equipe irá
-            analisar o documento enviado para confirmar que ele atende aos
-            critérios estabelecidos.
+          <Text className="text-base text-center">
+            Por favor, envie uma foto nítida da frente da sua CNH. Somente CNH
+            será aceita como documento válido.
           </Text>
         </View>
 

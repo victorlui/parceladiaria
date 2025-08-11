@@ -34,7 +34,8 @@ export default function ProfileSelection() {
 
     if(selectedProfile === 'comerciante') {
      etapa = Etapas.REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO
-
+    } else if(selectedProfile === 'motorista_carro' || selectedProfile === 'motorista_moto') {
+      etapa = Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH
     }
 
     const request = {

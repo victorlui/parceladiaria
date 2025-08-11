@@ -26,14 +26,14 @@ export const Button: React.FC<ButtonProps> = ({
   const widthStyle = fullWidth ? 'w-full' : 'w-auto';
 
   const variantStyle = {
-    primary: 'bg-[#9BD13D]',
+    primary: 'bg-[#7FD223]',
     secondary: 'bg-[#111224]',
     danger: 'bg-[#bb2124]',
-    outline: 'bg-transparent border border-[#9BD13D]',
+    outline: 'bg-transparent border border-[#7FD223]',
   }[variant];
 
   const textColor = variant === 'outline' 
-    ? 'text-[#9BD13D] font-semibold text-[18px]'
+    ? 'text-[#7FD223] font-semibold text-[18px]'
     : 'text-white font-semibold text-[18px]';
 
   const disabledStyle = disabled || isLoading ? 'opacity-50' : '';
@@ -45,7 +45,7 @@ export const Button: React.FC<ButtonProps> = ({
       className={clsx(baseStyle, widthStyle, variantStyle, disabledStyle, className)}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#9BD13D' : '#fff'} />
+        <ActivityIndicator color={variant === 'outline' ? '#7FD223' : '#fff'} />
       ) : (
         <Text className={textColor}>{title}</Text>
       )}

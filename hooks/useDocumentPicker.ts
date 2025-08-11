@@ -31,7 +31,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
     return cameraStatus === "granted" && mediaStatus === "granted";
   };
 
-  const selectPDF = async (): Promise<SelectedFile | null> => {
+  const selectPDF = async (customName?: string): Promise<SelectedFile | null> => {
     const result = await DocumentPicker.getDocumentAsync({
       type: "application/pdf",
       copyToCacheDirectory: true,
@@ -41,7 +41,8 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       if (await checkFileSize(file.uri)) {
         return {
           uri: file.uri,
-          name: file.name,
+          name: customName || file.name,
+
           mimeType: file.mimeType || "application/pdf",
           type: "pdf",
         };
@@ -51,7 +52,9 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
   };
 
   const takePhoto = async (
-    from: "camera" | "library"
+    from: "camera" | "library",
+    customName?: string
+
   ): Promise<SelectedFile | null> => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return null;
@@ -68,7 +71,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       if (await checkFileSize(asset.uri)) {
         return {
           uri: asset.uri,
-          name: `document_${Date.now()}.jpg`,
+          name: customName || `document_${Date.now()}.jpg`,
           mimeType: "image/jpeg",
           type: "image",
         };
@@ -78,7 +81,8 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
   };
 
   const takeVideo = async (
-    from: "camera" | "library"
+    from: "camera" | "library",
+    customName?: string
   ): Promise<SelectedFile | null> => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return null;
@@ -100,14 +104,16 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       if (result.assets?.[0]?.type !== 'video' && await checkFileSize(asset.uri)) {
         return {
           uri: asset.uri,
-          name: `video_${Date.now()}.mp4`,
+          name: customName || `video_${Date.now()}.mp4`,
+
           mimeType: "video/mp4",
           type: "video",
         };
       }else if(result.assets?.[0]?.type === 'video'){
          return {
           uri: asset.uri,
-          name: `video_${Date.now()}.mp4`,
+          name: customName || `video_${Date.now()}.mp4`,
+
           mimeType: "video/mp4",
           type: "video",
         };

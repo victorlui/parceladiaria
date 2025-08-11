@@ -1,36 +1,37 @@
-import { Button } from "@/components/Button";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
-import DocumentIcon from "../../assets/icons/document.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import LayoutRegister from "@/components/ui/LayoutRegister";
+import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import { Colors } from "@/constants/Colors";
+import CarIcon from "../../assets/icons/car.svg";
 
-export default function AddressDocument() {
-  useDisableBackHandler();
+export default function DocumentoVeiculoScreen() {
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectPDF = async () => {
-    const selected = await selectPDF();
+    const selected = await selectPDF('documento_veiculo.jpg');
     if (selected) setFile(selected);
   };
 
   const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera");
+    const selected = await takePhoto("camera",'documento_veiculo.jpg');
     if (selected) setFile(selected);
   };
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, selecione uma foto ou documento.");
+      Alert.alert(
+        "Atenção",
+        "Por favor, tire uma foto do verso da CNH ou selecione."
+      );
       return;
     }
 
@@ -46,8 +47,8 @@ export default function AddressDocument() {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_PIX,
-          comprovante_endereco: finalUrl,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO,
+          foto_veiculo: finalUrl,
         },
       });
     } catch (error) {
@@ -66,21 +67,19 @@ export default function AddressDocument() {
     >
       <View className="flex-1">
         <CircleIcon
-          icon={<DocumentIcon />}
+          icon={<CarIcon />}
           color={Colors.primaryColor}
           size={100}
         />
         <View className="flex flex-col gap-3 my-5">
-          <Text className="text-xl font-bold">
-            Envio de Comprovante de Endereço
+          <Text className="text-2xl font-bold text-center text-[#33404F]">
+            Documento do veículo
           </Text>
-          <Text className="text-base">
-            Para garantir a segurança e autenticidade do seu cadastro, é
-            necessário enviar uma foto válida do seu comprovante de endereço no
-            máximo 90 dias, contendo nome, endereço e data. Nossa equipe irá
-            analisar o documento enviado para confirmar que ele atende aos
-            critérios estabelecidos.
+          <Text className="text-base text-center">
+            Verifique se a foto está legível e contém todos os dados do veículo.
+            O documento deve ser atualizado (2024/2025).
           </Text>
+         
         </View>
 
         <View className="flex-1">
@@ -119,6 +118,9 @@ export default function AddressDocument() {
             onPress={handleTakePhoto}
           />
         </View>
+         <Text className="text-sm ">
+            OBS: Foto incompleta, documento atrasado ou ilegível será cancelado
+          </Text>
       </View>
     </LayoutRegister>
   );

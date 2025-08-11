@@ -1,77 +1,59 @@
-import {  Image, Keyboard, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { Keyboard, StyleSheet, Text, TextInput, View } from "react-native";
 import { usePasswordsForm } from "@/hooks/useRegisterForm";
 import { FormInput } from "@/components/FormInput";
-import { Button } from "@/components/Button";
 import { PasswordsSchema } from "@/lib/passwords._validation";
 import { useRegisterAuthStore } from "@/store/register";
 import { useRegisterDataMutation } from "@/hooks/useRegisterMutation";
-import Spinner from "@/components/Spinner";
+import PasswordIMG from "@/assets/images/password_img.svg";
+import LayoutRegister from "@/components/ui/LayoutRegister";
+import { useRef } from "react";
 
 export default function CreatePassword() {
   const { control, handleSubmit } = usePasswordsForm();
   const { phone, cpf } = useRegisterAuthStore();
   const { mutate, isPending } = useRegisterDataMutation();
+  const formRefs = [useRef<TextInput>(null), useRef<TextInput>(null)];
 
   const onSubmit = (data: PasswordsSchema) => {
-    Keyboard.dismiss()
-    mutate({cpf: cpf ?? '',phone: phone ?? '' ,password:data.password!})
+    Keyboard.dismiss();
+    mutate({ cpf: cpf ?? "", phone: phone ?? "", password: data.password! });
   };
 
-  
   return (
-   <SafeAreaView style={styles.safeArea}>
-    {isPending && <Spinner />}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.content}>
-            <Image
-                source={require("@/assets/images/apenas-logo.png")}
-                className="w-full h-56 mb-4"
-                resizeMode="contain"
-              />
+    <LayoutRegister
+      onContinue={handleSubmit(onSubmit)}
+      loading={isPending}
+      isBack
+      isLogo={false}
+    >
+      <View className="flex items-center justify-center">
+        <PasswordIMG width={250} height={250} />
+      </View>
 
-              <FormInput
-                name="password"
-                control={control}
-                secureTextEntry
-                label="Senha"
-              />
-              <FormInput
-                name="confirmPassword"
-                control={control}
-                secureTextEntry
-                label="Confirme a senha"
-              />
+      <View className="flex justify-center  flex-1">
+        <Text className="text-gray-700 text-2xl font-bold  ">
+          Crie sua senha de acesso
+        </Text>
+      </View>
 
-              <Button title="Prosseguir" onPress={handleSubmit(onSubmit)} />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-    
+      <View className="flex-1">
+        <FormInput
+          name="password"
+          control={control}
+          secureTextEntry
+          label="Senha"
+          onSubmitEditing={() => formRefs[1].current?.focus()}
+          ref={formRefs[0]}
+        />
+        <FormInput
+          name="confirmPassword"
+          control={control}
+          secureTextEntry
+          label="Confirme a senha"
+          onSubmitEditing={handleSubmit(onSubmit)}
+          ref={formRefs[1]}
+        />
+      </View>
+    </LayoutRegister>
   );
 }
-
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff", // fundo preto inclusive no bottom
-  },
-  scrollContent: {
-    flexGrow: 1,
-    backgroundColor: "#fff", // fundo preto no scroll
-  },
-  content: {
-    padding: 20,
-    flex: 1,
-    justifyContent: "center",
-  },
- 
-});

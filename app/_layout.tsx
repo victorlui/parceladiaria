@@ -59,6 +59,7 @@ export default function RootLayout() {
           <Stack.Screen name="insert-password" options={{ headerShown: false }} />
           <Stack.Screen name="(register)" options={{ headerShown: false }} />
            <Stack.Screen name="(comerciante)" options={{ headerShown: false }} />
+           <Stack.Screen name="(motorista)" options={{ headerShown: false }} />
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="dark" />

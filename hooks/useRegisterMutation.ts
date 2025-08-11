@@ -1,6 +1,7 @@
 import { sendCode, checkOTP } from "@/services/code";
 import { registerService, updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
+import { useRegisterAuthStore } from "@/store/register";
 import { Etapas, getRouteByEtapa } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -83,6 +84,9 @@ export function useUpdateUserMutation() {
         return data;
       }
 
+      const registerStore = useRegisterAuthStore.getState();
+      const { setEtapa } = registerStore;
+      setEtapa(data.etapa)
       console.log(data);
 
       if (data.etapa === Etapas.FINALIZADO) {

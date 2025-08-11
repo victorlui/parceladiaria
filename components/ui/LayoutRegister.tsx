@@ -51,9 +51,9 @@ export default function LayoutRegister({
         >
          {isLogo && (
              <Image
-            source={require("@/assets/images/apenas-logo.png")}
-            className="w-full h-56 mb-4"
-            resizeMode="cover"
+            source={require("@/assets/images/parcela-logo.png")}
+            className="w-full h-40 mb-8"
+            resizeMode="contain"
           />
          )}
           {children}

@@ -69,6 +69,10 @@ export default function DocumentPhotoBackScreen() {
   };
 
   const onSubmit = async () => {
+     if(!selectedDocFront) {
+      Alert.alert("Atenção", "Por favor, tire uma foto do documento. ou selecione um pdf");
+      return;
+    }
     const fileInfo: any = await FileSystem.getInfoAsync(selectedDocFront.uri);
     if (fileInfo.size > 10 * 1024 * 1024) {
       Alert.alert("Arquivo muito grande (máx. 10MB)");
@@ -144,7 +148,7 @@ export default function DocumentPhotoBackScreen() {
                   />
                 </View>
               ) : (
-                <View>
+                <View className="flex-1">
                   <Text className="text-base mt-10">Documento frente: </Text>
                   <Text className="text-xl font-semibold mb-10">
                     {selectedDocFront.name}{" "}

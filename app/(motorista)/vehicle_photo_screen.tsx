@@ -1,36 +1,39 @@
-import { Button } from "@/components/Button";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
-import DocumentIcon from "../../assets/icons/document.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import LayoutRegister from "@/components/ui/LayoutRegister";
+import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import { Colors } from "@/constants/Colors";
+import CarIcon from "../../assets/icons/car.svg";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
-export default function AddressDocument() {
-  useDisableBackHandler();
+export default function VehiclePhotoScreen() {
+  useDisableBackHandler()
   const { mutate } = useUpdateUserMutation();
-  const { selectPDF, takePhoto } = useDocumentPicker(10);
+  const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPDF = async () => {
-    const selected = await selectPDF();
+  const handleSelectGallery = async () => {
+    const selected = await takePhoto('library','selfie_veiculo.jpg');
     if (selected) setFile(selected);
   };
 
   const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera");
+    const selected = await takePhoto("camera",'selfie_veiculo.jpg');
     if (selected) setFile(selected);
   };
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, selecione uma foto ou documento.");
+      Alert.alert(
+        "Atenção",
+        "Por favor, tire uma selfie com o veículo ou selecione da galeria."
+      );
       return;
     }
 
@@ -46,8 +49,8 @@ export default function AddressDocument() {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_PIX,
-          comprovante_endereco: finalUrl,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO,
+          foto_veiculo: finalUrl,
         },
       });
     } catch (error) {
@@ -66,20 +69,20 @@ export default function AddressDocument() {
     >
       <View className="flex-1">
         <CircleIcon
-          icon={<DocumentIcon />}
+          icon={<CarIcon />}
           color={Colors.primaryColor}
           size={100}
         />
         <View className="flex flex-col gap-3 my-5">
-          <Text className="text-xl font-bold">
-            Envio de Comprovante de Endereço
+          <Text className="text-2xl font-bold text-center text-[#33404F]">
+            Selfie com o veículo
           </Text>
-          <Text className="text-base">
-            Para garantir a segurança e autenticidade do seu cadastro, é
-            necessário enviar uma foto válida do seu comprovante de endereço no
-            máximo 90 dias, contendo nome, endereço e data. Nossa equipe irá
-            analisar o documento enviado para confirmar que ele atende aos
-            critérios estabelecidos.
+          <Text className="text-base text-center">
+            Tire uma selfie comprovando que você é o proprietário do veículo
+          </Text>
+          <Text className="text-base text-center">
+            Dicas: mostre o veículo ao fundo, esteja bem iluminado e use roupas
+            claras
           </Text>
         </View>
 
@@ -108,10 +111,10 @@ export default function AddressDocument() {
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity
-            onPress={handleSelectPDF}
+            onPress={handleSelectGallery}
             className="bg-gray-200 p-4 rounded-lg items-center justify-center"
           >
-            <Text className="text-base">Selecionar documento PDF</Text>
+            <Text className="text-base">Abrir galeria</Text>
           </TouchableOpacity>
           <Button
             title="Tirar foto"

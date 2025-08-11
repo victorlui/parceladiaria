@@ -53,7 +53,7 @@ export default function AddressScreen() {
       cidade: data.cidade,
       estado: data.estado,
       complemento: data.complemento,
-      etapa: Etapas.REGISTRANDO_PIX,
+      etapa: Etapas.REGISTRANDO_COMPROVANTE_ENDERECO,
     };
 
     mutate({ request: request });

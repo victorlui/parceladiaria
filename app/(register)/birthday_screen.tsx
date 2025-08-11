@@ -1,6 +1,7 @@
 import { DateInput } from "@/components/DateInput";
 import Spinner from "@/components/Spinner";
 import LayoutRegister from "@/components/ui/LayoutRegister";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas, formatDateToISO } from "@/utils";
 import { useForm } from "react-hook-form";
@@ -11,6 +12,7 @@ interface FormData {
 }
 
 export default function BirthdatScreen() {
+  useDisableBackHandler()
   const { control, handleSubmit } = useForm<FormData>();
   const { mutate, isPending } = useUpdateUserMutation();
 
@@ -24,12 +26,14 @@ export default function BirthdatScreen() {
   };
 
   return (
-    <LayoutRegister onContinue={handleSubmit(onSubmit)}>
-        {isPending && <Spinner />}
+    <LayoutRegister isBack={true} loading={isPending} onContinue={handleSubmit(onSubmit)}>
+
+
+        
       <View className="flex-1  justify-center ">
-        <Text className="text-center text-2xl">
-          Informe sua data de nascimento
-        </Text>
+         <Text className="text-2xl  font-bold">Informe sua data de </Text>
+         <Text className="text-2xl  font-bold">nascimento </Text>
+       
         <View className="my-10">
           <DateInput<FormData>
             name="birthDate"

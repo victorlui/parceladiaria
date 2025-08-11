@@ -1,36 +1,31 @@
-import { Button } from "@/components/Button";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
-import DocumentIcon from "../../assets/icons/document.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import LayoutRegister from "@/components/ui/LayoutRegister";
+import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import { Colors } from "@/constants/Colors";
+import CarIcon from "../../assets/icons/car.svg";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
-export default function AddressDocument() {
+export default function ProfilePhotoScreen() {
   useDisableBackHandler();
   const { mutate } = useUpdateUserMutation();
-  const { selectPDF, takePhoto } = useDocumentPicker(10);
+  const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPDF = async () => {
-    const selected = await selectPDF();
-    if (selected) setFile(selected);
-  };
-
-  const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera");
+  const handleSelectGallery = async () => {
+    const selected = await takePhoto("library", "profile_photo.jpg");
     if (selected) setFile(selected);
   };
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, selecione uma foto ou documento.");
+      Alert.alert("Atenção", "Por favor, anexe uma imagem do seu perfil.");
       return;
     }
 
@@ -46,8 +41,8 @@ export default function AddressDocument() {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_PIX,
-          comprovante_endereco: finalUrl,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL,
+          foto_perfil: finalUrl,
         },
       });
     } catch (error) {
@@ -65,21 +60,14 @@ export default function AddressDocument() {
       isLogo={false}
     >
       <View className="flex-1">
-        <CircleIcon
-          icon={<DocumentIcon />}
-          color={Colors.primaryColor}
-          size={100}
-        />
+        <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
         <View className="flex flex-col gap-3 my-5">
-          <Text className="text-xl font-bold">
-            Envio de Comprovante de Endereço
+          <Text className="text-2xl font-bold text-center text-[#33404F]">
+            Foto do seu perfil nas plataformas
           </Text>
-          <Text className="text-base">
-            Para garantir a segurança e autenticidade do seu cadastro, é
-            necessário enviar uma foto válida do seu comprovante de endereço no
-            máximo 90 dias, contendo nome, endereço e data. Nossa equipe irá
-            analisar o documento enviado para confirmar que ele atende aos
-            critérios estabelecidos.
+          <Text className="text-base text-center">
+            Anexe uma foto (print) da página de perfil no seu aplicativo de
+            trabalho (Uber, 99, etc)
           </Text>
         </View>
 
@@ -108,16 +96,11 @@ export default function AddressDocument() {
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity
-            onPress={handleSelectPDF}
+            onPress={handleSelectGallery}
             className="bg-gray-200 p-4 rounded-lg items-center justify-center"
           >
-            <Text className="text-base">Selecionar documento PDF</Text>
+            <Text className="text-base">Abrir galeria</Text>
           </TouchableOpacity>
-          <Button
-            title="Tirar foto"
-            variant="secondary"
-            onPress={handleTakePhoto}
-          />
         </View>
       </View>
     </LayoutRegister>
