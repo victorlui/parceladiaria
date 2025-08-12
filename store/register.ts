@@ -8,6 +8,8 @@ type RegisterAuth = {
   code: string | null;
   address: AddressSchema | null;
   etapa: Etapas | null;
+  password: string | null;
+  setPassword: (password: string) => void;
   setEtapa: (etapa: Etapas) => void;
   setCpf: (cpf: string) => void;
   setPhone: (phone: string) => void;
@@ -23,6 +25,10 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   address: null,
   isLoading: true,
   etapa: null,
+  password: null,
+  setPassword: (password) => {
+    set({ password });
+  },
   setEtapa: (etapa) => {
     set({ etapa });
   },

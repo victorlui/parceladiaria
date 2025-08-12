@@ -61,6 +61,10 @@ export default function RootLayout() {
            <Stack.Screen name="(comerciante)" options={{ headerShown: false }} />
            <Stack.Screen name="(motorista)" options={{ headerShown: false }} />
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          <Stack.Screen name="recusado_screen" options={{ headerShown: false }} />
+          <Stack.Screen name="divergencia_screen" options={{ headerShown: false }} />
+          <Stack.Screen name="reanalise_screen" options={{ headerShown: false }} />
+          <Stack.Screen name="pre_aprovado_screen" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="dark" />
     </QueryClientProvider>

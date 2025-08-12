@@ -4,7 +4,6 @@ import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
@@ -47,7 +46,7 @@ export default function CnhFrontScreen() {
 
       mutate({
         request: {
-          etapa: Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
+          etapa:  file.type === "pdf" ? Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO : Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
           foto_frente_doc: finalUrl,
         },
       });

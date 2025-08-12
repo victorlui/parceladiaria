@@ -22,7 +22,6 @@ interface DateInputProps<T extends FieldValues> {
   control: Control<T>;
   rules?: RegisterOptions;
   label?: string;
- 
 }
 
 export function DateInput<T extends FieldValues>({
@@ -30,7 +29,7 @@ export function DateInput<T extends FieldValues>({
   control,
   rules,
   label = "Data de Nascimento",
-}: DateInputProps<T>) { 
+}: DateInputProps<T>) {
   const [showPicker, setShowPicker] = useState(false);
 
   const formatDate = (date?: Date) => {
@@ -53,7 +52,12 @@ export function DateInput<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      rules={rules as Omit<RegisterOptions<T, Path<T>>, "setValueAs" | "disabled" | "valueAsNumber" | "valueAsDate">}
+      rules={
+        rules as Omit<
+          RegisterOptions<T, Path<T>>,
+          "setValueAs" | "disabled" | "valueAsNumber" | "valueAsDate"
+        >
+      }
       render={({ field: { value, onChange }, fieldState: { error } }) => (
         <View style={styles.container}>
           <Text style={styles.label}>{label}</Text>
@@ -71,7 +75,7 @@ export function DateInput<T extends FieldValues>({
             <DateTimePicker
               value={value || new Date()}
               mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
+              display={Platform.OS === "ios" ? "spinner" : "spinner"}
               maximumDate={new Date()}
               onChange={(event, date) => handleChange(event, date, onChange)}
               textColor="#222222"
@@ -99,8 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#d1d5db",
-    fontSize: 20
-
+    fontSize: 20,
   },
   inputError: {
     borderColor: "red",

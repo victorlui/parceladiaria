@@ -63,7 +63,7 @@ const player = useMemo(() => {
 
       mutate({
         request: {
-          etapa: Etapas.FINALIZADO,
+          etapa: Etapas.ASSISTINDO_VIDEO,
           video_comercio: finalUrl,
         },
       });

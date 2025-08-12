@@ -12,14 +12,15 @@ import { Button } from "../Button";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import Spinner from "../Spinner";
+import { Octicons } from "@expo/vector-icons";
 
 interface LayoutRegisterProps {
   children: ReactNode;
   isBack?: boolean;
   onContinue?: () => void;
-  loading?:boolean;
-  isLogo?:boolean;
-    disabledButton?: boolean;
+  loading?: boolean;
+  isLogo?: boolean;
+  disabledButton?: boolean;
 }
 
 export default function LayoutRegister({
@@ -28,54 +29,60 @@ export default function LayoutRegister({
   isBack,
   loading = false,
   isLogo = true,
-  disabledButton = false
+  disabledButton = false,
 }: LayoutRegisterProps) {
   return (
     <>
       {loading && <Spinner />}
-     <SafeAreaView
-      edges={["top", "bottom"]}
-      className="flex-1 bg-white justify-between"
-    >
-      <StatusBar style="dark" />
-    
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <SafeAreaView
+        edges={["top", "bottom"]}
+        className="flex-1 bg-white justify-between"
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
+        <StatusBar style="dark" />
+
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-         {isLogo && (
-             <Image
-            source={require("@/assets/images/parcela-logo.png")}
-            className="w-full h-40 mb-8"
-            resizeMode="contain"
-          />
-         )}
-          {children}
-          <View className="flex-row items-center mt-4   gap-5  justify-between w-full">
-            <View className="flex-1">
-              {isBack && (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+          >
+            {isLogo && (
+              <Image
+                source={require("@/assets/images/parcela-logo.png")}
+                className="w-full h-40 mb-8"
+                resizeMode="contain"
+              />
+            )}
+            {children}
+            <View className="flex-row items-end   gap-5 px-6  justify-between w-full">
+              <View className="flex-1">
+                {isBack && (
+                  <Button
+                    title="Voltar"
+                    onPress={() => router.back()}
+                    variant="outline"
+                     icon={<Octicons name="chevron-left" size={20} color="#9BD13D" />}
+                     isBack
+                  />
+                )}
+              </View>
+              <View className="flex-1" >
                 <Button
-                  title="Voltar"
-                  onPress={() => router.back()}
-                  variant="outline"
+                  title="Continuar"
+                  onPress={() => onContinue?.()}
+                  disabled={disabledButton}
+                  icon={<Octicons name="chevron-right" size={20} color="white" />}
                 />
-              )}
+              </View>
             </View>
-            <View className="flex-1">
-              <Button title="Continuar" onPress={() => onContinue?.()} disabled={disabledButton} />
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
-   
   );
 }
 
@@ -87,7 +94,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     backgroundColor: "#fff", // fundo preto no scroll
-    padding:20
+    padding: 20,
   },
   content: {
     padding: 20,

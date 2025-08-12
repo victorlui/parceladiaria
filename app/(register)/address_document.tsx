@@ -1,7 +1,7 @@
 import { Button } from "@/components/Button";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import CircleIcon from "@/components/ui/CircleIcon";
 import DocumentIcon from "../../assets/icons/document.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
@@ -10,9 +10,12 @@ import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import { Colors } from "@/constants/Colors";
+import { useAlerts } from "@/components/useAlert";
+import { Feather } from "@expo/vector-icons";
 
 export default function AddressDocument() {
   useDisableBackHandler();
+  const { showWarning, AlertDisplay } = useAlerts();
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
@@ -30,7 +33,7 @@ export default function AddressDocument() {
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, selecione uma foto ou documento.");
+      showWarning("Atenção", "Por favor, selecione uma foto ou documento.");
       return;
     }
 
@@ -41,8 +44,6 @@ export default function AddressDocument() {
       });
 
       if (!finalUrl) return;
-
-      console.log("finalUrl", finalUrl);
 
       mutate({
         request: {
@@ -57,69 +58,80 @@ export default function AddressDocument() {
     }
   };
 
-  return (
-    <LayoutRegister
-      loading={isLoading}
-      isBack
-      onContinue={onSubmit}
-      isLogo={false}
-    >
-      <View className="flex-1">
-        <CircleIcon
-          icon={<DocumentIcon />}
-          color={Colors.primaryColor}
-          size={100}
+  const renderFile = () => {
+    if (!file) {
+      return (
+        <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
+          <Feather name="file" size={50} color="#9CA3AF" />
+        </View>
+      );
+    }
+
+    if (file.type === 'pdf') {
+      return (
+        <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1 p-4">
+          <Feather name="file-text" size={30} color="#9CA3AF" />
+          <Text className="ml-2 text-gray-500">{file.name}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View className="mb-4 rounded-lg overflow-hidden">
+        <Image 
+          source={{ uri: file.uri }}
+          className="w-full h-48"
+          resizeMode="contain"
         />
-        <View className="flex flex-col gap-3 my-5">
-          <Text className="text-xl font-bold">
-            Envio de Comprovante de Endereço
-          </Text>
-          <Text className="text-base">
-            Para garantir a segurança e autenticidade do seu cadastro, é
-            necessário enviar uma foto válida do seu comprovante de endereço no
-            máximo 90 dias, contendo nome, endereço e data. Nossa equipe irá
-            analisar o documento enviado para confirmar que ele atende aos
-            critérios estabelecidos.
-          </Text>
-        </View>
-
-        <View className="flex-1">
-          {file && (
-            <>
-              {file.type === "image" ? (
-                <View className="w-full flex-1   mb-3">
-                  <Image
-                    source={{ uri: file.uri }}
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </View>
-              ) : (
-                <View>
-                  <Text className="text-base mt-10">Documento: </Text>
-                  <Text className="text-xl font-semibold mb-10">
-                    {file.name}{" "}
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </View>
-
-        <View className="flex-2  justify-end gap-5 mb-5">
-          <TouchableOpacity
-            onPress={handleSelectPDF}
-            className="bg-gray-200 p-4 rounded-lg items-center justify-center"
-          >
-            <Text className="text-base">Selecionar documento PDF</Text>
-          </TouchableOpacity>
-          <Button
-            title="Tirar foto"
-            variant="secondary"
-            onPress={handleTakePhoto}
-          />
-        </View>
       </View>
-    </LayoutRegister>
+    );
+  };
+
+  return (
+    <>
+      <AlertDisplay />
+      <LayoutRegister
+        loading={isLoading}
+        isBack
+        onContinue={onSubmit}
+        isLogo={false}
+      >
+        <View className="flex-1 pb-5 px-6 ">
+          <CircleIcon
+            icon={<DocumentIcon />}
+            color={Colors.primaryColor}
+            size={100}
+          />
+          <View className="flex flex-col gap-3 my-5">
+            <Text className="text-xl text-center font-bold">
+              Envio de Comprovante de Endereço
+            </Text>
+            <Text className="text-base text-center">
+              Para garantir a segurança e autenticidade do seu cadastro, é
+              necessário enviar uma foto válida do seu comprovante de endereço
+              no máximo 90 dias, contendo nome, endereço e data. Nossa equipe
+              irá analisar o documento enviado para confirmar que ele atende aos
+              critérios estabelecidos.
+            </Text>
+          </View>
+
+          {renderFile()}
+
+          <View className="justify-end gap-5">
+            <TouchableOpacity
+              onPress={handleSelectPDF}
+              className="bg-gray-200 p-4 rounded-lg items-center justify-center"
+            >
+              <Text className="text-base">Selecionar documento PDF</Text>
+            </TouchableOpacity>
+            <Button
+              title="Tirar foto"
+              variant="secondary"
+              onPress={handleTakePhoto}
+            />
+          </View>
+        </View>
+      </LayoutRegister>
+    </>
   );
 }

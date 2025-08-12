@@ -30,9 +30,9 @@ export async function checkOTP(
       otp: code,
     });
     
-    return response.data;
+    return response.data;  
+
   } catch (error: any) {
-    console.log("error", error.response);
     if (error.response) {
       throw {
         status: error.response.status,
@@ -42,5 +42,7 @@ export async function checkOTP(
         data: error.response.data,
       };
     }
+    return error
+    
   }
 }

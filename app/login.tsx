@@ -5,10 +5,11 @@ import { useCheckCPFMutation } from "@/hooks/useLoginMutation";
 import { CPFSchema } from "@/lib/cpf_validation";
 import { useRegisterAuthStore } from "@/store/register";
 import { Image, Keyboard, Text, View } from "react-native";
-import CPF from "../assets/images/cpf_img.svg";
-
+import { useAlerts } from "@/components/useAlert";
+import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 export default function LoginScreen() {
   const { handleSubmit, control } = useCPFForm();
+  const { AlertDisplay } = useAlerts();
   const mutation = useCheckCPFMutation();
   const { setCpf } = useRegisterAuthStore();
 
@@ -19,43 +20,58 @@ export default function LoginScreen() {
   };
 
   return (
-    <LayoutRegister
-      onContinue={handleSubmit(onSubmit)}
-      isLogo={false}
-      loading={mutation.isPending}
-    >
-      <View className=" mb-10">
+    <>
+      <AlertDisplay />
+
+      <LayoutRegister
+        onContinue={handleSubmit(onSubmit)}
+        isLogo={false}
+        loading={mutation.isPending}
+      >
+        <View className="flex-1  px-6 py-8">
+          <View className="items-center mb-8">
             <Image
               source={require("@/assets/images/apenas-logo.png")}
-              className="w-full h-60 mb-8"
+              className="w-full h-48"
               resizeMode="contain"
             />
-            <Text className="text-4xl text-center  font-bold">
-              PARCELA DIÁRIA
+          </View>
+
+        
+          <View className="items-center mb-8">
+            <View className="bg-[#9BD13D] p-4 rounded-2xl shadow-md">
+              <FontAwesome6 name="lock" size={40} color="white" />
+            </View>
+          </View>
+
+          {/* Welcome Text Section */}
+          <View className="mb-10 ">
+            <Text className="text-4xl text-center font-bold text-[#33404F]">
+              Bem-vindo
+            </Text>
+            <Text className="text-lg text-center text-[#4B5563]">
+              Digite seu CPF para continuar
             </Text>
           </View>
-      <View className="flex-1 justify-center">
-        <View>
-          {/* <View className="flex items-center">
-          <CPF width={250} height={250} />
-        </View> */}
-          
-          <Text className="text-4xl  font-bold">Bem vindo de volta!</Text>
-          <Text className="text-base  text-[#33404F] mb-8">
-            Informe seu CPF para continuar
-          </Text>
+
+          {/* Input Section */}
+          <View className="w-full">
+            <FormInput
+              control={control}
+              name="cpf"
+              
+              placeholder="000.000.000-00"
+              keyboardType="numeric"
+              rules={{ required: "CPF é obrigatório" }}
+              maskType="cpf"
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit(onSubmit)}
+              icon={<FontAwesome name="id-card" size={24} color="#9CA3AF" />}
+              
+            />
+          </View>
         </View>
-        <FormInput
-          control={control}
-          name="cpf"
-          placeholder="000.000.000-00"
-          keyboardType="numeric"
-          rules={{ required: "CPF é obrigatório" }}
-          maskType="cpf"
-          returnKeyType="done"
-          onSubmitEditing={handleSubmit(onSubmit)}
-        />
-      </View>
-    </LayoutRegister>
+      </LayoutRegister>
+    </>
   );
 }

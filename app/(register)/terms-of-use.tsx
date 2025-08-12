@@ -20,7 +20,7 @@ export default function TermsOfUse() {
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
       <StatusBar style="dark" />
-        <BackIcon />
+        
 
       <View className="flex-row items-center gap-4 my-6">
         <Image

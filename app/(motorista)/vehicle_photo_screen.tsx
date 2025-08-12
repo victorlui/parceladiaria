@@ -19,12 +19,12 @@ export default function VehiclePhotoScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectGallery = async () => {
-    const selected = await takePhoto('library','selfie_veiculo.jpg');
+    const selected = await takePhoto('library');
     if (selected) setFile(selected);
   };
 
   const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera",'selfie_veiculo.jpg');
+    const selected = await takePhoto("camera");
     if (selected) setFile(selected);
   };
 
@@ -49,7 +49,7 @@ export default function VehiclePhotoScreen() {
 
       mutate({
         request: {
-          etapa: Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO,
           foto_veiculo: finalUrl,
         },
       });

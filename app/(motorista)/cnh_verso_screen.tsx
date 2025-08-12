@@ -4,16 +4,13 @@ import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
-import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
 import DocumentIcon from "../../assets/icons/document.svg";
+import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 
 export default function CnhVersoScreen() {
-  const { etapa } = useRegisterAuthStore();
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);

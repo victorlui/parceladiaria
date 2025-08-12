@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
-import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
@@ -8,33 +7,26 @@ import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import CarIcon from "../../assets/icons/car.svg";
+import CarIcon from "../../assets/icons/user-circle-add.svg";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
-export default function DocumentoVeiculoScreen() {
-  const { mutate } = useUpdateUserMutation();
-  const { selectPDF, takePhoto } = useDocumentPicker(10);
+export default function ComprovanteGanhosScreen() {
+  useDisableBackHandler();
+  const { mutate, isPending } = useUpdateUserMutation();
+  const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPDF = async () => {
-    const selected = await selectPDF();
-    if (selected) setFile(selected);
-  };
-
-  const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera");
+  const handleSelectGallery = async () => {
+    const selected = await takePhoto("library");
     if (selected) setFile(selected);
   };
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert(
-        "Atenção",
-        "Por favor, tire uma foto do verso da CNH ou selecione."
-      );
+      Alert.alert("Erro", "Por favor, selecione um comprovante de ganhos.");
       return;
     }
-
     try {
       setIsLoading(true);
       const finalUrl = await uploadFileToS3({
@@ -43,12 +35,10 @@ export default function DocumentoVeiculoScreen() {
 
       if (!finalUrl) return;
 
-      console.log("finalUrl", finalUrl);
-
       mutate({
         request: {
-          etapa: Etapas.MOTORISTA_REGISTRANDO_FOTO_VEICULO,
-          foto_docveiculo: finalUrl,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL,
+          ganhos_app:finalUrl
         },
       });
     } catch (error) {
@@ -60,26 +50,26 @@ export default function DocumentoVeiculoScreen() {
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}
     >
       <View className="flex-1">
-        <CircleIcon
-          icon={<CarIcon />}
-          color={Colors.primaryColor}
-          size={100}
-        />
+        <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
-            Documento do veículo
+            Relatório de Ganhos no
+          </Text>
+          <Text className="text-2xl font-bold text-center text-[#33404F]">
+            Aplicativo de Corridas
           </Text>
           <Text className="text-base text-center">
-            Verifique se a foto está legível e contém todos os dados do veículo.
-            O documento deve ser atualizado (2024/2025).
+            Envie uma foto ou vídeo do seu perfil completo no aplicativo de
+            corridas. É necessário mostrar sua foto de perfil, número total de
+            corridas e seus ganhos dos últimos 30 dias. Não corte nenhuma
+            informação.
           </Text>
-         
         </View>
 
         <View className="flex-1">
@@ -107,20 +97,12 @@ export default function DocumentoVeiculoScreen() {
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity
-            onPress={handleSelectPDF}
+            onPress={handleSelectGallery}
             className="bg-gray-200 p-4 rounded-lg items-center justify-center"
           >
-            <Text className="text-base">Selecionar documento PDF</Text>
+            <Text className="text-base">Abrir galeria</Text>
           </TouchableOpacity>
-          <Button
-            title="Tirar foto"
-            variant="secondary"
-            onPress={handleTakePhoto}
-          />
         </View>
-         <Text className="text-sm ">
-            OBS: Foto incompleta, documento atrasado ou ilegível será cancelado
-          </Text>
       </View>
     </LayoutRegister>
   );

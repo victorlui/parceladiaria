@@ -9,6 +9,7 @@ export default function MotoristaLayout() {
       <Stack.Screen name="document_veiculo_screen" options={{ headerShown: false }} />
       <Stack.Screen name="vehicle_photo_screen" options={{ headerShown: false }} />
       <Stack.Screen name="profile_photo_screen" options={{ headerShown: false }} />
+      <Stack.Screen name="comprovante_ganhos_screen" options={{ headerShown: false }} />
       <Stack.Screen name="additional_print_screen" options={{ headerShown: false }} />
     </Stack>
   );

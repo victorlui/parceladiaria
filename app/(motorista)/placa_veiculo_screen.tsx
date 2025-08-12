@@ -50,6 +50,8 @@ export default function PLacaVeiculoScreen() {
           label=""
           placeholder="ABC-1D23"
           maskType="vehiclePlate"
+           returnKeyType="done"
+          onSubmitEditing={handleSubmit(onSubmit)}
         />
       </View>
     </LayoutRegister>

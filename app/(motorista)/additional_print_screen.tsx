@@ -7,53 +7,54 @@ import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import CarIcon from "../../assets/icons/car.svg";
+import CarIcon from "../../assets/icons/user-circle-add.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
 export default function AdditionalPrintScreen() {
   useDisableBackHandler();
-  const { mutate } = useUpdateUserMutation();
+  const { mutate,isPending } = useUpdateUserMutation();
   const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectGallery = async () => {
-    const selected = await takePhoto("library", "profile_photo.jpg");
+    const selected = await takePhoto("library");
     if (selected) setFile(selected);
   };
 
   const onSubmit = async () => {
-    if (!file) {
-      Alert.alert("Atenção", "Por favor, anexe uma imagem do seu perfil.");
-      return;
-    }
+    if (file) {
+      try {
+        setIsLoading(true);
+        const finalUrl = await uploadFileToS3({
+          file: file,
+        });
 
-    try {
-      setIsLoading(true);
-      const finalUrl = await uploadFileToS3({
-        file: file,
-      });
+        if (!finalUrl) return;
 
-      if (!finalUrl) return;
-
-      console.log("finalUrl", finalUrl);
-
+        mutate({
+          request: {
+            etapa: Etapas.ASSISTINDO_VIDEO,
+            adicional: finalUrl
+          },
+        });
+      } catch (error) {
+        console.log("error", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
       mutate({
         request: {
-          etapa: Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL,
-          foto_perfil: finalUrl,
+          etapa: Etapas.ASSISTINDO_VIDEO,
         },
       });
-    } catch (error) {
-      console.log("error", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}
@@ -62,11 +63,11 @@ export default function AdditionalPrintScreen() {
         <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
-            Foto do seu perfil nas plataformas
+            Gostaria de adicionar mais um comprovante?
           </Text>
           <Text className="text-base text-center">
-            Anexe uma foto (print) da página de perfil no seu aplicativo de
-            trabalho (Uber, 99, etc)
+            Quanto mais informações sobre seu relacionamento com a plataforma,
+            maior a chance de aprovação.
           </Text>
         </View>
 

@@ -6,6 +6,8 @@ import { Etapas, getRouteByEtapa } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
+import { useLoginMutation } from "./useLoginMutation";
+import { useAlerts } from "@/components/useAlert";
 
 export function useRegisterMutation() {
   const { mutate, isPending, isError, isSuccess, error, data } = useMutation({
@@ -30,18 +32,16 @@ export function useRegisterMutation() {
 }
 
 export function useCheckOTPMutation() {
+  
   return useMutation({
     mutationFn: ({ phone, code }: { phone: string; code: string }) =>
       checkOTP(phone, code),
     onSuccess: (data) => {
-      if (data?.success) {
-        alert("Código verificado com sucesso");
-        router.push("/(register)/create-password");
-      }
       return data;
     },
     onError: (error: any) => {
-      alert(error.message || "Erro ao verificar código");
+      
+      throw new Error(error.message || "Erro ao verificar código")
     },
   });
 }
@@ -74,9 +74,11 @@ export function useRegisterDataMutation() {
 }
 
 export function useUpdateUserMutation() {
+  const loginMutation = useLoginMutation();
+  const {cpf, password} = useRegisterAuthStore()
+
   return useMutation({
     mutationFn: (request: any) => {
-      console.log("fn", request);
       return updateUserService({ request: request.request });
     },
     onSuccess: (data) => {
@@ -86,20 +88,25 @@ export function useUpdateUserMutation() {
 
       const registerStore = useRegisterAuthStore.getState();
       const { setEtapa } = registerStore;
-      setEtapa(data.etapa)
+      setEtapa(data.etapa);
       console.log(data);
 
       if (data.etapa === Etapas.FINALIZADO) {
-        Alert.alert("Sucesso", "Seu cadastro foi finalizado com sucesso!", [
+        Alert.alert("Sucesso", "Seu cadastro foi finalizado com sucesso. Redirecionando para a home!", [
           {
             text: "OK",
-            onPress: () => router.replace("/login"),
+            onPress: () => {
+              loginMutation.mutate({
+                cpf: cpf || "",
+                password: password || "",
+              });
+             
+            },
             style: "default",
           },
         ]);
       } else {
         const rota = getRouteByEtapa(data.etapa as Etapas);
-
         if (rota) {
           router.push(rota as any);
         }
@@ -112,3 +119,4 @@ export function useUpdateUserMutation() {
     },
   });
 }
+

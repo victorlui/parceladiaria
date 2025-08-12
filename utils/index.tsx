@@ -31,6 +31,14 @@ export async function requestPermissions () {
   };
 
 
+  export enum StatusCadastro {
+    DIVERGENTE = 'divergente',
+    RECUSADO = 'recusado',
+    APROVADO = 'aprovado',
+    REANALISE = 'reanalise',
+    PRE_APROVADO = 'pre-aprovado',
+  }
+
 export enum Etapas {
   INICIO = 'Inicio',
   REGISTRANDO_COMPROVANTE_ENDERECO = 'registrando_comprovante_endereco',
@@ -47,7 +55,8 @@ export enum Etapas {
   REGISTRANDO_FRENTE_COMERCIO = 'registrando_frente_comercio',
   REGISTRANDO_INTERIOR_COMERCIO = 'registrando_interior_comercio',
   REGISTRANDO_VIDEO_COMERCIO = 'registrando_video_comercio',
-  FINALIZADO = 'finalizado',
+  ASSISTINDO_VIDEO = 'assistindo_video',
+  FINALIZADO = 'Finalizado',
   MOTORISTA_REGISTRANDO_FRENTE_CNH = 'registrando_frente_cnh',
   MOTORISTA_REGISTRANDO_VERSO_CNH = 'registrando_verso_cnh',
   MOTORISTA_REGISTRANDO_PLACA_VEICULO = 'registrando_placa_veiculo',
@@ -55,6 +64,8 @@ export enum Etapas {
   MOTORISTA_REGISTRANDO_FOTO_VEICULO = 'registrando_foto_veiculo',
   MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO = 'registrando_documento_proprietario',
   MOTORISTA_REGISTRANDO_PRINT_ADICIONAL = 'registrando_print_adicional',
+  MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS = 'registrando_comprovante_ganhos',
+  APP_ANALISE = 'analise'
 }
 
 
@@ -80,7 +91,10 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_VEICULO]: "/(motorista)/document_veiculo_screen",
   [Etapas.MOTORISTA_REGISTRANDO_FOTO_VEICULO]: "/(motorista)/vehicle_photo_screen",
   [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO]: "/(motorista)/profile_photo_screen",
+  [Etapas.MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS]: "/(motorista)/comprovante_ganhos_screen",
   [Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL]: "/(motorista)/additional_print_screen",
+  [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
+  [Etapas.APP_ANALISE]: "/(app)/home",
 
   [Etapas.FINALIZADO]: "/login",
 

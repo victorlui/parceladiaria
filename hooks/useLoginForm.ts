@@ -14,6 +14,6 @@ export const useLoginForm = () => {
 export const useCPFForm = () => {
   return useForm<CPFSchema>({
     resolver: zodResolver(cpfSchema),
-    mode: "onChange",
+    mode: "onSubmit",
   });
 }

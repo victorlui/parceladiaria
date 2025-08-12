@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
-import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
@@ -19,7 +18,7 @@ export default function ProfilePhotoScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectGallery = async () => {
-    const selected = await takePhoto("library", "profile_photo.jpg");
+    const selected = await takePhoto("library");
     if (selected) setFile(selected);
   };
 
@@ -41,7 +40,7 @@ export default function ProfilePhotoScreen() {
 
       mutate({
         request: {
-          etapa: Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS,
           foto_perfil: finalUrl,
         },
       });

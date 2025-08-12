@@ -1,8 +1,7 @@
 import React, { forwardRef } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, TextInput, View, ViewStyle } from "react-native";
 import { Controller, Control } from "react-hook-form";
 import { MaskedTextInput } from "react-native-mask-text";
-import { clsx } from "clsx"; // ou use diretamente string de classes
 import { Colors } from "@/constants/Colors";
 
 interface FormInputProps {
@@ -25,6 +24,8 @@ interface FormInputProps {
   };
   onSubmitEditing?: () => void; // <- para chamar submit ou focar próximo
   returnKeyType?: "done" | "next";
+  icon?: React.ReactNode;
+  
 }
 
 export const FormInput = forwardRef<TextInput, FormInputProps>(
@@ -42,6 +43,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
       autoCapitalize,
       onSubmitEditing,
       returnKeyType = "done",
+      icon
     },
     ref
   ) => {
@@ -54,20 +56,29 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
           field: { onChange, onBlur, value },
           fieldState: { error },
         }) => {
-          const styleInput = {
+         // Ajustamos os estilos para acomodar o ícone
+          const containerStyle = {
+            flexDirection: "row", // 👈 Alinha o ícone e o input na mesma linha
+            alignItems: "center", // 👈 Alinha verticalmente
             borderWidth: 1,
             borderColor: error ? "#ef4444" : Colors.borderColor,
             borderRadius: 6,
-            padding: 8,
-            fontSize: 16,
             height: 60,
+            paddingHorizontal: 8, // 👈 Ajuste o padding horizontal para o container
+          };
+
+          const inputStyle = {
+            flex: 1, // 👈 Faz o input ocupar o espaço restante
+            fontSize: 16,
+            height: "100%", // 👈 Ocupa a altura do container
+            paddingLeft: 8, // 👈 Adiciona padding à esquerda do texto do input
           };
 
           const commonProps = {
             onBlur,
             value,
             placeholder,
-            style: styleInput,
+            style: inputStyle,
             ref,
             returnKeyType,
             onSubmitEditing,
@@ -158,11 +169,16 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
           };
 
           return (
-            <View className="mb-3">
+             <View className="mb-3">
               {label && (
                 <Text className="mb-1 text-base text-gray-700">{label}</Text>
               )}
-              {renderInput()}
+              {/* O View com 'containerStyle' agora envolve o ícone e o input */}
+              <View style={containerStyle as ViewStyle}>
+                {/* 2. Renderizamos o ícone se ele existir */}
+                {icon && <View style={{ marginRight: 8 }}>{icon}</View>}
+                {renderInput()}
+              </View>
               {error && (
                 <Text className="mt-1 text-sm text-red-500">
                   {error.message || "Campo obrigatório"}

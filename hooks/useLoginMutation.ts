@@ -3,13 +3,16 @@ import { CPFSchema } from "@/lib/cpf_validation";
 import { checkCPF } from "@/services/check-cpf";
 import { router } from "expo-router";
 import { login } from "@/services/login";
-import { Etapas, getRouteByEtapa } from "@/utils";
+import { Etapas, getRouteByEtapa, StatusCadastro } from "@/utils";
 import { useAuthStore } from "@/store/auth";
+import { useAlerts } from "@/components/useAlert";
 
 export const useCheckCPFMutation = () => {
+  const { showError } = useAlerts();
   return useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPF(cpf),
     onSuccess: ({ data: { type }, message }) => {
+      console.log("adsa", type, message);
       if (!type && message === "Sem cadastro") {
         router.push("/(register)/terms-of-use");
       }
@@ -19,26 +22,37 @@ export const useCheckCPFMutation = () => {
       }
     },
     onError: (error: any) => {
-      alert(error.message || "Erro ao logar");
+       showError(
+        'Ops!',
+        error.message || 'Ocorreu um erro inesperado.'
+      );
     },
   });
 };
 
 export const useLoginMutation = () => {
+   const { showError } = useAlerts();
   return useMutation({
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: (data) => {
       const { etapa, status } = data.data;
       console.log("login", data);
-      // Store login data
+
       useAuthStore.getState().login(data.token, data.data);
 
-      if (etapa === Etapas.FINALIZADO && status === "pendente") {
-         router.push("/(app)/video_screen");
+      if (status === Etapas.APP_ANALISE) {
+        router.replace("/(app)/home");
+      } else if (status === StatusCadastro.DIVERGENTE) {
+        router.replace("/divergencia_screen");
+      } else if (status === StatusCadastro.PRE_APROVADO) {
+        router.replace("/pre_aprovado_screen");
+      } else if (status === StatusCadastro.RECUSADO) {
+        router.replace("/recusado_screen");
+      } else if (status === StatusCadastro.REANALISE) {
+        router.replace("/reanalise_screen");
       } else {
         const rota = getRouteByEtapa(etapa as Etapas);
-
         if (rota) {
           router.push(rota as any);
         }
@@ -47,7 +61,10 @@ export const useLoginMutation = () => {
       return data;
     },
     onError: (error: any) => {
-      alert(error.message || "Erro ao logar");
+      showError(
+        'Ops!',
+        error.message || 'Ocorreu um erro inesperado.'
+      );
     },
   });
 };
