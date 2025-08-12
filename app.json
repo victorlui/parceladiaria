@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "parceladiaria",
+    "name": "Parcela Diaria",
     "slug": "parceladiaria",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.victorlui.parceladiaria"
     },
     "web": {
       "bundler": "metro",
@@ -64,6 +68,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
+      }
     }
   }
 }

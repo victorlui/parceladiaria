@@ -1,9 +1,10 @@
 import { useAuthStore } from "@/store/auth";
-import { ScrollView, Text, View, Image, Alert } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, Text, View, Image, Alert, Dimensions, TouchableOpacity } from "react-native";
 import { Button } from "@/components/Button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
@@ -11,15 +12,28 @@ import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { updateUserService } from "@/services/register";
 import { router } from "expo-router";
 import Spinner from "@/components/Spinner";
+import DrawerMenu from "@/components/DrawerMenu";
 
-export default function RecusadoScreen() {
-  const { user,logout } = useAuthStore();
+const { width, height } = Dimensions.get('window');
+const isTablet = width > 768;
+
+export default function DivergenciaScreen() {
+  const { user, logout } = useAuthStore();
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   
   const { takePhoto } = useDocumentPicker(10);
   const [selectedFiles, setSelectedFiles] = useState<Record<string, string>>(
     {}
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleMenuPress = () => {
+    setIsDrawerVisible(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerVisible(false);
+  };
 
   function safeParseArray(str: any) {
     if (!str) return [];
@@ -137,32 +151,90 @@ export default function RecusadoScreen() {
      {isLoading && <Spinner />}
     <SafeAreaView
       edges={["top", "bottom"]}
-      className="flex-1  bg-white py-5 px-5"
+      className="flex-1 bg-gradient-to-b from-blue-50 to-white"
     >
+      {/* Container principal com padding responsivo */}
+      <View className={`flex-1 ${isTablet ? 'px-12 py-8' : 'px-6 py-4'}`}>
         
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flex: 1 }}
-      >
-        <View>
-          <Text className="text-3xl font-bold">Divergências</Text>
-          <Text className="text-base ">
-            Verifique os documentos abaixo e envie-os novamente para
-            verificação.
-          </Text>
+        {/* Header com logo e menu */}
+        <View className="flex-row items-center justify-between mb-8">
+          <TouchableOpacity 
+            onPress={handleMenuPress}
+            className="p-2"
+          >
+            <Ionicons name="menu" size={28} color="#374151" />
+          </TouchableOpacity>
+          
+          <View className="flex-1 items-center">
+            <Image 
+              source={require("@/assets/images/apenas-logo.png")} 
+              className={`w-full ${isTablet ? 'h-32' : 'h-24'}`}
+              resizeMode="contain" 
+            />
+          </View>
+          
+          <View className="w-12" />
         </View>
 
-        <View className="flex-1">{renderDocumentRequests()}</View>
+        {/* Card com informações de divergência */}
+        <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-6 border border-gray-100">
+          <View className="items-center">
+            {/* Ícone de status */}
+            <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-yellow-100">
+              <Text className="text-2xl text-yellow-600">
+                ⚠️
+              </Text>
+            </View>
 
-        <View className="">
-          <Button
-            title="Enviar documentos"
-            onPress={handleSubmitDocuments}
-            disabled={Object.keys(selectedFiles).length === 0 || isLoading}
-          />
+            {/* Título principal */}
+            <Text className={`font-bold text-center mb-3 ${
+              isTablet ? 'text-3xl' : 'text-2xl'
+            } text-gray-800 leading-tight`}>
+              Divergências Encontradas
+            </Text>
+
+            {/* Subtítulo */}
+            <Text className={`text-center text-gray-600 leading-relaxed ${
+              isTablet ? 'text-lg' : 'text-base'
+            }`}>
+              Verifique os documentos abaixo e envie-os novamente para verificação.
+            </Text>
+
+            {/* Badge de status */}
+            <View className="mt-4 px-4 py-2 rounded-full bg-yellow-100">
+              <Text className="font-semibold text-sm text-yellow-800">
+                PENDENTE CORREÇÃO
+              </Text>
+            </View>
+          </View>
         </View>
-      </ScrollView>
+
+        {/* Conteúdo de documentos */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="flex-1"
+        >
+          <View className="px-4">
+            {renderDocumentRequests()}
+          </View>
+
+          <View className="gap-5 px-4 py-6">
+            <Button
+              title="Enviar documentos"
+              onPress={handleSubmitDocuments}
+              disabled={Object.keys(selectedFiles).length === 0 || isLoading}
+            />
+          </View>
+        </ScrollView>
+
+      </View>
+      
+      {/* DrawerMenu */}
+      <DrawerMenu 
+        isVisible={isDrawerVisible} 
+        onClose={handleCloseDrawer}
+        showOnlyLogout={true}
+      />
     </SafeAreaView>
     </>
    

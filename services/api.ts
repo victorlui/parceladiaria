@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/store/auth";
 import axios, { AxiosError } from "axios";
+import { router } from "expo-router";
 const BASE_URL = "https://app.parceladiaria.com.br/api";
 const api = axios.create({
   baseURL: BASE_URL,
@@ -7,8 +8,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-
 
 api.interceptors.request.use(
   async (config) => {
@@ -19,8 +18,8 @@ api.interceptors.request.use(
 
     return config;
   },
-   (error: AxiosError) => {
-     console.log("error request", error.response);
+  (error: AxiosError) => {
+    console.log("error request", error.response);
     return Promise.reject(error);
   }
 );
@@ -31,18 +30,11 @@ api.interceptors.response.use(
   },
   async (error: AxiosError) => {
     console.log("error response", error.response);
-    if (error.status === 401) {
-       const token = useAuthStore.getState().token;
-      console.log('token response',token)
-       // const response = await api.post("v1/renew", {
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-
+    // if (error.response?.status === 401) {
+    //   useAuthStore.getState().logout()
+    //   router.replace('/login')
       
-    }
+    // }
 
     return Promise.reject(error);
   }

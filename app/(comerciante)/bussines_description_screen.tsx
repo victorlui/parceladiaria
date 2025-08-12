@@ -33,7 +33,7 @@ export default function BussinesDescriptionScreen() {
       onContinue={onSubmit}
       loading={isPending}
     >
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<HouseIcon />}
           color={Colors.primaryColor}
@@ -43,7 +43,7 @@ export default function BussinesDescriptionScreen() {
           Descreva seu tipo de comércio
         </Text>
 
-        <View className="flex-1">
+        <View className="flex-1  mb-8">
           <TextInput
             value={description}
             onChangeText={setDescription}

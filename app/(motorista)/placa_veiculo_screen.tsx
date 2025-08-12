@@ -31,7 +31,7 @@ export default function PLacaVeiculoScreen() {
       isLogo={false}
     >
       <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
-      <View className="h-[250px]">
+      <View className="h-[250px] px-6">
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
             Placa do veículo
@@ -43,7 +43,7 @@ export default function PLacaVeiculoScreen() {
         </View>
       </View>
 
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <FormInput
           name="plate"
           control={control}

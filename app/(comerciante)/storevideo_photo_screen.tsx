@@ -81,7 +81,7 @@ const player = useMemo(() => {
       onContinue={onSubmit}
       isLogo={false}
     >
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<DocumentIcon />}
           color={Colors.primaryColor}
@@ -105,7 +105,7 @@ const player = useMemo(() => {
           {file && file.type === "video" && (
             <VideoView
               style={{
-                width: 350,
+                width: '100%',
                 height: 200,
                 borderRadius: 12,
                 backgroundColor: "#000",

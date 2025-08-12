@@ -33,23 +33,23 @@ export default function CreatePassword() {
       isBack
       isLogo={false}
     >
-      <View className="flex-1 justify-between px-6">
-        <View className="items-center mb-8">
+      <View className="flex-1 px-6">
+        <View className="items-center mb-6">
           <Image
             source={require("@/assets/images/apenas-logo.png")}
-            className="w-full h-48"
+            className="w-full h-40"
             resizeMode="contain"
           />
         </View>
 
-        <View className="items-center ">
+        <View className="items-center mb-6">
           <View className="bg-[#9BD13D] p-4 rounded-2xl shadow-md">
             <FontAwesome6 name="lock" size={40} color="white" />
           </View>
         </View>
 
-        <View className="flex justify-center flex-1">
-          <Text className="text-gray-700 text-center text-2xl font-bold  ">
+        <View className="mb-8">
+          <Text className="text-gray-700 text-center text-2xl font-bold">
             Crie sua senha de acesso
           </Text>
         </View>

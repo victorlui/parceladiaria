@@ -12,59 +12,57 @@ export const useCheckCPFMutation = () => {
   return useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPF(cpf),
     onSuccess: ({ data: { type }, message }) => {
-      console.log("adsa", type, message);
       if (!type && message === "Sem cadastro") {
         router.push("/(register)/terms-of-use");
       }
 
-      if (type && type === "lead") {
+      if ((type && type === "lead") || type === "client") {
         router.push("/insert-password");
       }
     },
     onError: (error: any) => {
-       showError(
-        'Ops!',
-        error.message || 'Ocorreu um erro inesperado.'
-      );
+      showError("Ops!", error.message || "Ocorreu um erro inesperado.");
     },
   });
 };
 
 export const useLoginMutation = () => {
-   const { showError } = useAlerts();
+  const { showError } = useAlerts();
   return useMutation({
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: (data) => {
-      const { etapa, status } = data.data;
+      const { etapa, status, type } = data.data;
+
       console.log("login", data);
 
       useAuthStore.getState().login(data.token, data.data);
 
-      if (status === Etapas.APP_ANALISE) {
-        router.replace("/(app)/home");
-      } else if (status === StatusCadastro.DIVERGENTE) {
-        router.replace("/divergencia_screen");
-      } else if (status === StatusCadastro.PRE_APROVADO) {
-        router.replace("/pre_aprovado_screen");
-      } else if (status === StatusCadastro.RECUSADO) {
-        router.replace("/recusado_screen");
-      } else if (status === StatusCadastro.REANALISE) {
-        router.replace("/reanalise_screen");
+      if (type === "client") {
+        router.push("/(app)/home");
       } else {
-        const rota = getRouteByEtapa(etapa as Etapas);
-        if (rota) {
-          router.push(rota as any);
+        if (status === Etapas.APP_ANALISE) {
+          router.replace("/analise_screen");
+        } else if (status === StatusCadastro.DIVERGENTE) {
+          router.replace("/divergencia_screen");
+        } else if (status === StatusCadastro.PRE_APROVADO) {
+          router.replace("/pre_aprovado_screen");
+        } else if (status === StatusCadastro.RECUSADO) {
+          router.replace("/recusado_screen");
+        } else if (status === StatusCadastro.REANALISE) {
+          router.replace("/reanalise_screen");
+        } else {
+          const rota = getRouteByEtapa(etapa as Etapas);
+          if (rota) {
+            router.push(rota as any);
+          }
         }
       }
 
       return data;
     },
     onError: (error: any) => {
-      showError(
-        'Ops!',
-        error.message || 'Ocorreu um erro inesperado.'
-      );
+      showError("Ops!", error.message || "Ocorreu um erro inesperado.");
     },
   });
 };

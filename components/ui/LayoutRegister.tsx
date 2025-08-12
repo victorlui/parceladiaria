@@ -46,7 +46,7 @@ export default function LayoutRegister({
         >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="always"
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
           >

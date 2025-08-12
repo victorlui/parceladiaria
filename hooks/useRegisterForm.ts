@@ -1,5 +1,6 @@
 import { addressSchema, AddressSchema } from "@/lib/address_validation";
 import { emailSchema, EmailSchema } from "@/lib/email_validation";
+import { passwordLoginSchema, PasswordLoginSchema } from "@/lib/password_validation";
 import { passwordsSchema, PasswordsSchema } from "@/lib/passwords._validation";
 import { phoneSchema, PhoneSchema } from "@/lib/phone_validation";
 import { plateSchema, PlateSchema } from "@/lib/plate_veiicle";
@@ -17,6 +18,14 @@ export const usePhoneForm = () => {
 export const usePasswordsForm = () => {
   return useForm<PasswordsSchema>({
     resolver: zodResolver(passwordsSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  });
+};
+
+export const usePasswordsLoginForm = () => {
+  return useForm<PasswordLoginSchema>({
+    resolver: zodResolver(passwordLoginSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
   });

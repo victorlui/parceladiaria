@@ -1,23 +1,26 @@
 import Spinner from "@/components/Spinner";
+import { useAlerts } from "@/components/useAlert";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
-import { useEvent } from "expo";
 import { StatusBar } from "expo-status-bar";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function VideoScreen() {
-  const insets = useSafeAreaInsets();
-  const { isPending } = useLoginMutation();
-  const { mutate: registerMutate } = useUpdateUserMutation();
-
   useDisableBackHandler();
-  const [progress, setProgress] = useState(0); // 0 a 1
+  const insets = useSafeAreaInsets();
+  const { showSuccess, AlertDisplay } = useAlerts();
+  const { password, cpf } = useRegisterAuthStore();
+  const { isPending, mutate } = useLoginMutation();
+
+  const { mutate: registerMutate, isSuccess } = useUpdateUserMutation();
+  const [progress, setProgress] = useState(0);
+
   const videoPlayer = useVideoPlayer(
     require("../../assets/videos/cadastro-em-analise.mp4") ?? "",
     (player) => {
@@ -30,8 +33,19 @@ export default function VideoScreen() {
   const videoRef = useRef<VideoView>(null);
 
   useEffect(() => {
+    if (isSuccess) {
+      videoPlayer.pause();
+      showSuccess("", "Cadastro realizado com sucesso!", () => {
+        mutate({
+          cpf: cpf || "",
+          password: password || "",
+        });
+      });
+    }
+  }, [isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     const subscription = videoPlayer.addListener("playToEnd", () => {
-      console.log("video acabou");
       onContinue();
     });
     return () => {
@@ -65,14 +79,15 @@ export default function VideoScreen() {
         etapa: Etapas.FINALIZADO,
       },
     });
-    // mutate({
-    //   cpf: cpf!,
-    //   password: password!,
-    // });
   }, [registerMutate]);
+
+  if (isPending) {
+    return <Spinner />;
+  }
 
   return (
     <View>
+      <AlertDisplay />
       {isPending && <Spinner />}
       <StatusBar style="light" />
 

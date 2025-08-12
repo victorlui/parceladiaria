@@ -37,6 +37,7 @@ export async function requestPermissions () {
     APROVADO = 'aprovado',
     REANALISE = 'reanalise',
     PRE_APROVADO = 'pre-aprovado',
+    ANALISE = 'analise',
   }
 
 export enum Etapas {

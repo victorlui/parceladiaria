@@ -10,6 +10,7 @@ import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useState } from "react";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
+import { renderFile } from "@/components/RenderFile";
 
 export default function StoreInteriorPhotoScreen() {
   useDisableBackHandler();
@@ -28,7 +29,7 @@ export default function StoreInteriorPhotoScreen() {
     if (selected) setFile(selected);
   };
 
-  const handleGallery= async () => {
+  const handleGallery = async () => {
     const selected = await takePhoto("library");
     if (selected) setFile(selected);
   };
@@ -69,7 +70,7 @@ export default function StoreInteriorPhotoScreen() {
       onContinue={onSubmit}
       isLogo={false}
     >
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<DocumentIcon />}
           color={Colors.primaryColor}
@@ -80,46 +81,28 @@ export default function StoreInteriorPhotoScreen() {
             Foto do interior do comércio
           </Text>
           <Text className="text-base text-center">
-            Para validação do seu estabelecimento, é necessário registrar uma imagem que demonstre a estrutura interna, incluindo área de estoque, disposição dos produtos e equipamentos utilizados.
+            Para validação do seu estabelecimento, é necessário registrar uma
+            imagem que demonstre a estrutura interna, incluindo área de estoque,
+            disposição dos produtos e equipamentos utilizados.
           </Text>
         </View>
 
-        <View className="flex-1">
-          {file && (
-            <>
-              {file.type === "image" ? (
-                <View className="w-full flex-1   mb-3">
-                  <Image
-                    source={{ uri: file.uri }}
-                    className="w-full h-full"
-                    resizeMode="contain"
-                  />
-                </View>
-              ) : (
-                <View>
-                  <Text className="text-base mt-10">Documento: </Text>
-                  <Text className="text-xl font-semibold mb-10">
-                    {file.name}{" "}
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </View>
+      {renderFile(file)}
+
 
         <View className="flex-2  justify-end gap-3 mb-5">
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={handleSelectPDF}
             className="bg-gray-200 p-4 rounded-lg items-center justify-center"
           >
             <Text className="text-base">Selecionar documento PDF</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </TouchableOpacity> */}
+          {/* <TouchableOpacity
             onPress={handleGallery}
             className="bg-gray-200 p-4 rounded-lg items-center justify-center"
           >
             <Text className="text-base">Selecionar da galeria</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <Button
             title="Tirar foto"
             variant="secondary"

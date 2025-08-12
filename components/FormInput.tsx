@@ -1,8 +1,7 @@
-import React, { forwardRef } from "react";
-import { Text, TextInput, View, ViewStyle } from "react-native";
+import React, { forwardRef, useRef } from "react";
+import { Text, TextInput, View, TouchableOpacity } from "react-native";
 import { Controller, Control } from "react-hook-form";
 import { MaskedTextInput } from "react-native-mask-text";
-import { Colors } from "@/constants/Colors";
 
 interface FormInputProps {
   name: string;
@@ -47,6 +46,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
     },
     ref
   ) => {
+    const inputRef = useRef<TextInput>(null);
     return (
       <Controller
         control={control}
@@ -56,39 +56,45 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
           field: { onChange, onBlur, value },
           fieldState: { error },
         }) => {
-         // Ajustamos os estilos para acomodar o ícone
-          const containerStyle = {
-            flexDirection: "row", // 👈 Alinha o ícone e o input na mesma linha
-            alignItems: "center", // 👈 Alinha verticalmente
-            borderWidth: 1,
-            borderColor: error ? "#ef4444" : Colors.borderColor,
-            borderRadius: 6,
-            height: 60,
-            paddingHorizontal: 8, // 👈 Ajuste o padding horizontal para o container
-          };
+          // Usando classes Tailwind para melhor compatibilidade no APK
+          const containerClasses = `flex-row items-center border rounded-md h-16 px-3 ${
+            error ? "border-red-500" : "border-gray-300"
+          }`;
 
-          const inputStyle = {
-            flex: 1, // 👈 Faz o input ocupar o espaço restante
-            fontSize: 16,
-            height: "100%", // 👈 Ocupa a altura do container
-            paddingLeft: 8, // 👈 Adiciona padding à esquerda do texto do input
-          };
+          const inputClasses = "flex-1 text-lg h-full px-3 text-gray-900";
 
-          const commonProps = {
-            onBlur,
-            value,
-            placeholder,
-            style: inputStyle,
-            ref,
-            returnKeyType,
-            onSubmitEditing,
+          const currentRef = ref || inputRef;
+
+          const handleContainerPress = () => {
+            const inputToFocus = (typeof ref === 'function' ? inputRef.current : ref?.current) || inputRef.current;
+            if (inputToFocus) {
+              inputToFocus.focus();
+            }
           };
 
           const renderInput = () => {
+            // Props específicos para MaskedTextInput (sem className)
+            const maskedProps = {
+              onBlur,
+              value,
+              placeholder,
+              ref: currentRef,
+              returnKeyType,
+              onSubmitEditing,
+              placeholderTextColor: "#9CA3AF",
+              style: { color: "#111827", flex: 1, fontSize: 18, paddingHorizontal: 12, height: "100%" },
+            };
+
+            // Props específicos para TextInput normal
+            const textInputProps = {
+              ...maskedProps,
+              className: inputClasses,
+            };
+
             if (maskType === "cpf") {
               return (
                 <MaskedTextInput
-                  {...commonProps}
+                  {...maskedProps}
                   mask="999.999.999-99"
                   keyboardType="numeric"
                   onChangeText={(text) => onChange(text.replace(/\D/g, ""))}
@@ -99,7 +105,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
             if (maskType === "currency") {
               return (
                 <MaskedTextInput
-                  {...commonProps}
+                  {...maskedProps}
                   type="currency"
                   keyboardType="numeric"
                   options={{
@@ -116,7 +122,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
             if (maskType === "phone") {
               return (
                 <MaskedTextInput
-                  {...commonProps}
+                  {...maskedProps}
                   mask="(99) 99999-9999"
                   keyboardType="phone-pad"
                   onChangeText={(text) => onChange(text.replace(/\D/g, ""))}
@@ -127,7 +133,7 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
             if (maskType === "custom" && maskOptions?.mask) {
               return (
                 <MaskedTextInput
-                  {...commonProps}
+                  {...maskedProps}
                   mask={maskOptions.mask}
                   keyboardType={keyboardType}
                   autoCapitalize={autoCapitalize}
@@ -139,12 +145,12 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
             if (maskType === "vehiclePlate") {
               return (
                 <MaskedTextInput
-                  {...commonProps}
+                  {...maskedProps}
                   keyboardType="default"
                   autoCapitalize="characters"
-                  maxLength={8} // 7 + hífen
+                  maxLength={8}
                   onChangeText={(text) => {
-                    let cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, ""); // Só letras e números
+                    let cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
                     let formatted = cleaned;
 
                     if (cleaned.length > 3) {
@@ -157,9 +163,10 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
               );
             }
 
+            // Para inputs normais, usar TextInput ao invés de MaskedTextInput
             return (
-              <MaskedTextInput
-                {...commonProps}
+              <TextInput
+                {...textInputProps}
                 keyboardType={keyboardType}
                 secureTextEntry={secureTextEntry}
                 autoCapitalize={autoCapitalize}
@@ -169,16 +176,25 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
           };
 
           return (
-             <View className="mb-3">
+            <View className="mb-3">
               {label && (
                 <Text className="mb-1 text-base text-gray-700">{label}</Text>
               )}
-              {/* O View com 'containerStyle' agora envolve o ícone e o input */}
-              <View style={containerStyle as ViewStyle}>
-                {/* 2. Renderizamos o ícone se ele existir */}
-                {icon && <View style={{ marginRight: 8 }}>{icon}</View>}
-                {renderInput()}
-              </View>
+              <TouchableOpacity 
+                onPress={handleContainerPress} 
+                activeOpacity={0.7}
+                accessible={true}
+                accessibilityRole="button"
+              >
+                <View className={containerClasses}>
+                  {icon && (
+                    <View className="mr-2" pointerEvents="none">
+                      {icon}
+                    </View>
+                  )}
+                  {renderInput()}
+                </View>
+              </TouchableOpacity>
               {error && (
                 <Text className="mt-1 text-sm text-red-500">
                   {error.message || "Campo obrigatório"}

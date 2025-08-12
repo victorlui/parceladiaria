@@ -21,7 +21,7 @@ export default function HasCompanyScreen() {
 
     mutate({
       request: {
-        etapa: Etapas.REGISTRANDO_CONTRATO_SOCIAL,
+        etapa:  hasCompany === "sim" ?  Etapas.REGISTRANDO_CONTRATO_SOCIAL : Etapas.REGISTRANDO_FRENTE_COMERCIO,
         mei: hasCompany === "sim" ? "1" : "0",
       },
     });
@@ -34,7 +34,7 @@ export default function HasCompanyScreen() {
       onContinue={onSubmit}
       loading={isPending}
     >
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<DocumentIcon />}
           color={Colors.primaryColor}

@@ -1,23 +1,36 @@
 import { Image, Keyboard, StyleSheet, Text, View } from "react-native";
-import { usePasswordsForm } from "@/hooks/useRegisterForm";
+import { usePasswordsLoginForm } from "@/hooks/useRegisterForm";
 import { FormInput } from "@/components/FormInput";
-import { PasswordsSchema } from "@/lib/passwords._validation";
 import { useRegisterAuthStore } from "@/store/register";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useAlerts } from "@/components/useAlert";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { useEffect } from "react";
+import { PasswordLoginSchema } from "@/lib/password_validation";
 
 export default function InsertPassword() {
-  const { AlertDisplay } = useAlerts();
-  const { control, handleSubmit } = usePasswordsForm();
-  const { cpf, setPassword } = useRegisterAuthStore();
-  const { mutate, isPending } = useLoginMutation();
+  const { AlertDisplay,showError,showWarning } = useAlerts();
+  const { control, handleSubmit } = usePasswordsLoginForm();
 
-  const onSubmit = (data: PasswordsSchema) => {
+  const { cpf, setPassword } = useRegisterAuthStore();
+  const { mutate, isPending,isError } = useLoginMutation();
+
+  useEffect(() => {
+    if (isError) {
+      showError("Acesso negado","");
+    }
+  }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+
+  const onSubmit = (data: PasswordLoginSchema) => {
+    if (!data.password) {
+      showWarning("Atenção","Por favor, insira sua senha.");
+      return;
+    }
     Keyboard.dismiss();
     setPassword(data.password || "");
-
     mutate({ cpf: cpf ?? "", password: data.password! });
   };
 

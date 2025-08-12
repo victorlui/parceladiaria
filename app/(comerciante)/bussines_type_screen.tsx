@@ -45,7 +45,7 @@ export default function BussinesTypeScreen() {
       onContinue={onSubmit}
       loading={isPending}
     >
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<HouseIcon />}
           color={Colors.primaryColor}

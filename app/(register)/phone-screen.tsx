@@ -25,10 +25,11 @@ export default function PhoneScreen() {
   const { control, handleSubmit, getValues } = usePhoneForm();
   const { mutate, isPending, data } = useRegisterMutation();
   const { setPhone } = useRegisterAuthStore();
-  const { AlertDisplay, showWarning, showSuccess, showError } = useAlerts();
+  const { AlertDisplay, showWarning, showSuccess, showError,hideAlert } = useAlerts();
   const mutation = useCheckOTPMutation();
   const [sendCode, setSendCode] = useState(false);
   const [code, setCode] = useState("");
+  const [hasShownSuccess, setHasShownSuccess] = useState(false);
 
   const number = getValues("phone");
 
@@ -39,12 +40,16 @@ export default function PhoneScreen() {
   }, [mutation.isError, mutation.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (mutation.isSuccess) {
-      showSuccess("Sucesso", "Código verificado com sucesso", () =>
+    if (mutation.isSuccess ) {
+     
+      showSuccess("Sucesso", "Código verificado com sucesso", () =>{
+        hideAlert()
         router.push("/(register)/create-password")
+      }
+        
       );
     }
-  }, [mutation.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mutation.isSuccess, hasShownSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = (data: PhoneSchema) => {
     if (data.phone.length !== 11) {
@@ -75,6 +80,7 @@ export default function PhoneScreen() {
   const handleSendCode = (code: string) => {
     Keyboard.dismiss();
     setPhone(number);
+   hideAlert()
     mutation.mutate({
       phone: number ?? "",
       code,
@@ -129,7 +135,10 @@ export default function PhoneScreen() {
                       ""}
                   </Text>
                 </Text>
-                <TouchableOpacity onPress={() => setSendCode(false)}>
+                <TouchableOpacity onPress={() => {
+                  setSendCode(false);
+                  setHasShownSuccess(false);
+                }}>
                   <Text className="text-blue-600 text-xl font-medium  underline">
                     Mudar o número
                   </Text>

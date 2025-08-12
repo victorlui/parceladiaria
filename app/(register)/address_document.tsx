@@ -1,10 +1,10 @@
 import { Button } from "@/components/Button";
 import LayoutRegister from "@/components/ui/LayoutRegister";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import CircleIcon from "@/components/ui/CircleIcon";
 import DocumentIcon from "../../assets/icons/document.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
+
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
@@ -12,26 +12,30 @@ import { Etapas } from "@/utils";
 import { Colors } from "@/constants/Colors";
 import { useAlerts } from "@/components/useAlert";
 import { Feather } from "@expo/vector-icons";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
 export default function AddressDocument() {
+  // Hook no topo (como o React exige)
   useDisableBackHandler();
+
   const { showWarning, AlertDisplay } = useAlerts();
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
+
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPDF = async () => {
+  const handleSelectPDF = useCallback(async () => {
     const selected = await selectPDF();
     if (selected) setFile(selected);
-  };
+  }, [selectPDF]);
 
-  const handleTakePhoto = async () => {
+  const handleTakePhoto = useCallback(async () => {
     const selected = await takePhoto("camera");
     if (selected) setFile(selected);
-  };
+  }, [takePhoto]);
 
-  const onSubmit = async () => {
+  const onSubmit = useCallback(async () => {
     if (!file) {
       showWarning("Atenção", "Por favor, selecione uma foto ou documento.");
       return;
@@ -39,9 +43,7 @@ export default function AddressDocument() {
 
     try {
       setIsLoading(true);
-      const finalUrl = await uploadFileToS3({
-        file: file,
-      });
+      const finalUrl = await uploadFileToS3({ file });
 
       if (!finalUrl) return;
 
@@ -56,9 +58,9 @@ export default function AddressDocument() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [file, mutate, showWarning]);
 
-  const renderFile = () => {
+  const renderFile = useCallback(() => {
     if (!file) {
       return (
         <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
@@ -67,7 +69,7 @@ export default function AddressDocument() {
       );
     }
 
-    if (file.type === 'pdf') {
+    if (file.type === "pdf") {
       return (
         <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1 p-4">
           <Feather name="file-text" size={30} color="#9CA3AF" />
@@ -78,14 +80,14 @@ export default function AddressDocument() {
 
     return (
       <View className="mb-4 rounded-lg overflow-hidden">
-        <Image 
+        <Image
           source={{ uri: file.uri }}
-          className="w-full h-48"
+          className="w-full h-40"
           resizeMode="contain"
         />
       </View>
     );
-  };
+  }, [file]);
 
   return (
     <>

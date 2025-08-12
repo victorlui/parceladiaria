@@ -32,7 +32,6 @@ export function useRegisterMutation() {
 }
 
 export function useCheckOTPMutation() {
-  
   return useMutation({
     mutationFn: ({ phone, code }: { phone: string; code: string }) =>
       checkOTP(phone, code),
@@ -40,8 +39,7 @@ export function useCheckOTPMutation() {
       return data;
     },
     onError: (error: any) => {
-      
-      throw new Error(error.message || "Erro ao verificar código")
+      throw new Error(error.message || "Erro ao verificar código");
     },
   });
 }
@@ -73,10 +71,34 @@ export function useRegisterDataMutation() {
   });
 }
 
-export function useUpdateUserMutation() {
-  const loginMutation = useLoginMutation();
-  const {cpf, password} = useRegisterAuthStore()
+export function useLoginDataMutation() {
+  return useMutation({
+    mutationFn: ({
+      cpf,
+      phone,
+      password,
+    }: {
+      cpf: string;
+      phone: string;
+      password: string;
+    }) => registerService(cpf, phone, password),
 
+    onSuccess: (data) => {
+      const authStore = useAuthStore.getState();
+      const { login } = authStore;
+      if (data?.success) {
+        //login(data.data.token, null);
+        //router.push("/(register)/birthday_screen");
+      }
+      return data;
+    },
+    onError: (error: any) => {
+      alert(error.message || "Erro ao verificar código");
+    },
+  });
+}
+
+export function useUpdateUserMutation() {
   return useMutation({
     mutationFn: (request: any) => {
       return updateUserService({ request: request.request });
@@ -89,22 +111,9 @@ export function useUpdateUserMutation() {
       const registerStore = useRegisterAuthStore.getState();
       const { setEtapa } = registerStore;
       setEtapa(data.etapa);
-      console.log(data);
 
       if (data.etapa === Etapas.FINALIZADO) {
-        Alert.alert("Sucesso", "Seu cadastro foi finalizado com sucesso. Redirecionando para a home!", [
-          {
-            text: "OK",
-            onPress: () => {
-              loginMutation.mutate({
-                cpf: cpf || "",
-                password: password || "",
-              });
-             
-            },
-            style: "default",
-          },
-        ]);
+         return data;
       } else {
         const rota = getRouteByEtapa(data.etapa as Etapas);
         if (rota) {
@@ -119,4 +128,3 @@ export function useUpdateUserMutation() {
     },
   });
 }
-

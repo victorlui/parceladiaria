@@ -10,6 +10,7 @@ import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useState } from "react";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
+import { renderFile } from "@/components/RenderFile";
 
 export default function ContractSocialScreen() {
   useDisableBackHandler();
@@ -51,7 +52,7 @@ export default function ContractSocialScreen() {
       mutate({
         request: {
           etapa: Etapas.REGISTRANDO_FRENTE_COMERCIO,
-          contrato_social: finalUrl,
+          mei: finalUrl,
         },
       });
     } catch (error) {
@@ -64,7 +65,7 @@ export default function ContractSocialScreen() {
 
   return (
     <LayoutRegister loading={isLoading} isBack onContinue={onSubmit} isLogo={false}>
-      <View className="flex-1">
+      <View className="flex-1 px-6">
         <CircleIcon
           icon={<DocumentIcon />}
           color={Colors.primaryColor}
@@ -83,24 +84,8 @@ export default function ContractSocialScreen() {
           </Text>
         </View>
 
-        <View className="flex-1">
-          {file && (
-            <>
-              {file.type === "image" ? (
-                <View className="w-full flex-1   mb-3">
-                  <Image source={{ uri: file.uri }} className="w-full h-full" resizeMode="contain" />
-                </View>
-              ) : (
-                <View>
-                  <Text className="text-base mt-10">Documento: </Text>
-                  <Text className="text-xl font-semibold mb-10">
-                    {file.name}{" "}
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </View>
+      {renderFile(file)}
+
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity

@@ -1,4 +1,7 @@
+import { Button } from "@/components/Button";
 import { useAuthStore } from "@/store/auth";
+import { StatusCadastro } from "@/utils";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, View, Text, Dimensions, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,8 +12,9 @@ import DrawerMenu from "@/components/DrawerMenu";
 const { width, height } = Dimensions.get('window');
 const isTablet = width > 768;
 
-export default function ReanaliseScreen() {
+const HomeScreen: React.FC = () => {
   const { user } = useAuthStore();
+  const router = useRouter();
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
   const handleMenuPress = () => {
@@ -20,6 +24,8 @@ export default function ReanaliseScreen() {
   const handleCloseDrawer = () => {
     setIsDrawerVisible(false);
   };
+
+  const isAnalysis = user?.status === StatusCadastro.ANALISE;
 
   return (
     <SafeAreaView 
@@ -53,17 +59,19 @@ export default function ReanaliseScreen() {
         <View className="flex-1 justify-center items-center px-4">
           
           {/* Ilustração */}
-          <View className="mb-8">
-            <DocumentAnalisy height={isTablet ? 320 : 280} />
-          </View>
+         
 
           {/* Card com informações */}
           <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">
             <View className="items-center">
               {/* Ícone de status */}
-              <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-orange-100">
-                <Text className="text-2xl text-orange-600">
-                  🔄
+              <View className={`w-16 h-16 rounded-full items-center justify-center mb-4 ${
+                isAnalysis ? 'bg-yellow-100' : 'bg-green-100'
+              }`}>
+                <Text className={`text-2xl ${
+                  isAnalysis ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {isAnalysis ? '⏳' : '✅'}
                 </Text>
               </View>
 
@@ -71,20 +79,27 @@ export default function ReanaliseScreen() {
               <Text className={`font-bold text-center mb-3 ${
                 isTablet ? 'text-3xl' : 'text-2xl'
               } text-gray-800 leading-tight`}>
-                Cadastro em Reanálise
+                {isAnalysis ? "Cadastro em Análise" : "Cadastro Aprovado"}
               </Text>
 
               {/* Subtítulo */}
               <Text className={`text-center text-gray-600 leading-relaxed ${
                 isTablet ? 'text-lg' : 'text-base'
               }`}>
-                Seu cadastro está em processo de reanálise. Em breve, nossa equipe entrará em contato.
+                {isAnalysis 
+                  ? "Estamos analisando seus dados. Você receberá uma notificação assim que o processo for concluído."
+                  : "Parabéns! Seu cadastro foi aprovado com sucesso. Agora você pode aproveitar todos os nossos serviços."
+                }
               </Text>
 
               {/* Badge de status */}
-              <View className="mt-4 px-4 py-2 rounded-full bg-orange-100">
-                <Text className="font-semibold text-sm text-orange-800">
-                  EM REANÁLISE
+              <View className={`mt-4 px-4 py-2 rounded-full ${
+                isAnalysis ? 'bg-yellow-100' : 'bg-green-100'
+              }`}>
+                <Text className={`font-semibold text-sm ${
+                  isAnalysis ? 'text-yellow-800' : 'text-green-800'
+                }`}>
+                  {isAnalysis ? 'EM ANÁLISE' : 'APROVADO'}
                 </Text>
               </View>
             </View>
@@ -96,9 +111,10 @@ export default function ReanaliseScreen() {
       {/* DrawerMenu */}
       <DrawerMenu 
         isVisible={isDrawerVisible} 
-        onClose={handleCloseDrawer}
-        showOnlyLogout={true}
+        onClose={handleCloseDrawer} 
       />
     </SafeAreaView>
   );
-}
+};
+
+export default HomeScreen;
