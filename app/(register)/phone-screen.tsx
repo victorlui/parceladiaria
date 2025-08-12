@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Keyboard,
   Text,
   TouchableOpacity,
   View,
-  Alert,
   Image,
 } from "react-native";
 import AppleOTPInput from "@/components/AppleOTP";
@@ -30,6 +29,9 @@ export default function PhoneScreen() {
   const [sendCode, setSendCode] = useState(false);
   const [code, setCode] = useState("");
   const [hasShownSuccess, setHasShownSuccess] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const number = getValues("phone");
 
@@ -40,16 +42,40 @@ export default function PhoneScreen() {
   }, [mutation.isError, mutation.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (mutation.isSuccess ) {
-     
-      showSuccess("Sucesso", "Código verificado com sucesso", () =>{
-        hideAlert()
-        router.push("/(register)/create-password")
-      }
-        
-      );
+    if (mutation.isSuccess && !hasShownSuccess) {
+      setHasShownSuccess(true);
+      showSuccess("Sucesso", "Código verificado com sucesso", () => {
+        hideAlert();
+        router.push("/(register)/create-password");
+      });
     }
   }, [mutation.isSuccess, hasShownSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Timer effect for resend button
+  useEffect(() => {
+    if (resendTimer > 0) {
+      timerRef.current = setTimeout(() => {
+        setResendTimer(resendTimer - 1);
+      }, 1000);
+    } else if (resendTimer === 0 && !canResend) {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [resendTimer, canResend]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const onSubmit = (data: PhoneSchema) => {
     if (data.phone.length !== 11) {
@@ -73,14 +99,32 @@ export default function PhoneScreen() {
   };
 
   const handleSubmitagain = () => {
-    mutate({ phone: data?.data.phone ?? "", method: "whatsapp" });
-    showSuccess("Código enviado", "Novo código foi enviado");
+    if (!canResend) return;
+    
+    const phoneNumber = data?.data?.phone ?? number ?? "";
+    if (!phoneNumber) {
+      showError("Erro", "Número de telefone não encontrado");
+      return;
+    }
+
+    mutate({ phone: phoneNumber, method: "whatsapp" });
+    showSuccess("Código enviado", "Novo código foi enviado via WhatsApp");
+    
+    // Start 15 second timer
+    setCanResend(false);
+    setResendTimer(15);
   };
 
   const handleSendCode = (code: string) => {
+    if (!code || code.length !== 6) {
+      showWarning("Atenção", "Insira um código válido de 6 dígitos");
+      return;
+    }
+
     Keyboard.dismiss();
     setPhone(number);
-   hideAlert()
+    hideAlert();
+    
     mutation.mutate({
       phone: number ?? "",
       code,
@@ -138,6 +182,11 @@ export default function PhoneScreen() {
                 <TouchableOpacity onPress={() => {
                   setSendCode(false);
                   setHasShownSuccess(false);
+                  setCanResend(true);
+                  setResendTimer(0);
+                  if (timerRef.current) {
+                    clearTimeout(timerRef.current);
+                  }
                 }}>
                   <Text className="text-blue-600 text-xl font-medium  underline">
                     Mudar o número
@@ -172,11 +221,19 @@ export default function PhoneScreen() {
 
             {sendCode && (
               <TouchableOpacity
-                className="mb-6 w-full justify-end items-end"
+                className={`mb-6 w-full justify-end items-end ${
+                  !canResend ? 'opacity-50' : ''
+                }`}
                 onPress={handleSubmitagain}
+                disabled={!canResend}
               >
-                <Text className="text-end text-blue-600 text-md font-semibold">
-                  Receber código via whatsApp
+                <Text className={`text-end text-md font-semibold ${
+                  canResend ? 'text-blue-600' : 'text-gray-400'
+                }`}>
+                  {canResend 
+                    ? 'Receber código via WhatsApp'
+                    : `Aguarde ${resendTimer}s para reenviar`
+                  }
                 </Text>
               </TouchableOpacity>
             )}

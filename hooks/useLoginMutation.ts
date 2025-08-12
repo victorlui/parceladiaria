@@ -54,7 +54,7 @@ export const useLoginMutation = () => {
         } else {
           const rota = getRouteByEtapa(etapa as Etapas);
           if (rota) {
-            router.push(rota as any);
+            router.replace(rota as any);
           }
         }
       }

@@ -42,6 +42,7 @@ export async function requestPermissions () {
 
 export enum Etapas {
   INICIO = 'Inicio',
+  INICIO_BIRTH = 'inicio',
   REGISTRANDO_COMPROVANTE_ENDERECO = 'registrando_comprovante_endereco',
   REGISTRANDO_PROFISSAO = 'registrando_profissao',
   REGISTRANDO_EMAIL = 'registrando_email',
@@ -72,6 +73,7 @@ export enum Etapas {
 
 const routeMap: Record<Etapas, string> = {
   [Etapas.INICIO]: "/(register)/birthday_screen",
+  [Etapas.INICIO_BIRTH]: "/(register)/birthday_screen",
   [Etapas.REGISTRANDO_COMPROVANTE_ENDERECO]: "/(register)/address_document",
   [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/profile_selection",
   [Etapas.REGISTRANDO_EMAIL]: "/(register)/email_screen",

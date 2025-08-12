@@ -52,10 +52,6 @@ export default function ReanaliseScreen() {
         {/* Conteúdo central */}
         <View className="flex-1 justify-center items-center px-4">
           
-          {/* Ilustração */}
-          <View className="mb-8">
-            <DocumentAnalisy height={isTablet ? 320 : 280} />
-          </View>
 
           {/* Card com informações */}
           <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">

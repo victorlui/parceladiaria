@@ -112,6 +112,7 @@ const HomeScreen: React.FC = () => {
       <DrawerMenu 
         isVisible={isDrawerVisible} 
         onClose={handleCloseDrawer} 
+        showOnlyLogout
       />
     </SafeAreaView>
   );
