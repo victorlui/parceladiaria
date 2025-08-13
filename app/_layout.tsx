@@ -29,58 +29,7 @@ export default function RootLayout() {
     restore();
   }, [restoreToken]);
 
-  // Redirecionar conforme status do usuário
-  useEffect(() => {
-    if (loading) return; // Evita rodar antes do restoreToken terminar
-    
-    console.log('token layout', token, user);
-
-    if (!token && !user) {
-      router.replace("/login");
-      return;
-    }
-
-    // Se tiver token e user com type 'client', verificar status do cadastro
-    if (user?.type === 'client') {
-      // Verificar se user.status existe antes de fazer o switch
-      if (!user.status) {
-        router.replace("/(app)/home");
-        return;
-      }
-
-      // Redirecionar baseado no status do cadastro para clients
-      switch (user.status) {
-        case StatusCadastro.ANALISE:
-          router.replace("/analise_screen");
-          break;
-        case StatusCadastro.RECUSADO:
-          router.replace("/recusado_screen");
-          break;
-        case StatusCadastro.DIVERGENTE:
-          router.replace("/divergencia_screen");
-          break;
-        case StatusCadastro.REANALISE:
-          router.replace("/reanalise_screen");
-          break;
-        case StatusCadastro.PRE_APROVADO:
-          router.replace("/pre_aprovado_screen");
-          break;
-        case StatusCadastro.APROVADO:
-          router.replace("/(app)/home");
-          break;
-        default:
-          router.replace("/login");
-          break;
-      }
-      return;
-    }
-
-    // Se tiver token e user com type 'lead', verificar status do cadastro
-  
-
-    // Se tiver token e user (sem type específico ou outro type), deixar passar
-    // Não faz verificação de status, apenas permite acesso
-  }, [loading, token, user, router]);
+  // A lógica de redirecionamento agora está no index.tsx
 
   if (loading) {
     return (
@@ -94,6 +43,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="insert-password" options={{ headerShown: false }} />
         <Stack.Screen name="(register)" options={{ headerShown: false }} />

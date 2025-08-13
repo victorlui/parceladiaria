@@ -7,6 +7,9 @@ import {
   ScrollView,
   Text,
   View,
+  Image,
+  Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { Button } from "@/components/Button";
 import { router } from "expo-router";
@@ -19,6 +22,12 @@ import {
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
 import { updateUserService } from "@/services/register";
+import { Ionicons } from '@expo/vector-icons';
+import DrawerMenu from "@/components/DrawerMenu";
+import { Colors } from "@/constants/Colors";
+
+const { width, height } = Dimensions.get('window');
+const isTablet = width > 768;
 
 export default function PreAprovadoScreen() {
   const { logout } = useAuthStore();
@@ -32,10 +41,20 @@ export default function PreAprovadoScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
 
   const handleLogout = () => {
     logout();
     router.replace("/login");
+  };
+
+  const handleMenuPress = () => {
+    setIsDrawerVisible(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerVisible(false);
   };
 
   const allTermsAccepted = Object.values(termsAccepted).every((value) => value);
@@ -136,163 +155,323 @@ export default function PreAprovadoScreen() {
   ];
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-white">
-      {/* Conteúdo com rolagem */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          padding: 20,
-          paddingBottom: 150, // espaço extra para não colar nos botões fixos
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="mb-8">
-          <Text className="text-3xl font-bold mb-1 text-center">
-            Você foi pré-aprovado!
-          </Text>
-          <Text className="text-lg text-center">
-            Para prosseguir, aceite os termos abaixo:
-          </Text>
+    <SafeAreaView 
+      edges={['top', 'bottom']} 
+      className="flex-1 bg-gradient-to-b from-green-50 to-white"
+    >
+      {/* Container principal com padding responsivo */}
+      <View className={`flex-1 ${isTablet ? 'px-12 py-8' : 'px-6 py-4'}`}>
+        
+        {/* Header com logo e menu */}
+        <View className="flex-row items-center justify-between mb-8">
+          <TouchableOpacity 
+            onPress={handleMenuPress}
+            className="p-2"
+          >
+            <Ionicons name="menu" size={28} color="#374151" />
+          </TouchableOpacity>
+          
+          <View className="flex-1 items-center">
+            <Image 
+              source={require("@/assets/images/apenas-logo.png")} 
+              className={`w-full ${isTablet ? 'h-32' : 'h-24'}`}
+              resizeMode="contain" 
+            />
+          </View>
+          
+          <View className="w-12" />
         </View>
 
-        <View>
-          <Text className="text-2xl font-bold mb-6">Termos e Condições</Text>
-
-          <View className="gap-6">
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                1. Termos de Uso
-              </Text>
-              <Text className="text-gray-700">
-                Os Termos de Uso definem as condições para utilizar os serviços
-                do banco, incluindo a conta digital e produtos financeiros.
+        {/* Card principal com informações de pré-aprovação */}
+        <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-6 border border-gray-100">
+          <View className="items-center">
+            {/* Ícone de status */}
+            <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-green-100">
+              <Text className="text-2xl text-green-600">
+                ✅
               </Text>
             </View>
 
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                2. Política de Privacidade
-              </Text>
-              <Text className="text-gray-700">
-                Detalha a coleta, armazenamento e uso dos dados pessoais dos
-                clientes, garantindo segurança e transparência.
-              </Text>
-            </View>
+            {/* Título principal */}
+            <Text className={`font-bold text-center mb-3 ${
+              isTablet ? 'text-3xl' : 'text-2xl'
+            } text-gray-800 leading-tight`}>
+              Você foi pré-aprovado!
+            </Text>
 
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                3. Contrato de Empréstimo (CCB)
-              </Text>
-              <Text className="text-gray-700">
-                Registra os detalhes do empréstimo concedido, incluindo prazos,
-                taxas e obrigações do cliente.
-              </Text>
-            </View>
+            {/* Subtítulo */}
+            <Text className={`text-center text-gray-600 leading-relaxed ${
+              isTablet ? 'text-lg' : 'text-base'
+            }`}>
+              Para prosseguir, aceite os termos abaixo:
+            </Text>
 
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                4. Termos de Adesão à Conta Digital
-              </Text>
-              <Text className="text-gray-700">
-                Regulamenta a criação e uso da conta digital, com regras sobre
-                movimentações e tarifas aplicáveis.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                5. Política de Pagamentos e Reembolsos
-              </Text>
-              <Text className="text-gray-700">
-                Define os métodos aceitos para pagamentos, prazos de compensação
-                e regras para reembolsos.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                6. Termos de Segurança e Autenticação
-              </Text>
-              <Text className="text-gray-700">
-                Explica medidas de proteção contra fraudes, como autenticação em
-                duas etapas e monitoramento de atividades suspeitas.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                7. Política de Combate à Fraude
-              </Text>
-              <Text className="text-gray-700">
-                Estabelece diretrizes para a prevenção de fraudes e lavagem de
-                dinheiro, conforme normas regulatórias.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                8. Política de Atendimento ao Cliente
-              </Text>
-              <Text className="text-gray-700">
-                Define canais de suporte, tempo médio de resposta e regras para
-                reclamações e contestações.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                9. Termos de Encerramento de Conta
-              </Text>
-              <Text className="text-gray-700">
-                Especifica os procedimentos para encerrar a conta, incluindo
-                quitação de débitos pendentes.
-              </Text>
-            </View>
-
-            <View>
-              <Text className="text-lg font-semibold mb-2">
-                10. Política de Atualização de Termos
-              </Text>
-              <Text className="text-gray-700">
-                Explica que os termos podem ser alterados e como os clientes
-                serão informados sobre as mudanças.
+            {/* Badge de status */}
+            <View className="mt-4 px-4 py-2 rounded-full bg-green-100">
+              <Text className="font-semibold text-sm text-green-800">
+                PRÉ-APROVADO
               </Text>
             </View>
           </View>
         </View>
 
-        <View className="gap-4 my-8">
-          {termsData.map((term) => (
-            <TermsCheckbox
-              key={term.id}
-              checked={termsAccepted[term.id as keyof typeof termsAccepted]}
-              onPress={() =>
-                handleToggleTerm(term.id as keyof typeof termsAccepted)
-              }
-              label={term.label}
-              onOpenLink={(type) => {
-                setModalType(type);
-                setModalVisible(true);
-              }}
-            />
-          ))}
+        {/* Conteúdo central simplificado */}
+        <View className="flex-1 justify-center items-center px-4">
+          
+          {/* Informações adicionais */}
+          <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">
+            <View className="items-center">
+              <Text className={`text-center text-gray-600 leading-relaxed ${
+                isTablet ? 'text-lg' : 'text-base'
+              } mb-6`}>
+                Parabéns! Seu cadastro foi pré-aprovado. Para finalizar o processo, você precisa aceitar nossos termos e condições.
+              </Text>
+              
+              <Text className={`text-center text-gray-500 ${
+                isTablet ? 'text-base' : 'text-sm'
+              }`}>
+                Clique no botão abaixo para revisar e aceitar os termos.
+              </Text>
+            </View>
+          </View>
+          
         </View>
-      </ScrollView>
 
-      {/* Botões fixos */}
-      <View
-        className="absolute  left-0 right-0 bg-white p-5 border-t border-gray-200"
-        style={{ bottom: useSafeAreaInsets().bottom }}
-      >
-        <Button
-          title="Aceitar"
-          onPress={handleContinue}
-          disabled={!allTermsAccepted}
-        />
-        <View style={{ height: 8 }} />
-        <Button title="Sair" onPress={handleLogout} variant="outline" />
+        {/* Botões refatorados */}
+        <View className="px-6 pb-6 pt-4">
+          <View className="gap-3">
+            {/* Botão principal - Aceitar Termos */}
+            <TouchableOpacity
+              onPress={() => setTermsModalVisible(true)}
+              className=" rounded-xl py-4 px-6 "
+              style={{backgroundColor:Colors.primaryColor}}
+            >
+              <View className="flex-row items-center justify-center gap-3">
+                <Ionicons name="document-text" size={20} color="white" />
+                <Text className="text-white font-semibold text-base">
+                  Revisar e Aceitar Termos
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Botão secundário - Sair */}
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
+            >
+              <View className="flex-row items-center justify-center gap-3">
+                <Ionicons name="log-out-outline" size={20} color="#6b7280" />
+                <Text className="text-gray-600 font-semibold text-base">
+                  Sair
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
       </View>
+      
+      {/* DrawerMenu */}
+      <DrawerMenu 
+        isVisible={isDrawerVisible} 
+        onClose={handleCloseDrawer}
+        showOnlyLogout={true}
+      />
 
+      {/* Modal dos Termos e Condições */}
+      <Modal visible={termsModalVisible} animationType="slide">
+        <SafeAreaView className="flex-1 bg-white">
+          <View className="flex-1">
+            {/* Header do Modal */}
+            <View className="flex-row items-center justify-between p-5 border-b border-gray-200">
+              <Text className="text-xl font-bold">Termos e Condições</Text>
+              <TouchableOpacity onPress={() => setTermsModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#374151" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Conteúdo do Modal */}
+            <ScrollView 
+              className="flex-1 p-5"
+              contentContainerStyle={{ paddingBottom: 150 }}
+            >
+              {/* Seções dos Termos */}
+              <View className="gap-6 mb-8">
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    1. Termos de Uso
+                  </Text>
+                  <Text className="text-gray-700">
+                    Os Termos de Uso definem as condições para utilizar os serviços
+                    do banco, incluindo a conta digital e produtos financeiros.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    2. Política de Privacidade
+                  </Text>
+                  <Text className="text-gray-700">
+                    Detalha a coleta, armazenamento e uso dos dados pessoais dos
+                    clientes, garantindo segurança e transparência.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    3. Contrato de Empréstimo (CCB)
+                  </Text>
+                  <Text className="text-gray-700">
+                    Registra os detalhes do empréstimo concedido, incluindo prazos,
+                    taxas e obrigações do cliente.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    4. Termos de Adesão à Conta Digital
+                  </Text>
+                  <Text className="text-gray-700">
+                    Regulamenta a criação e uso da conta digital, com regras sobre
+                    movimentações e tarifas aplicáveis.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    5. Política de Pagamentos e Reembolsos
+                  </Text>
+                  <Text className="text-gray-700">
+                    Define os métodos aceitos para pagamentos, prazos de compensação
+                    e regras para reembolsos.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    6. Termos de Segurança e Autenticação
+                  </Text>
+                  <Text className="text-gray-700">
+                    Explica medidas de proteção contra fraudes, como autenticação em
+                    duas etapas e monitoramento de atividades suspeitas.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    7. Política de Combate à Fraude
+                  </Text>
+                  <Text className="text-gray-700">
+                    Estabelece diretrizes para a prevenção de fraudes e lavagem de
+                    dinheiro, conforme normas regulatórias.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    8. Política de Atendimento ao Cliente
+                  </Text>
+                  <Text className="text-gray-700">
+                    Define canais de suporte, tempo médio de resposta e regras para
+                    reclamações e contestações.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    9. Termos de Encerramento de Conta
+                  </Text>
+                  <Text className="text-gray-700">
+                    Especifica os procedimentos para encerrar a conta, incluindo
+                    quitação de débitos pendentes.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text className="text-lg font-semibold mb-2">
+                    10. Política de Atualização de Termos
+                  </Text>
+                  <Text className="text-gray-700">
+                    Explica que os termos podem ser alterados e como os clientes
+                    serão informados sobre as mudanças.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Checkboxes dos Termos */}
+              <View className="gap-4 mb-8">
+                {termsData.map((term) => (
+                  <TermsCheckbox
+                    key={term.id}
+                    checked={termsAccepted[term.id as keyof typeof termsAccepted]}
+                    onPress={() =>
+                      handleToggleTerm(term.id as keyof typeof termsAccepted)
+                    }
+                    label={term.label}
+                    onOpenLink={(type) => {
+                      setModalType(type);
+                      setModalVisible(true);
+                    }}
+                  />
+                ))}
+              </View>
+            </ScrollView>
+
+            {/* Botões do Modal refatorados */}
+            <View className="p-5 border-t border-gray-200 bg-white">
+              <View className="gap-3">
+                {/* Botão Aceitar e Continuar */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (allTermsAccepted) {
+                      setTermsModalVisible(false);
+                      handleContinue();
+                    }
+                  }}
+                  disabled={!allTermsAccepted || isLoading}
+                  className={`rounded-xl py-4 px-6 ${
+                    allTermsAccepted && !isLoading
+                      ? `bg-[${Colors.primaryColor}] `
+                      : 'bg-gray-300'
+                  }`}
+                >
+                  <View className="flex-row items-center justify-center gap-3">
+                    {isLoading ? (
+                      <View className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Ionicons 
+                        name="checkmark-circle" 
+                        size={20} 
+                        color={allTermsAccepted ? "white" : "#9ca3af"} 
+                      />
+                    )}
+                    <Text className={`font-semibold text-base ${
+                      allTermsAccepted && !isLoading ? 'text-white' : 'text-gray-500'
+                    }`}>
+                      {isLoading ? 'Processando...' : 'Aceitar e Continuar'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Botão Cancelar */}
+                <TouchableOpacity
+                  onPress={() => setTermsModalVisible(false)}
+                  className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
+                >
+                  <View className="flex-row items-center justify-center gap-3">
+                    <Ionicons name="close-circle-outline" size={20} color="#6b7280" />
+                    <Text className="text-gray-600 font-semibold text-base">
+                      Cancelar
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Modal de Detalhes dos Termos */}
       <Modal visible={modalVisible} animationType="slide">
         <View className="flex-1 bg-white p-5">
           <ScrollView>

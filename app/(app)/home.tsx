@@ -1,23 +1,26 @@
-import { useAuthStore } from "@/store/auth";
+// import { useAuthStore } from "@/store/auth"; // Removido pois não está sendo usado
 import {
   Text,
   View,
   TouchableOpacity,
   ScrollView,
-  Animated,
+  Dimensions,
+  ActivityIndicator,
   Image,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { ClientInfo, getLoanActive, getLoansOpen, getRenovacao } from "@/services/loans";
-import { useEffect, useMemo, useState, useRef } from "react";
-import { Ionicons } from '@expo/vector-icons';
-import DrawerMenu from '@/components/DrawerMenu';
-import Spinner from '@/components/Spinner';
+import { router, useFocusEffect } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ClientInfo, gerarQRCode, getLoanActive, getLoansOpen } from "@/services/loans";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import DrawerMenu from "@/components/DrawerMenu";
+import Spinner from "@/components/Spinner";
 import { format, isBefore, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { Colors } from "@/constants/Colors";
+import { PropsQRCode, useQRCodeStore } from "@/store/qrcode";
 
 interface Installment {
   id: number;
@@ -47,69 +50,77 @@ const DashboardCard: React.FC<{
   title: string;
   value: string;
   subtitle?: string;
-  bgColor: string;
-  textColor: string;
-  icon?: string;
-}> = ({ title, value, subtitle, bgColor, textColor, icon }) => {
+  iconName: string;
+  iconColor: string;
+  isSmallScreen?: boolean;
+}> = ({ title, value, subtitle, iconName, iconColor, isSmallScreen }) => {
   return (
     <View
-      className={`${bgColor} p-4 rounded-xl flex-1 mx-1 border border-gray-200`}
+      style={{
+        backgroundColor: '#FFFFFF',
+        padding: isSmallScreen ? 12 : 16,
+        borderRadius: 16,
+        flex: 1,
+        marginHorizontal: 4,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+      }}
     >
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className={`${textColor} text-sm opacity-80`}>
-          {icon} {title}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <MaterialIcons name={iconName as any} size={isSmallScreen ? 16 : 20} color={iconColor} />
+        <Text style={{
+          color: '#6B7280',
+          fontSize: isSmallScreen ? 11 : 12,
+          marginLeft: 6,
+          fontWeight: '500',
+          flex: 1,
+        }}>
+          {title}
         </Text>
-        {subtitle && (
-          <Text className={`${textColor} text-xs opacity-60`}>{subtitle}</Text>
-        )}
       </View>
-      <Text className={`${textColor} text-2xl font-bold`}>{value}</Text>
+      <Text style={{
+        color: '#1F2937',
+        fontSize: isSmallScreen ? 16 : 20,
+        fontWeight: 'bold',
+        lineHeight: isSmallScreen ? 20 : 24,
+      }}>
+        {value}
+      </Text>
+      {subtitle && (
+        <Text style={{
+          color: '#9CA3AF',
+          fontSize: isSmallScreen ? 10 : 11,
+          marginTop: 2,
+        }}>
+          {subtitle}
+        </Text>
+      )}
     </View>
   );
 };
 
 const HomeScreen: React.FC = () => {
-  const { user } = useAuthStore();
+  const { setQRCodeData } = useQRCodeStore();
   const [loanActive, setLoanActive] = useState<ClientInfo>();
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const headerHeight = useRef(new Animated.Value(1)).current;
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const screenWidth = Dimensions.get('window').width;
+  const isSmallScreen = screenWidth < 380;
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: false,
-      listener: (event: any) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        if (offsetY > 30) {
-          Animated.timing(headerHeight, {
-            toValue: 0,
-            duration: 40,
-            useNativeDriver: false,
-          }).start();
-        } else {
-          Animated.timing(headerHeight, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    }
-  );
-
-  const formatCurrency = (value: number) => {
+  // Função para formatar moeda
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
-  };
+  }, []);
 
-  const dashboardData = {
+  // Dados do dashboard calculados dinamicamente
+  const dashboardData = useMemo(() => ({
     totalEmprestimos: formatCurrency(
       Number(loanActive?.data.lastLoan.amount || 0)
     ),
@@ -122,279 +133,449 @@ const HomeScreen: React.FC = () => {
       dueDate.setHours(0, 0, 0, 0);
       return isBefore(dueDate, today);
     }).length,
-  };
+  }), [loanActive, installments, formatCurrency]);
 
-  useEffect(() => {
-    async function fetchLoanActive() {
-      try {
-        setIsLoading(true);
-        const response = await getLoanActive();
-        const response_list = await getLoansOpen(
-          response.data.data.lastLoan.id
-        );
-        const unpaidInstallments = response_list.data.data.filter(
-          (item: Installment) => item.paid === "Não"
-        );
-        // const response_renovacao = await getRenovacao();
-        // console.log("res",response_renovacao)
-        setLoanActive(response.data);
-        setInstallments(unpaidInstallments);
-      } catch (error) {
-        console.error("Error fetching loan data:", error);
-      } finally {
-        setIsLoading(false);
+  // Função para buscar dados do empréstimo
+  const fetchLoanData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await getLoanActive();
+      const response_list = await getLoansOpen(
+        response.data.data.lastLoan.id
+      );
+      const unpaidInstallments = response_list.data.data.filter(
+        (item: Installment) => item.paid === "Não"
+      );
+      
+      setLoanActive(response.data);
+      setInstallments(unpaidInstallments);
+      
+      // Sempre selecionar a primeira parcela disponível
+      if (unpaidInstallments.length > 0) {
+        setSelectedInstallments([unpaidInstallments[0].id]);
+        setSelectAll(unpaidInstallments.length === 1);
+      } else {
+        setSelectedInstallments([]);
+        setSelectAll(false);
       }
+    } catch (error) {
+      return error
+    } finally {
+      setIsLoading(false);
     }
-    fetchLoanActive();
   }, []);
 
-  const toggleInstallment = (id: number) => {
+  // Carregar dados inicialmente
+  useEffect(() => {
+    fetchLoanData();
+  }, [fetchLoanData]);
+
+  // Atualizar dados quando a tela receber foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchLoanData();
+    }, [fetchLoanData])
+  );
+
+  // Função para alternar seleção de parcela
+  const toggleInstallment = useCallback((id: number) => {
     setSelectedInstallments((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
-  };
+  }, []);
 
-  const isOverdue = (date: string) => {
+  // Função para verificar se a parcela está vencida
+  const isOverdue = useCallback((date: string) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas a data
+    today.setHours(0, 0, 0, 0);
     const dueDate = parseISO(date);
-    dueDate.setHours(0, 0, 0, 0); // Zera as horas da data de vencimento
+    dueDate.setHours(0, 0, 0, 0);
     return isBefore(dueDate, today);
-  };
+  }, []);
 
-  const valor = useMemo(() => {
+  // Valor total das parcelas selecionadas
+  const selectedAmount = useMemo(() => {
     return installments
       .filter((item) => selectedInstallments.includes(item.id))
       .reduce((sum, item) => sum + (parseFloat(String(item.amount)) || 0), 0);
   }, [installments, selectedInstallments]);
 
+  // Valor total pendente
   const totalPendingAmount = useMemo(() => {
     return installments.reduce((total, installment) => {
       return total + (parseFloat(String(installment.amount)) || 0);
     }, 0);
   }, [installments]);
 
+  // Atualizar estado de "selecionar todas"
   useEffect(() => {
     if (installments.length > 0) {
       const allSelected = installments.every((item) =>
         selectedInstallments.includes(item.id)
       );
       setSelectAll(allSelected);
+    } else {
+      setSelectAll(false);
     }
   }, [selectedInstallments, installments]);
 
+  // Número de parcelas vencidas
   const overdueInstallments = useMemo(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas a data
+    today.setHours(0, 0, 0, 0);
     return installments.filter((installment) => {
       const dueDate = parseISO(installment.due_date);
-      dueDate.setHours(0, 0, 0, 0); // Zera as horas da data de vencimento
+      dueDate.setHours(0, 0, 0, 0);
       return isBefore(dueDate, today);
     }).length;
   }, [installments]);
 
+  // Função para gerar QR Code e navegar
+  const handleGenerateQRCode = useCallback(async () => {
+    if (selectedInstallments.length === 0) return;
+    
+    try {
+      setIsGeneratingQR(true);
+      const qrCodeData = await gerarQRCode(selectedInstallments);
+      setQRCodeData(qrCodeData as PropsQRCode);
+      router.push('/(app)/qr_code_screen');
+    } catch (error: unknown) {
+      console.error('Erro ao gerar QR Code:', error);
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  }, [selectedInstallments, setQRCodeData]);
+
+  // Função para alternar seleção de todas as parcelas
+  const handleToggleSelectAll = useCallback(() => {
+    if (selectAll) {
+      setSelectedInstallments([]);
+      setSelectAll(false);
+    } else {
+      setSelectedInstallments(installments.map((item) => item.id));
+      setSelectAll(true);
+    }
+  }, [selectAll, installments]);
+
   if (isLoading) {
-    return (
-      <Spinner />
-    );
+    return <Spinner />;
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-white px-6">
-      <Animated.View
-        style={{
-          height: headerHeight.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 300],
-            extrapolate: "clamp",
-          }),
-          opacity: headerHeight,
-          overflow: "hidden",
-        }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.dark.background }}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={['#FAFBFC', '#F8FAFC', '#FFFFFF']}
+        style={{ flex: 1 }}
       >
-        {/* Header */}
-        <View className="mt-8 mb-6">
-          <View className="flex-row items-center justify-between">
-            <View >
+        {/* Header Fixo */}
+        <View style={{
+          paddingHorizontal: 20,
+          paddingVertical: 24,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderBottomWidth: 1,
+          borderBottomColor: 'rgba(155, 209, 61, 0.1)',
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               <TouchableOpacity
-              onPress={() => setIsDrawerVisible(true)}
-              className="pb-2"
-            >
-              <Ionicons name="menu" size={28} color="#374151" />
-            </TouchableOpacity>
-            <Text className="text-gray-800 text-2xl font-bold">
-              Olá {loanActive?.name},
-            </Text>
-            </View>
-            
-          </View>
-        </View>
-
-        <View className="flex-row mb-4 ">
-          <DashboardCard
-            title="Empréstimo ativo"
-            value={dashboardData.totalEmprestimos.toLocaleString()}
-            subtitle=""
-            bgColor="bg-green-50"
-            textColor="text-gray-800"
-            icon="📊"
-          />
-          <DashboardCard
-            title="Parcelas pendentes"
-            value={installments.length.toString()}
-            subtitle=""
-            bgColor="bg-green-50"
-            textColor="text-gray-800"
-            icon="📋"
-          />
-        </View>
-
-        <View className="flex-row mb-2">
-          <DashboardCard
-            title="Valor pendente"
-            value={formatCurrency(totalPendingAmount)}
-            subtitle=""
-            bgColor="bg-green-50"
-            textColor="text-gray-800"
-            icon="💰"
-          />
-          <DashboardCard
-            title="Parcelas vencidas"
-            value={`${overdueInstallments} parcelas`}
-            subtitle=""
-            bgColor="bg-red-50"
-            textColor="text-gray-800"
-            icon="⚠️"
-          />
-        </View>
-      </Animated.View>
-
-      <View className="p-4 mb-4 mt-2">
-        <View className="flex-row items-center">
-          <Text className="text-2xl mr-3">🔒</Text>
-          <View className="flex-1">
-            <Text className="text-red-500 text-sm leading-5">
-              Para sua segurança, realize pagamentos somente através do nosso aplicativo.
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-gray-800 text-xl font-bold">
-          Parcelas em Aberto
-        </Text>
-        <TouchableOpacity
-          className="flex-row items-center"
-          onPress={() => {
-            if (selectAll) {
-              setSelectedInstallments([]);
-              setSelectAll(false);
-            } else {
-              setSelectedInstallments(installments.map((item) => item.id));
-              setSelectAll(true);
-            }
-          }}
-        >
-          <View
-            className={`w-5 h-5 border-2 border-gray-400 rounded mr-2 items-center justify-center ${
-              selectAll ? "bg-green-500 border-green-500" : "bg-transparent"
-            }`}
-          >
-            {selectAll && (
-              <Text className="text-white text-xs font-bold">✓</Text>
-            )}
-          </View>
-          <Text className="text-gray-600 text-sm">Selecionar todas</Text>
-        </TouchableOpacity>
-      </View>
-      <ScrollView
-        className="flex-1"
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-      >
-        <View className="gap-3">
-          {installments.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => toggleInstallment(item.id)}
-              className={`flex-row items-center px-4 py-2 rounded-lg border ${
-                selectedInstallments.includes(item.id)
-                  ? "bg-green-100 border-green-400"
-                  : isOverdue(item.due_date)
-                    ? "bg-red-50 border-red-300"
-                    : "bg-gray-50 border-gray-200"
-              }`}
-            >
-              <Checkbox checked={selectedInstallments.includes(item.id)} />
-              <View className="flex-1">
-                <Text
-                  className={`${
-                    selectedInstallments.includes(item.id)
-                      ? "text-green-700 font-semibold text-lg"
-                      : isOverdue(item.due_date)
-                        ? "text-red-600 font-semibold text-lg"
-                        : "text-gray-800 font-semibold text-lg"
-                  }`}
-                >
-                  Parcela {item.installment}
-                </Text>
-                <Text
-                  className={`${
-                    selectedInstallments.includes(item.id)
-                      ? "text-green-600"
-                      : isOverdue(item.due_date)
-                        ? "text-red-500"
-                        : "text-gray-600"
-                  }`}
-                >
-                  Vencimento:{" "}
-                  {format(parseISO(item.due_date), "dd/MM/yyyy", { locale: ptBR })}
-                </Text>
-                <Text
-                  className={`text-lg font-bold ${
-                    selectedInstallments.includes(item.id)
-                      ? "text-green-700"
-                      : isOverdue(item.due_date)
-                        ? "text-red-600"
-                        : "text-gray-800"
-                  } mt-1`}
-                >
-                  {formatCurrency(item.amount)}
+                onPress={() => setIsDrawerVisible(true)}
+                style={{
+                  padding: 8,
+                  borderRadius: 8,
+                  backgroundColor: 'rgba(155, 209, 61, 0.1)',
+                  marginRight: 12,
+                  width: 50,
+                  height: 50,
+                  alignItems:'center',
+                  justifyContent:'center'
+                }}
+              >
+                <Ionicons name="menu" size={24} color="#1F2937" />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  color: '#1F2937',
+                  fontSize: isSmallScreen ? 20 : 24,
+                  fontWeight: 'bold',
+                }}>
+                  Olá {loanActive?.name},
                 </Text>
               </View>
-            </TouchableOpacity>
-          ))}
+            </View>
+            <Image
+              source={require('@/assets/images/apenas-logo.png')}
+              style={{
+                width: isSmallScreen ? 40 : 50,
+                height: isSmallScreen ? 40 : 50,
+                resizeMode: 'contain',
+              }}
+            />
+          </View>
         </View>
-      </ScrollView>
+
+        <ScrollView
+          style={{ flex: 1 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
+          {/* Dashboard Cards */}
+          <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
+            <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+              <DashboardCard
+                title="Empréstimo ativo"
+                value={dashboardData.totalEmprestimos.toLocaleString()}
+                iconName="account-balance"
+                iconColor="#9BD13D"
+                isSmallScreen={isSmallScreen}
+              />
+              <DashboardCard
+                title="Parcelas pendentes"
+                value={installments.length.toString()}
+                iconName="assignment"
+                iconColor="#3B82F6"
+                isSmallScreen={isSmallScreen}
+              />
+            </View>
+
+            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+              <DashboardCard
+                title="Valor pendente"
+                value={formatCurrency(totalPendingAmount)}
+                iconName="attach-money"
+                iconColor="#F59E0B"
+                isSmallScreen={isSmallScreen}
+              />
+              <DashboardCard
+                title="Parcelas vencidas"
+                value={`${overdueInstallments}`}
+                subtitle=""
+                iconName="warning"
+                iconColor="#EF4444"
+                isSmallScreen={isSmallScreen}
+              />
+            </View>
+          </View>
+
+          {/* Card de Segurança */}
+          <View style={{
+            backgroundColor: '#FFFFFF',
+            marginHorizontal: 20,
+            marginBottom: 16,
+            padding: 16,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialIcons name="security" size={24} color="#EF4444" style={{ marginRight: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  color: '#EF4444',
+                  fontSize: isSmallScreen ? 12 : 14,
+                  lineHeight: isSmallScreen ? 16 : 20,
+                  fontWeight: '500',
+                }}>
+                  Para sua segurança, realize pagamentos somente através do nosso
+                  aplicativo.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Cabeçalho das Parcelas */}
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 16,
+            paddingHorizontal: 20,
+          }}>
+            <Text style={{
+              color: '#1F2937',
+              fontSize: isSmallScreen ? 18 : 20,
+              fontWeight: 'bold',
+            }}>
+              Parcelas em Aberto
+            </Text>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center' }}
+              onPress={handleToggleSelectAll}
+            >
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderWidth: 2,
+                  borderColor: selectAll ? '#9BD13D' : '#9CA3AF',
+                  borderRadius: 4,
+                  marginRight: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: selectAll ? '#9BD13D' : 'transparent',
+                }}
+              >
+                {selectAll && (
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                )}
+              </View>
+              <Text style={{
+                color: '#6B7280',
+                fontSize: isSmallScreen ? 12 : 14,
+              }}>
+                Selecionar todas
+              </Text>
+            </TouchableOpacity>
+          </View>
+        
+          <View style={{ paddingHorizontal: 20 }}>
+            <View style={{ gap: 12 }}>
+              {installments.map((item) => {
+                const isSelected = selectedInstallments.includes(item.id);
+                const isItemOverdue = isOverdue(item.due_date);
+                
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    onPress={() => toggleInstallment(item.id)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: isSmallScreen ? 12 : 16,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      backgroundColor: isSelected
+                        ? 'rgba(155, 209, 61, 0.1)'
+                        : isItemOverdue
+                          ? 'rgba(239, 68, 68, 0.05)'
+                          : '#FFFFFF',
+                      borderColor: isSelected
+                        ? 'rgba(155, 209, 61, 0.3)'
+                        : isItemOverdue
+                          ? 'rgba(239, 68, 68, 0.2)'
+                          : '#E5E7EB',
+                    }}
+                  >
+                    <Checkbox checked={isSelected} />
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          color: isSelected
+                            ? '#9BD13D'
+                            : isItemOverdue
+                              ? '#EF4444'
+                              : '#1F2937',
+                          fontWeight: '600',
+                          fontSize: isSmallScreen ? 16 : 18,
+                        }}
+                      >
+                        Parcela {item.installment}
+                      </Text>
+                      <Text
+                        style={{
+                          color: isSelected
+                            ? '#84CC16'
+                            : isItemOverdue
+                              ? '#F87171'
+                              : '#6B7280',
+                          fontSize: isSmallScreen ? 12 : 14,
+                          marginTop: 2,
+                        }}
+                      >
+                        Vencimento:{" "}
+                        {format(parseISO(item.due_date), "dd/MM/yyyy", {
+                          locale: ptBR,
+                        })}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: isSmallScreen ? 16 : 18,
+                          fontWeight: 'bold',
+                          color: isSelected
+                            ? '#9BD13D'
+                            : isItemOverdue
+                              ? '#EF4444'
+                              : '#1F2937',
+                          marginTop: 4,
+                        }}
+                      >
+                        {formatCurrency(item.amount)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
 
       {selectedInstallments.length > 0 && (
-        <View className="py-4 border-t border-gray-200">
-          <Text className="text-center text-lg mb-2 text-gray-600">
+        <View style={{
+          paddingVertical: 16,
+          paddingHorizontal: 20,
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(155, 209, 61, 0.2)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        }}>
+          <Text style={{
+            textAlign: 'center',
+            fontSize: isSmallScreen ? 14 : 16,
+            marginBottom: 8,
+            color: '#6B7280',
+          }}>
             {selectedInstallments.length} parcela(s) selecionada(s)
           </Text>
-          <Text className="text-center text-lg mb-4 text-gray-800 font-bold">
-            Total: {formatCurrency(valor)}
+          <Text style={{
+            textAlign: 'center',
+            fontSize: isSmallScreen ? 16 : 18,
+            marginBottom: 16,
+            color: '#1F2937',
+            fontWeight: 'bold',
+          }}>
+            Total: {formatCurrency(selectedAmount)}
           </Text>
           <TouchableOpacity
-            className="bg-green-500 py-4 rounded-lg"
-            onPress={() =>
-              console.log("Selected installments:", selectedInstallments)
-            }
+            style={{
+              backgroundColor: isGeneratingQR ? '#9CA3AF' : '#9BD13D',
+              paddingVertical: isSmallScreen ? 12 : 16,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: isGeneratingQR ? '#6B7280' : '#84CC16',
+              opacity: isGeneratingQR ? 0.7 : 1,
+            }}
+            onPress={handleGenerateQRCode}
+            disabled={isGeneratingQR || selectedInstallments.length === 0}
           >
-            <Text className="text-white text-center font-bold text-lg">
-              Pagar Parcelas
-            </Text>
+            {isGeneratingQR ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
+                 <Text style={{
+                   color: 'white',
+                   textAlign: 'center',
+                   fontWeight: 'bold',
+                   fontSize: isSmallScreen ? 16 : 18,
+                 }}>Gerando QR Code...</Text>
+              </View>
+            ) : (
+              <Text style={{
+                color: 'white',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: isSmallScreen ? 16 : 18,
+              }}>
+                Pagar Parcelas
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       )}
-      
+
       <DrawerMenu
         isVisible={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}
       />
+      </LinearGradient>
     </SafeAreaView>
   );
 };

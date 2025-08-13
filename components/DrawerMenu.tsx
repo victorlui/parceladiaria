@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,10 @@ import {
   Dimensions,
   SafeAreaView,
   Image,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '@/store/auth';
-import { router } from 'expo-router';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "@/store/auth";
+import { router } from "expo-router";
 
 interface DrawerMenuProps {
   isVisible: boolean;
@@ -19,13 +19,17 @@ interface DrawerMenuProps {
   showOnlyLogout?: boolean;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 const DRAWER_WIDTH = screenWidth * 0.8;
 
-const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLogout = false }) => {
+const DrawerMenu: React.FC<DrawerMenuProps> = ({
+  isVisible,
+  onClose,
+  showOnlyLogout = false,
+}) => {
   const [slideAnim] = useState(new Animated.Value(-DRAWER_WIDTH));
   const [overlayOpacity] = useState(new Animated.Value(0));
-  const {logout} = useAuthStore()
+  const { logout } = useAuthStore();
 
   React.useEffect(() => {
     if (isVisible) {
@@ -59,45 +63,60 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLog
 
   const allMenuItems = [
     {
-      icon: 'home-outline',
-      title: 'Início',
+      icon: "home-outline",
+      title: "Início",
       onPress: () => {
-        console.log('Início pressed');
+        console.log("Início pressed");
         onClose();
       },
     },
     {
-      icon: 'wallet-outline',
-      title: 'Meus Empréstimos',
+      icon: "wallet-outline",
+      title: "Meus Empréstimos",
       onPress: () => {
-        console.log('Meus Empréstimos pressed');
+        router.push("/(app)/my_loans_screen");
         onClose();
       },
     },
-     {
-      icon: 'reload-outline',
-      title: 'Renovação',
+
+    //  {
+    //   icon: 'reload-outline',
+    //   title: 'Renovação',
+    //   onPress: () => {
+    //     console.log('Configurações pressed');
+    //     onClose();
+    //   },
+    // },
+    {
+      icon: "person-outline",
+      title: "Meu Perfil",
       onPress: () => {
-        console.log('Configurações pressed');
+        router.push("/(app)/profile_screen");
         onClose();
       },
     },
     {
-      icon: 'person-outline',
-      title: 'Meu Perfil',
+      icon: "settings-outline",
+      title: "Configurações",
       onPress: () => {
-        console.log('Perfil pressed');
+        router.push("/(app)/settings_screen");
         onClose();
       },
     },
-   
-   
     {
-      icon: 'log-out-outline',
-      title: 'Sair',
+      icon: "document-text-outline",
+      title: "Termos e Condições",
       onPress: () => {
-       logout()
-       router.replace('/login')
+        router.push("/(app)/view_terms");
+        onClose();
+      },
+    },
+    {
+      icon: "log-out-outline",
+      title: "Sair",
+      onPress: () => {
+        logout();
+        router.replace("/login");
         onClose();
       },
     },
@@ -105,11 +124,11 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLog
 
   const logoutOnlyItems = [
     {
-      icon: 'log-out-outline',
-      title: 'Sair',
+      icon: "log-out-outline",
+      title: "Sair",
       onPress: () => {
-       logout()
-       router.replace('/login')
+        logout();
+        router.replace("/login");
         onClose();
       },
     },
@@ -128,12 +147,12 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLog
       <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'black',
+            backgroundColor: "black",
             opacity: overlayOpacity,
           },
         ]}
@@ -149,15 +168,15 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLog
       <Animated.View
         style={[
           {
-            position: 'absolute',
+            position: "absolute",
             top: 0,
             left: 0,
             bottom: 0,
             width: DRAWER_WIDTH,
-            backgroundColor: 'white',
+            backgroundColor: "white",
             transform: [{ translateX: slideAnim }],
             elevation: 16,
-            shadowColor: '#000',
+            shadowColor: "#000",
             shadowOffset: {
               width: 2,
               height: 0,
@@ -169,11 +188,14 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({ isVisible, onClose, showOnlyLog
       >
         <SafeAreaView style={{ flex: 1 }}>
           {/* Header */}
-          <View className="bg-green-100 px-6 py-8">
+          <View className=" px-6 py-8" style={{backgroundColor: 'rgba(155, 209, 61, 0.1)'}}>
             <View className="flex-row items-center justify-between">
-              <View className='flex-1'>
-               
-               <Image source={require('@/assets/images/parcela-logo.png')} className="w-full h-16" resizeMode='contain' />
+              <View className="flex-1">
+                <Image
+                  source={require("@/assets/images/parcela-logo.png")}
+                  className="w-full h-16"
+                  resizeMode="contain"
+                />
               </View>
               {/* <TouchableOpacity
                 onPress={onClose}

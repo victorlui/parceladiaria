@@ -4,7 +4,7 @@
     "slug": "parceladiaria",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon_old.png",
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

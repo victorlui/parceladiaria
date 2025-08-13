@@ -1,13 +1,16 @@
-import { Image, Keyboard, StyleSheet, Text, View } from "react-native";
+import { Image, Keyboard, StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { usePasswordsLoginForm } from "@/hooks/useRegisterForm";
 import { FormInput } from "@/components/FormInput";
 import { useRegisterAuthStore } from "@/store/register";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useAlerts } from "@/components/useAlert";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { PasswordLoginSchema } from "@/lib/password_validation";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { Colors } from "@/constants/Colors";
+import { StatusBar } from "expo-status-bar";
 
 export default function InsertPassword() {
   const { AlertDisplay,showError,showWarning } = useAlerts();
@@ -35,60 +38,187 @@ export default function InsertPassword() {
   };
 
   return (
-    <>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
       <AlertDisplay />
-      <LayoutRegister
-        onContinue={handleSubmit(onSubmit)}
-        isBack
-        isLogo={false}
-        loading={isPending}
+      
+      <LinearGradient
+        colors={['#FAFBFC', '#F8FAFC', '#FFFFFF']}
+        style={styles.gradientBackground}
       >
-        <View className="flex-1 justify-between px-6">
-          <View className="items-center mb-8">
-            <Image
-              source={require("@/assets/images/apenas-logo.png")}
-              className="w-full h-48"
-              resizeMode="contain"
-            />
-          </View>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.content}>
+              {/* Logo Section */}
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("@/assets/images/apenas-logo.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
 
-          <View className="items-center ">
-            <View className="bg-[#9BD13D] p-4 rounded-2xl shadow-md">
-              <FontAwesome6 name="lock" size={40} color="white" />
+              {/* Welcome Card */}
+              <View style={styles.welcomeCard}>
+                <View style={styles.iconContainer}>
+                  <FontAwesome6 name="lock" size={40} color="white" />
+                </View>
+                
+                <Text style={styles.welcomeTitle}>
+                  Senha de acesso
+                </Text>
+                <Text style={styles.welcomeSubtitle}>
+                  Digite sua senha para acessar sua conta
+                </Text>
+              </View>
+
+              {/* Password Input Card */}
+              <View style={styles.inputCard}>
+                <View style={styles.cardHeader}>
+                  <MaterialIcons name="lock" size={20} color="#9BD13D" />
+                  <Text style={styles.cardTitle}>Autenticação</Text>
+                </View>
+                
+                <View style={styles.inputContainer}>
+                  <FormInput
+                    name="password"
+                    control={control}
+                    secureTextEntry
+                    placeholder="Digite sua senha"
+                    returnKeyType="done"
+                    onSubmitEditing={handleSubmit(onSubmit)}
+                    icon={<FontAwesome6 name="key" size={24} color="#9CA3AF" />}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.loginButton,
+                    isPending && styles.buttonDisabled,
+                  ]}
+                  onPress={handleSubmit(onSubmit)}
+                  disabled={isPending}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons
+                    name={isPending ? "hourglass-empty" : "login"}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.buttonText}>
+                    {isPending ? "Verificando..." : "Entrar"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-          <View className="flex justify-center flex-1">
-          <Text className="text-gray-700 text-center text-2xl font-bold  ">
-            Senha de acesso
-          </Text>
-        </View>
-          <View style={styles.content}>
-            <FormInput
-              name="password"
-              control={control}
-              secureTextEntry
-              label="Senha"
-              returnKeyType="done"
-              onSubmitEditing={handleSubmit(onSubmit)}
-            />
-          </View>
-        </View>
-      </LayoutRegister>
-    </>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: "#fff", // fundo preto inclusive no bottom
+    backgroundColor: Colors.dark.background,
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: "#fff", // fundo preto no scroll
+    justifyContent: 'center',
   },
   content: {
-    flex: 1,
+    padding: 20,
+    gap:20
+  },
+  logoContainer: {
+    alignItems: 'center',
     
+  },
+  logo: {
+    width: '100%',
+    height: 140,
+  },
+  welcomeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    
+    padding: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 209, 61, 0.1)',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    backgroundColor: '#9BD13D',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+   
+    padding: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 209, 61, 0.1)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginLeft: 8,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  loginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#9BD13D',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  buttonDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
 });
