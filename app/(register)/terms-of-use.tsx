@@ -1,254 +1,362 @@
-import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  Image,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Button } from "@/components/Button";
 import { StatusBar } from "expo-status-bar";
-import BackIcon from "@/components/BackIcon";
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Colors } from "@/constants/Colors";
+import { WebView } from "react-native-webview";
+import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system";
+import { useEffect, useState } from "react";
 
 export default function TermsOfUse() {
-  const insets = useSafeAreaInsets();
-  
+  const [htmlContent, setHtmlContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadHtml = async () => {
+      try {
+        const asset = Asset.fromModule(require('@/assets/termodeuso.html'));
+        await asset.downloadAsync();
+        let html = await FileSystem.readAsStringAsync(asset.localUri!);
+        
+        // CSS simplificado para evitar conflitos
+        const cssStyle = `
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              font-size: 16px;
+              line-height: 1.5;
+              padding: 16px;
+              margin: 0;
+              color: #333;
+              background-color: #fff;
+            }
+            h1, h2, h3, h4, h5, h6 {
+              font-weight: 600;
+              margin-top: 20px;
+              margin-bottom: 10px;
+              color: #111;
+            }
+            h1 { font-size: 22px; }
+            h2 { font-size: 20px; }
+            h3 { font-size: 18px; }
+            p {
+              font-size: 16px;
+              margin-bottom: 10px;
+              text-align: justify;
+            }
+            ul, ol {
+              padding-left: 20px;
+              margin-bottom: 10px;
+            }
+            li {
+              font-size: 16px;
+              margin-bottom: 6px;
+            }
+            strong, b {
+              font-weight: 600;
+              color: #111;
+            }
+          </style>
+        `;
+        
+        // Inserir o CSS no HTML de forma mais segura
+        if (html.includes('</head>')) {
+          html = html.replace('</head>', cssStyle + '</head>');
+        } else if (html.includes('<body>')) {
+          html = html.replace('<body>', '<head>' + cssStyle + '</head><body>');
+        } else {
+          html = '<html><head>' + cssStyle + '</head><body>' + html + '</body></html>';
+        }
+        
+        setHtmlContent(html);
+      } catch (error) {
+        setHtmlContent('<html><head><style>body{font-size:16px;padding:16px;}</style></head><body><p>Erro ao carregar os termos de uso. Tente novamente.</p></body></html>');
+        return error
+        
+        
+      }
+    };
+
+    loadHtml();
+  }, []);
 
   const handleContinue = () => {
-    console.log("continue");
-    router.push({ pathname: "/(register)/phone-screen" });
+    setIsLoading(true);
+    setTimeout(() => {
+      router.push({ pathname: "/(register)/phone-screen" });
+      setIsLoading(false);
+    }, 300);
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
+  if (!htmlContent) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
+        <LinearGradient
+          colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+          style={styles.gradientBackground}
+        >
+          <View style={styles.loadingContainer}>
+            <MaterialIcons name="hourglass-empty" size={40} color="#9BD13D" />
+            <Text style={styles.loadingText}>Carregando termos de uso...</Text>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView
-      className="flex-1 bg-white p-4"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-    >
-      <StatusBar style="dark" />
-        
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
+      
+      <LinearGradient
+        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+        style={styles.gradientBackground}
+      >
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.content}>
+            {/* Header com botão de voltar */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleBack}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+              </TouchableOpacity>
+            </View>
 
-      <View className="flex-row items-center gap-4 my-6">
-        <Image
-          source={require("@/assets/images/google-docs.png")}
-          className="w-12 h-12"
-          resizeMode="contain"
-        />
-        <View>
-          <Text className="text-2xl font-bold text-gray-900">
-            Termos e condições
-          </Text>
-          <Text className="text-gray-600">Atualizado: 08/08/2025</Text>
-        </View>
-      </View>
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("@/assets/images/apenas-logo.png")}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
 
-      <View className="flex-1">
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Text className="text-xl font-bold mb-4">
-            TERMOS DE USO – PARCELA DIÁRIA
-          </Text>
+            {/* Card de boas-vindas */}
+            <View style={styles.welcomeCard}>
+             
+              <Text style={styles.welcomeTitle}>Termos e Condições</Text>
+              <Text style={styles.welcomeSubtitle}>
+                Leia atentamente nossos termos de uso antes de continuar
+              </Text>
+            </View>
 
-          <Text className="font-bold mt-4 mb-2">1. INTRODUÇÃO</Text>
-          <Text className="mb-2">
-            Bem-vindo(a) ao Parcela Diária!
-            {"\n\n"}
-            Estes Termos de Uso (“Termos”) regem o acesso e a utilização dos
-            serviços oferecidos pelo site www.parceladiaria.com.br (“Site”) e
-            demais plataformas vinculadas, operadas por Parcela Diária
-            (“Empresa”). Ao acessar ou utilizar qualquer dos nossos serviços,
-            você declara expressamente que concorda com todos os termos e
-            condições aqui estabelecidos.
-          </Text>
+            {/* Card dos termos */}
+            <View style={styles.termsCard}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Termos de Uso</Text>
+              </View>
 
-          <Text className="font-bold mt-4 mb-2">2. OBJETO DOS TERMOS</Text>
-          <Text className="mb-2">
-            2.1. Os presentes Termos destinam-se a regular a relação entre a
-            Empresa e os usuários, abrangendo a utilização de serviços
-            relacionados à oferta, análise e concessão de créditos, bem como
-            quaisquer outras funcionalidades disponibilizadas no Site.
-            {"\n\n"}
-            2.2. Este documento estabelece as condições para acesso, cadastro,
-            uso e segurança dos serviços prestados pela Empresa.
-          </Text>
+              <View style={styles.webViewContainer}>
+                <WebView
+                  originWhitelist={['*']}
+                  source={{ html: htmlContent }}
+                  style={styles.webView}
+                  showsVerticalScrollIndicator={true}
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled={true}
+                  nestedScrollEnabled={true}
+                  scalesPageToFit={false}
+                  startInLoadingState={true}
+                  javaScriptEnabled={false}
+                  domStorageEnabled={false}
+                  allowsInlineMediaPlayback={false}
+                  mediaPlaybackRequiresUserAction={true}
+                  bounces={false}
+                  renderLoading={() => (
+                    <View style={styles.webViewLoading}>
+                      <MaterialIcons name="hourglass-empty" size={24} color="#9BD13D" />
+                      <Text style={styles.loadingText}>Carregando...</Text>
+                    </View>
+                  )}
+                  onError={(syntheticEvent) => {
+                    const { nativeEvent } = syntheticEvent;
+                    console.warn('WebView error: ', nativeEvent);
+                  }}
+                
+                />
+              </View>
 
-          <Text className="font-bold mt-4 mb-2">3. ACEITAÇÃO DOS TERMOS</Text>
-          <Text className="mb-2">
-            3.1. Ao utilizar os serviços do Site e/ou Aplicativo o Usuário
-            concorda integralmente com estes Termos, responsabilizando-se pelo
-            seu cumprimento.
-            {"\n\n"}
-            3.2. Se o Usuário não concordar com qualquer parte destes Termos,
-            deverá interromper imediatamente a utilização dos serviços.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">4. ALTERAÇÕES DOS TERMOS</Text>
-          <Text className="mb-2">
-            4.1. A Empresa reserva-se o direito de modificar, a qualquer tempo,
-            estes Termos, mediante a atualização da sua versão no Site.
-            {"\n\n"}
-            4.2. As alterações entrarão em vigor na data de sua publicação, e o
-            acesso continuado aos serviços constituirá aceitação tácita das
-            mudanças.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">5. CADASTRO E SEGURANÇA</Text>
-          <Text className="mb-2">
-            5.1. Para acessar determinados serviços, o Usuário deverá realizar
-            um cadastro, fornecendo informações verdadeiras, precisas e
-            atualizadas, bem como enviando os documentos solicitados, na forma
-            em que solicitados, sob pena de responsabilização.
-            {"\n\n"}
-            5.2. O Usuário é o único responsável por manter o sigilo de suas
-            credenciais de acesso, comprometendo-se a notificar imediatamente a
-            Empresa em caso de qualquer uso não autorizado.
-            {"\n\n"}
-            5.3. O Usuário resta ciente de que após o envio dos documentos
-            solicitados, os documentos irão para análise prévia. Após a análise,
-            caso o Usuário seja aprovado, o mesmo irá receber um link via
-            WhatsApp (pelo número previamente fornecido) com os termos para
-            conhecimento e aceite.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">6. SERVIÇOS OFERECIDOS</Text>
-          <Text className="mb-2">
-            6.1. O Parcela Diária atua na oferta de serviços financeiros, que
-            podem incluir, mas não se limitam a análise e concessão de créditos,
-            por meio de uma plataforma online.
-            {"\n\n"}
-            6.2. A concessão de crédito está sujeita à análise de risco,
-            aprovação e verificação das informações fornecidas pelo Usuário, com
-            base em critérios previamente estabelecidos pela Empresa. O Usuário
-            não possui qualquer direito de indenização em caso de não aceite.
-            {"\n\n"}
-            6.3. Informações detalhadas sobre critérios de aprovação, juros,
-            prazos e encargos serão disponibilizadas no ato da contratação e
-            durante o processo de solicitação de crédito.
-            {"\n\n"}
-            6.4. A Parcela Diária poderá, a qualquer tempo e sem a necessidade
-            de aviso prévio, suspender os serviços, caso seja averiguado
-            qualquer risco ou fraude, sem que isso gere qualquer direito de
-            indenização do Usuário.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">7. OBRIGAÇÕES DO USUÁRIO</Text>
-          <Text className="mb-2">
-            O Usuário se compromete a:
-            {"\n\n"}- Fornecer dados corretos e atualizados durante o cadastro e
-            ao longo da utilização dos serviços;
-            {"\n"}- Utilizar o Site e os serviços da Empresa unicamente para
-            fins lícitos e de acordo com a legislação aplicável;
-            {"\n"}- Manter a confidencialidade de suas credenciais de acesso,
-            não as compartilhando com terceiros;
-            {"\n"}- Respeitar todas as disposições legais e regulamentares
-            relacionadas à utilização dos serviços;
-            {"\n"}- Cumprir com o quanto pactuado, inclusive com a obrigação de
-            pagamento dos créditos ora concedidos.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">
-            8. DIREITOS E OBRIGAÇÕES DA EMPRESA
-          </Text>
-          <Text className="mb-2">
-            8.1. A Empresa compromete-se a prestar os serviços com diligência e
-            eficiência, adotando medidas de segurança para proteger os dados dos
-            Usuários.
-            {"\n\n"}
-            8.2. A Empresa poderá, a seu exclusivo critério:
-            {"\n"}- Efetuar atualizações e manutenções no Site que possam causar
-            interrupções temporárias nos serviços;
-            {"\n"}- Solicitar comprovação adicional de informações para garantir
-            a veracidade dos dados fornecidos;
-            {"\n"}- Restringir ou bloquear o acesso do Usuário caso constate
-            descumprimento destes Termos ou indícios de uso indevido.
-            {"\n\n"}
-            8.3. A Empresa não se responsabiliza por eventuais prejuízos
-            decorrentes de falhas ou indisponibilidade temporária dos serviços,
-            salvo em casos comprovados de negligência ou má-fé.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">
-            9. PROPRIEDADE INTELECTUAL
-          </Text>
-          <Text className="mb-2">
-            9.1. Todos os conteúdos exibidos no Site e/ou no aplicativo
-            incluindo, mas não se limitando a textos, imagens, logotipos e
-            softwares, são de propriedade exclusiva da Empresa ou de terceiros
-            autorizados.
-            {"\n\n"}
-            9.2. É expressamente proibida a reprodução, distribuição, alteração
-            ou qualquer uso desses conteúdos sem a prévia autorização por
-            escrito da Empresa.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">
-            10. POLÍTICA DE PRIVACIDADE E PROTEÇÃO DE DADOS
-          </Text>
-          <Text className="mb-2">
-            10.1. A utilização dos serviços implica a aceitação da nossa
-            Política de Privacidade, disponível no Site e/ou aplicativo, que
-            estabelece as diretrizes para coleta, armazenamento e tratamento dos
-            dados pessoais dos Usuários.
-            {"\n\n"}
-            10.2. A Empresa se compromete a utilizar as informações pessoais dos
-            Usuários de forma segura e de acordo com a legislação aplicável,
-            como a Lei Geral de Proteção de Dados (LGPD).
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">
-            11. LIMITAÇÕES DE RESPONSABILIDADE
-          </Text>
-          <Text className="mb-2">
-            11.1. Em nenhuma hipótese a Empresa será responsabilizada por danos
-            diretos, indiretos, incidentais ou consequenciais resultantes da
-            utilização ou da impossibilidade de utilização dos serviços.
-            {"\n\n"}
-            11.2. O Usuário concorda que os serviços são fornecidos “no estado
-            em que se encontram” e que qualquer utilização é por sua conta e
-            risco.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">12. RESCISÃO</Text>
-          <Text className="mb-2">
-            12.1. O Usuário pode rescindir o uso dos serviços a qualquer
-            momento, bastando para isso interromper o acesso ao Site.
-            {"\n\n"}
-            12.2. A Empresa reserva-se o direito de rescindir ou suspender o
-            acesso do Usuário, sem aviso prévio, caso identifique violações a
-            estes Termos ou atividades que possam comprometer a segurança e
-            integridade dos serviços.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">13. DISPOSIÇÕES GERAIS</Text>
-          <Text className="mb-2">
-            13.1. Caso qualquer cláusula destes Termos seja considerada inválida
-            ou inexequível, as demais cláusulas permanecerão em pleno vigor.
-            {"\n\n"}
-            13.2. A eventual tolerância de qualquer das partes quanto ao
-            descumprimento de qualquer disposição destes Termos não implicará em
-            renúncia de direitos ou alteração destes termos.
-            {"\n\n"}
-            13.3. Estes Termos constituem o entendimento integral entre as
-            partes, substituindo quaisquer acordos anteriores, escritos ou
-            verbais.
-          </Text>
-
-          <Text className="font-bold mt-4 mb-2">
-            14. LEGISLAÇÃO APLICÁVEL E FORO
-          </Text>
-          <Text className="mb-10">
-            14.1. Estes Termos serão regidos e interpretados de acordo com as
-            leis brasileiras.
-            {"\n\n"}
-            14.2. Fica eleito o Foro da comarca de [Cidade/Estado] para dirimir
-            quaisquer controvérsias decorrentes destes Termos, com renúncia
-            expressa a qualquer outro.
-          </Text>
-        </ScrollView>
-
-        <View className="mt-4">
-          <Button
-            variant="primary"
-            title="Aceitar termos e condições"
-            onPress={handleContinue}
-            fullWidth={true}
-            className="py-4"
-          />
-        </View>
-      </View>
+              {/* Botão de aceitar */}
+              <TouchableOpacity
+                style={[
+                  styles.acceptButton,
+                  isLoading && styles.buttonDisabled,
+                ]}
+                onPress={handleContinue}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                <MaterialIcons
+                  name={isLoading ? "hourglass-empty" : "check-circle"}
+                  size={18}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.buttonText}>
+                  {isLoading ? "Processando..." : "Aceitar e Continuar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.dark.background,
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding:20,
+    
+  },
+ header: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(155, 209, 61, 0.1)",
+  },
+  logoContainer: {
+    alignItems: "center",
+    
+  },
+  logo: {
+    width: "100%",
+    height: 70,
+  },
+  welcomeCard: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(155, 209, 61, 0.1)",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  iconContainer: {
+    backgroundColor: "#9BD13D",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#1F2937",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  termsCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(155, 209, 61, 0.1)",
+    flex: 1,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginLeft: 8,
+  },
+  webViewContainer: {
+    flex: 1,
+    marginBottom: 20,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+    minHeight: 300,
+  },
+  webView: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  webViewLoading: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  acceptButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#9BD13D",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: "#D1D5DB",
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 10,
+  },
+});

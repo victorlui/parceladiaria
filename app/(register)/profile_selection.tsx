@@ -1,11 +1,24 @@
 import Spinner from "@/components/Spinner";
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
 import { useState } from "react";
-import { Text, TouchableOpacity, View, Alert, Image, Animated } from "react-native";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { 
+  Text, 
+  TouchableOpacity, 
+  View, 
+  Alert, 
+  Image, 
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
+} from "react-native";
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { router } from "expo-router";
 
 const profileOptions = [
   {
@@ -31,7 +44,6 @@ const profileOptions = [
 export default function ProfileSelection() {
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const { mutate, isPending } = useUpdateUserMutation();
-  const [scaleAnim] = useState(new Animated.Value(1));
 
   const onContinue = () => {
     if (!selectedProfile) {
@@ -53,90 +65,297 @@ export default function ProfileSelection() {
 
   const handlePress = (id: string) => {
     setSelectedProfile(id);
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
   return (
-    <LayoutRegister isLogo={false} isBack onContinue={onContinue}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
       {isPending && <Spinner />}
-      <View className="flex-1 px-4">
-        <View className="items-center mb-8">
-          <Image
-            source={require("@/assets/images/apenas-logo.png")}
-            className="w-full h-48"
-            resizeMode="contain"
-          />
-        </View>
-        
-        <Text className="text-center text-3xl font-bold mb-8 text-gray-800">
-          Selecione seu perfil
-        </Text>
 
-        <View className="space-y-4 flex-1">
-          {profileOptions.map((option) => {
-            const isSelected = selectedProfile === option.id;
-
-            return (
-              <Animated.View 
-                key={option.id}
-                style={{ transform: [{ scale: scaleAnim }] }}
-              >
+      <LinearGradient
+        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+        style={styles.gradientBackground}
+      >
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.content}>
+              {/* Header with back button */}
+              <View style={styles.header}>
                 <TouchableOpacity
-                  onPress={() => handlePress(option.id)}
-                  className="overflow-hidden"
+                  style={styles.backButton}
+                  onPress={() => router.back()}
                 >
-                  <View
-                    className={`p-4 rounded-xl shadow-md ${
-                      isSelected ? 'bg-[#7FD223]' : 'bg-white'
-                    }`}
-                  >
-                    <View className="flex-row items-center justify-between rounded-md">
-                      <View className="flex-row items-center flex-1">
-                        <MaterialCommunityIcons
-                          name={option.iconName as "car" | "motorbike" | "store"}
-                          size={32}
-                          color={isSelected ? '#ffffff' : '#7FD223'}
-                          style={{ marginRight: 16 }}
-                        />
-                        <Text
-                          className={`text-lg font-bold ${
-                            isSelected ? 'text-white' : 'text-gray-800'
-                          }`}
-                        >
-                          {option.label}
-                        </Text>
-                      </View>
-                      
-                      <View
-                        className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
-                          isSelected 
-                            ? 'border-white bg-transparent' 
-                            : 'border-gray-300 bg-white'
-                        }`}
-                      >
-                        {isSelected && (
-                          <View className="w-3 h-3 rounded-full bg-white" />
-                        )}
-                      </View>
-                    </View>
-                  </View>
+                  <MaterialIcons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
-              </Animated.View>
-            );
-          })}
-        </View>
-      </View>
-    </LayoutRegister>
+              </View>
+
+              {/* Logo */}
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("@/assets/images/apenas-logo.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* Welcome Card */}
+              <View style={styles.welcomeCard}>
+                <Text style={styles.welcomeTitle}>Selecione seu perfil</Text>
+                <Text style={styles.welcomeSubtitle}>
+                  Escolha a opção que melhor descreve sua atividade profissional
+                </Text>
+              </View>
+
+              {/* Profile Options Card */}
+              <View style={styles.inputCard}>
+                <View style={styles.cardHeader}>
+                  <MaterialIcons name="work" size={20} color="#9BD13D" />
+                  <Text style={styles.cardTitle}>Opções de Perfil</Text>
+                </View>
+
+                <View style={styles.optionsContainer}>
+                  {profileOptions.map((option) => {
+                    const isSelected = selectedProfile === option.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.id}
+                        onPress={() => handlePress(option.id)}
+                        style={[
+                          styles.profileOption,
+                          isSelected && styles.profileOptionSelected
+                        ]}
+                      >
+                          <View style={styles.profileOptionContent}>
+                            <View style={styles.profileOptionLeft}>
+                              <MaterialCommunityIcons
+                                name={option.iconName as "car" | "motorbike" | "store"}
+                                size={32}
+                                color={isSelected ? '#ffffff' : '#9BD13D'}
+                                style={styles.profileIcon}
+                              />
+                              <Text
+                                style={[
+                                  styles.profileLabel,
+                                  isSelected && styles.profileLabelSelected
+                                ]}
+                              >
+                                {option.label}
+                              </Text>
+                            </View>
+                            
+                            <View
+                              style={[
+                                styles.radioButton,
+                                isSelected && styles.radioButtonSelected
+                              ]}
+                            >
+                              {isSelected && (
+                                <View style={styles.radioButtonInner} />
+                              )}
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.continueButton,
+                    (!selectedProfile || isPending) && styles.buttonDisabled
+                  ]}
+                  onPress={onContinue}
+                  disabled={!selectedProfile || isPending}
+                >
+                  {isPending ? (
+                    <MaterialIcons name="hourglass-empty" size={20} color="white" />
+                  ) : (
+                    <MaterialIcons name="arrow-forward" size={20} color="white" />
+                  )}
+                  <Text style={styles.buttonText}>
+                    {isPending ? "Salvando..." : "Continuar"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.dark.background,
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+ backButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(155, 209, 61, 0.1)",
+  },
+  logoContainer: {
+    alignItems: 'center',
+   
+  },
+  logo: {
+
+    height: 120,
+    resizeMode: 'contain',
+  },
+  welcomeCard: {
+    borderRadius: 16,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 209, 61, 0.1)',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  iconContainer: {
+    backgroundColor: '#9BD13D',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 209, 61, 0.1)',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginLeft: 8,
+  },
+  optionsContainer: {
+    marginBottom: 20,
+  },
+  profileOption: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  profileOptionSelected: {
+    backgroundColor: '#9BD13D',
+    borderColor: '#9BD13D',
+  },
+  profileOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  profileOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  profileIcon: {
+    marginRight: 16,
+  },
+  profileLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    flex: 1,
+    marginRight: 16,
+  },
+  profileLabelSelected: {
+    color: '#FFFFFF',
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioButtonSelected: {
+    borderColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+  },
+  continueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#9BD13D',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+});

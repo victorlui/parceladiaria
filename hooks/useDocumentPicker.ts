@@ -5,7 +5,6 @@ import { Alert } from "react-native";
 
 type FileType = "pdf" | "image" | "video";
 
-
 interface SelectedFile {
   uri: string;
   name: string;
@@ -14,69 +13,123 @@ interface SelectedFile {
 }
 
 export function useDocumentPicker(maxSizeMB: number = 10) {
-  const checkFileSize = async (uri: string) => {
-    const info: FileSystem.FileInfo = await FileSystem.getInfoAsync(uri);
-    return (
-      info.exists &&
-      "size" in info &&
-      (info as { size: number }).size < maxSizeMB * 1024 * 1024
-    );
+  // Para vídeos, usamos um limite maior (5x o limite padrão)
+  const maxVideoSizeMB = maxSizeMB * 5;
+
+  const checkFileSize = async (uri: string, customMaxSize?: number) => {
+    try {
+      const info: FileSystem.FileInfo = await FileSystem.getInfoAsync(uri);
+      const sizeLimit = customMaxSize || maxSizeMB;
+      return (
+        info.exists &&
+        "size" in info &&
+        (info as { size: number }).size < sizeLimit * 1024 * 1024
+      );
+    } catch (error) {
+      console.error("Erro ao verificar tamanho do arquivo:", error);
+      return false;
+    }
   };
 
   const requestPermissions = async () => {
-    const { status: cameraStatus } =
-      await ImagePicker.requestCameraPermissionsAsync();
-    const { status: mediaStatus } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    return cameraStatus === "granted" && mediaStatus === "granted";
+    try {
+      const { status: cameraStatus } =
+        await ImagePicker.requestCameraPermissionsAsync();
+      const { status: mediaStatus } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (cameraStatus !== "granted" || mediaStatus !== "granted") {
+        Alert.alert(
+          "Permissões necessárias",
+          "Para usar esta funcionalidade, é necessário permitir o acesso à câmera e galeria."
+        );
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao solicitar permissões:", error);
+      return false;
+    }
   };
 
   const selectPDF = async (customName?: string): Promise<SelectedFile | null> => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "application/pdf",
-      copyToCacheDirectory: true,
-    });
-    if (!result.canceled) {
-      const file = result.assets[0];
-      if (await checkFileSize(file.uri)) {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+      
+      if (!result.canceled && result.assets.length > 0) {
+        const file = result.assets[0];
+        const isValidSize = await checkFileSize(file.uri);
+        
+        if (!isValidSize) {
+          Alert.alert(
+            "Arquivo muito grande",
+            `O arquivo PDF deve ter no máximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`
+          );
+          return null;
+        }
+        
         return {
           uri: file.uri,
           name: customName || file.name,
-
           mimeType: file.mimeType || "application/pdf",
           type: "pdf",
         };
       }
+    } catch (error) {
+      console.error("Erro ao selecionar PDF:", error);
+      Alert.alert("Erro", "Não foi possível selecionar o arquivo PDF.");
     }
+    
     return null;
   };
 
   const takePhoto = async (
     from: "camera" | "library",
     customName?: string
-
   ): Promise<SelectedFile | null> => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return null;
+    try {
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) return null;
 
-    const picker =
-      from === "camera"
-        ? ImagePicker.launchCameraAsync
-        : ImagePicker.launchImageLibraryAsync;
+      const picker =
+        from === "camera"
+          ? ImagePicker.launchCameraAsync
+          : ImagePicker.launchImageLibraryAsync;
 
-    const result = await picker({ quality: 0.8, allowsEditing: true });
+      const result = await picker({ 
+        quality: 0.8, 
+        allowsEditing: true,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images
+      });
 
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      if (await checkFileSize(asset.uri)) {
+      if (!result.canceled && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const isValidSize = await checkFileSize(asset.uri);
+        
+        if (!isValidSize) {
+          Alert.alert(
+            "Imagem muito grande",
+            `A imagem deve ter no máximo ${maxSizeMB}MB. Por favor, tire uma nova foto ou selecione uma imagem menor.`
+          );
+          return null;
+        }
+        
         return {
           uri: asset.uri,
-          name: customName || `document_${Date.now()}.jpg`,
+          name: customName || `photo_${Date.now()}.jpg`,
           mimeType: "image/jpeg",
           type: "image",
         };
       }
+    } catch (error) {
+      console.error("Erro ao capturar foto:", error);
+      Alert.alert("Erro", "Não foi possível capturar a foto.");
     }
+    
     return null;
   };
 
@@ -84,48 +137,49 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
     from: "camera" | "library",
     customName?: string
   ): Promise<SelectedFile | null> => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return null;
+    try {
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) return null;
 
-    const picker =
-      from === "camera"
-        ? ImagePicker.launchCameraAsync
-        : ImagePicker.launchImageLibraryAsync;
+      const picker =
+        from === "camera"
+          ? ImagePicker.launchCameraAsync
+          : ImagePicker.launchImageLibraryAsync;
 
-    const result = await picker({
-      quality: 1,
-      mediaTypes: 'videos',
-    });
+      const result = await picker({
+        quality: 0.7,
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        videoMaxDuration: 300, // 5 minutos máximo
+      });
 
-    
-
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      if (result.assets?.[0]?.type !== 'video' && await checkFileSize(asset.uri)) {
+      if (!result.canceled && result.assets.length > 0) {
+        const asset = result.assets[0];
+        
+        // Para vídeos, usamos o limite maior
+        const isValidSize = await checkFileSize(asset.uri, maxVideoSizeMB);
+        
+        if (!isValidSize) {
+          Alert.alert(
+            "Vídeo muito grande",
+            `O vídeo deve ter no máximo ${maxVideoSizeMB}MB. Por favor, grave um vídeo menor ou reduza a qualidade.`
+          );
+          return null;
+        }
+        
         return {
           uri: asset.uri,
           name: customName || `video_${Date.now()}.mp4`,
-
           mimeType: "video/mp4",
           type: "video",
         };
-      }else if(result.assets?.[0]?.type === 'video'){
-         return {
-          uri: asset.uri,
-          name: customName || `video_${Date.now()}.mp4`,
-
-          mimeType: "video/mp4",
-          type: "video",
-        };
-      } else {
-        Alert.alert("Atenção", "O arquivo é maior que 10MB. Por favor, selecione um arquivo menor.")
-        return null
       }
+    } catch (error) {
+      console.error("Erro ao capturar vídeo:", error);
+      Alert.alert("Erro", "Não foi possível capturar o vídeo.");
     }
+    
     return null;
   };
 
- 
-
-  return { selectPDF, takePhoto,takeVideo };
+  return { selectPDF, takePhoto, takeVideo };
 }

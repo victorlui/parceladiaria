@@ -1,4 +1,3 @@
-import LayoutRegister from "@/components/ui/LayoutRegister";
 import {
   Alert,
   Image,
@@ -7,6 +6,10 @@ import {
   TouchableOpacity,
   View,
   Modal,
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  Platform,
 } from "react-native";
 import { useState } from "react";
 import { Colors } from "@/constants/Colors";
@@ -14,7 +17,11 @@ import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const pixKeyTypes = [
   { value: "cpf", label: "CPF", icon: "card-outline" },
@@ -23,11 +30,12 @@ const pixKeyTypes = [
 ];
 
 export default function ChavePixScreen() {
-  const { cpf } = useRegisterAuthStore();
+  const { cpf, email: emailRegister, phone: phoneRegister } = useRegisterAuthStore();
+
   const { user } = useAuthStore();
   const [selectedProfile, setSelectedProfile] = useState<string>("");
-  const [email, setEmail] = useState<string>(user?.email ?? "");
-  const [phone, setPhone] = useState<string>(user?.whatsapp ?? "");
+  const [email, setEmail] = useState<string>(user?.email ?? emailRegister ?? "");
+  const [phone, setPhone] = useState<string>(user?.whatsapp ?? phoneRegister ?? "");
   const [modalVisible, setModalVisible] = useState(false);
   const [tempPixValue, setTempPixValue] = useState("");
   const { mutate, isPending } = useUpdateUserMutation();
@@ -81,104 +89,163 @@ export default function ChavePixScreen() {
   };
 
   return (
-    <LayoutRegister
-      isBack
-      onContinue={onSubmit}
-      isLogo={false}
-      loading={isPending}
-    >
-      <View className="flex-1 justify-between">
-        <View className="items-center mb-8">
-          <Image
-            source={require("@/assets/images/apenas-logo.png")}
-            className="w-full h-48"
-            resizeMode="contain"
-          />
-        </View>
+    <>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
 
-        <View>
-          <Text className="text-2xl mb-5 text-center">
-            Configure sua chave PIX para receber pagamentos
-          </Text>
-        </View>
-
-        <View className="flex-1 px-6">
-          <Text className="font-semibold text-xl mb-4">Tipos de chave PIX</Text>
-          {pixKeyTypes.map((option) => {
-            const isSelected = selectedProfile === option.value;
-            const bgColor = getIconBackgroundColor(option.value);
-
-            return (
-              <View key={option.value}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedProfile(option.value);
-                    if (option.value !== "cpf") {
-                      setTempPixValue(option.value === "email" ? email : phone);
-                      setModalVisible(true);
-                    }
-                  }}
-                  className="flex-row items-center border my-3 p-4 rounded-lg"
-                  style={{
-                    borderColor: isSelected ? Colors.primaryColor : Colors.borderColor,
-                    backgroundColor: isSelected ? `${bgColor}15` : 'transparent',
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      backgroundColor: isSelected ? bgColor : '#f5f5f5',
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 15,
-                    }}
+        <LinearGradient
+          colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+          style={styles.gradientBackground}
+        >
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoidingView}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+          >
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.content}>
+                {/* Header com botão voltar */}
+                <View style={styles.header}>
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => router.back()}
                   >
-                    <Ionicons 
-                      name={option.icon as 'card-outline' | 'mail-outline' | 'call-outline'}
-                      size={24} 
-                      color={isSelected ? '#fff' : '#666'} 
+                    <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.logoContainer}>
+                  <Image
+                    source={require("@/assets/images/apenas-logo.png")}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                <View style={styles.welcomeCard}>
+                  <View style={styles.iconContainer}>
+                    <MaterialIcons name="pix" size={24} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.welcomeTitle}>
+                    Configure sua chave PIX
+                  </Text>
+                  <Text style={styles.welcomeSubtitle}>
+                    Escolha uma chave PIX para receber pagamentos
+                  </Text>
+                </View>
+
+                <View style={styles.inputCard}>
+                  <View style={styles.cardHeader}>
+                    <MaterialIcons name="account-balance-wallet" size={20} color="#9BD13D" />
+                    <Text style={styles.cardTitle}>Tipos de chave PIX</Text>
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    {pixKeyTypes.map((option) => {
+                      const isSelected = selectedProfile === option.value;
+                      const bgColor = getIconBackgroundColor(option.value);
+
+                      return (
+                        <View key={option.value} style={styles.pixOptionContainer}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setSelectedProfile(option.value);
+                              if (option.value !== "cpf") {
+                                setTempPixValue(option.value === "email" ? email : phone);
+                                setModalVisible(true);
+                              }
+                            }}
+                            style={[
+                              styles.pixOption,
+                              {
+                                borderColor: isSelected ? Colors.primaryColor : "#E5E7EB",
+                                backgroundColor: isSelected ? `${bgColor}15` : 'transparent',
+                              }
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.pixIconContainer,
+                                {
+                                  backgroundColor: isSelected ? bgColor : '#f5f5f5',
+                                }
+                              ]}
+                            >
+                              <Ionicons 
+                                name={option.icon as 'card-outline' | 'mail-outline' | 'call-outline'}
+                                size={24} 
+                                color={isSelected ? '#fff' : '#666'} 
+                              />
+                            </View>
+                            <View style={styles.pixOptionContent}>
+                              <Text
+                                style={[
+                                  styles.pixOptionLabel,
+                                  {
+                                    color: isSelected ? bgColor : '#222222',
+                                  }
+                                ]}
+                              >
+                                {option.label}
+                              </Text>
+                              <Text style={styles.pixOptionDescription}>
+                                {option.value === 'cpf' ? 'Seu CPF como chave' : 
+                                 option.value === 'email' ? 'Seu e-mail como chave' : 
+                                 'Seu telefone como chave'}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+
+                          {selectedProfile === "cpf" && isSelected && (
+                            <Text style={styles.selectedPixKey}>
+                              Chave PIX: <Text style={styles.selectedPixValue}>{cpf}</Text>
+                            </Text>
+                          )}
+
+                          {selectedProfile === "email" && isSelected && email && (
+                            <Text style={styles.selectedPixKey}>
+                              Chave PIX: <Text style={styles.selectedPixValue}>{email}</Text>
+                            </Text>
+                          )}
+
+                          {selectedProfile === "phone" && isSelected && phone && (
+                            <Text style={styles.selectedPixKey}>
+                              Chave PIX: <Text style={styles.selectedPixValue}>{phone}</Text>
+                            </Text>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.continueButton,
+                      isPending && styles.buttonDisabled,
+                    ]}
+                    onPress={onSubmit}
+                    disabled={isPending}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons
+                      name={isPending ? "hourglass-empty" : "arrow-forward"}
+                      size={20}
+                      color="#FFFFFF"
                     />
-                  </View>
-                  <View>
-                    <Text
-                      className="font-bold text-lg"
-                      style={{
-                        color: isSelected ? bgColor : '#222222',
-                      }}
-                    >
-                      {option.label}
+                    <Text style={styles.buttonText}>
+                      {isPending ? "Salvando..." : "Continuar"}
                     </Text>
-                    <Text className="text-sm text-gray-500">
-                      {option.value === 'cpf' ? 'Seu CPF como chave' : 
-                       option.value === 'email' ? 'Seu e-mail como chave' : 
-                       'Seu telefone como chave'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                {selectedProfile === "cpf" && isSelected && (
-                  <Text className="text-md text-[#222222] ml-2">
-                    Chave PIX: <Text className="font-bold">{cpf}</Text>
-                  </Text>
-                )}
-
-                {selectedProfile === "email" && isSelected && email && (
-                  <Text className="text-md text-[#222222] ml-2">
-                    Chave PIX: <Text className="font-bold">{email}</Text>
-                  </Text>
-                )}
-
-                {selectedProfile === "phone" && isSelected && phone && (
-                  <Text className="text-md text-[#222222] ml-2">
-                    Chave PIX: <Text className="font-bold">{phone}</Text>
-                  </Text>
-                )}
+                  </TouchableOpacity>
+                </View>
               </View>
-            );
-          })}
-        </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </LinearGradient>
+      </SafeAreaView>
 
         <Modal
           animationType="slide"
@@ -216,7 +283,175 @@ export default function ChavePixScreen() {
             </View>
           </View>
         </Modal>
-      </View>
-    </LayoutRegister>
-  );
+      </>
+    );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.dark.background
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  content: {
+    flex: 1,
+   
+  },
+  header: {
+   flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginBottom: 10,
+    marginLeft: 20,
+    marginTop: 20,
+
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(155, 209, 61, 0.1)",
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  logo: {
+    height: 120,
+    resizeMode: 'contain',
+  },
+  welcomeCard: {
+    backgroundColor: 'white',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  inputCard: {
+    backgroundColor: 'white',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: '#9BD13D',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  pixOptionContainer: {
+    marginBottom: 15,
+  },
+  pixOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 2,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  pixIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  pixOptionContent: {
+    flex: 1,
+  },
+  pixOptionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  pixOptionDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  selectedPixKey: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    paddingLeft: 16,
+  },
+  selectedPixValue: {
+    fontWeight: '600',
+    color: '#333',
+  },
+  continueButton: {
+    backgroundColor: Colors.primaryColor,
+    paddingVertical: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+});

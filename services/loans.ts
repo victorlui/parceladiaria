@@ -1,9 +1,8 @@
-import { AxiosError } from "axios";
 import api from "./api";
-import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { QRCodeData } from "@/store/qrcode";
+import { errorHandler } from "@/utils";
 
 export type Loan = {
   id: number;
@@ -50,12 +49,7 @@ export async function getLoanActive(): Promise<Response> {
     const { data } = await api.get("v1/client");
     return data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+   errorHandler(error)
     throw error;
   }
 }
@@ -65,30 +59,11 @@ export async function getLoansOpen(id: number | null) {
     const { data } = await api.get(`/v1/loan/${id}`);
     return data;
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+   errorHandler(error)
     throw error;
   }
 }
 
-// export async function getRenovacao() {
-//   try {
-//     const { data } = await api.get(`v1/renew/rules`);
-//     return data;
-//   } catch (error: unknown) {
-//     if (error instanceof AxiosError) {
-//       if (error.response?.status === 401) {
-//         useAuthStore.getState().logout();
-//         router.replace("/login");
-//       }
-//     }
-//     throw error;
-//   }
-// }
 
 export async function getLoans(): Promise<Loan[]> {
   try {
@@ -96,12 +71,7 @@ export async function getLoans(): Promise<Loan[]> {
    
     return response.data.data.data
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+    errorHandler(error)
     throw error;
   }
 }
@@ -111,12 +81,7 @@ export async function getLoanInstallments(loanId: number): Promise<Installment[]
     const response = await api.get(`/v1/loan/${loanId}`);
     return response.data.data?.data || [];
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+   errorHandler(error)
     throw error;
   }
 }
@@ -141,12 +106,7 @@ export async function getClientInfo(): Promise<PropsDataUser> {
     const response = await api.get(`/v1/client/data/info`);
     return response.data.data || {};
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+    errorHandler(error)
     throw error;
   }
 }
@@ -161,12 +121,7 @@ export async function changePassword(password: string) {
     Alert.alert('Sucesso', 'Senha alterada com sucesso.');
     router.back()
   } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+   errorHandler(error)
     throw error;
   }
 }
@@ -186,14 +141,22 @@ export async function gerarQRCode(id:number[]):Promise<PropsQRCode | undefined> 
     })
     return response.data.data
   } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+    errorHandler(error)
     throw error;
 
   }
 }
+
+export async function getPaymentStatus(id: number) {
+  try {
+    const response = await api.get(`/v1/payment/${id}`);
+    console.log('response',response)
+
+    return response.data.data;
+  } catch (error: unknown) {
+    errorHandler(error)
+    throw error;
+  }
+}
+
 

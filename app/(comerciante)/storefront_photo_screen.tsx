@@ -19,10 +19,10 @@ export default function StorefrontPhotoScreen() {
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectPDF = async () => {
-    const selected = await selectPDF();
-    if (selected) setFile(selected);
-  };
+  // const handleSelectPDF = async () => {
+  //   const selected = await selectPDF();
+  //   if (selected) setFile(selected);
+  // };
 
   const handleTakePhoto = async () => {
     const selected = await takePhoto("camera");

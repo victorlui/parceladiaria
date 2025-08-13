@@ -40,7 +40,6 @@ const player = useMemo(() => {
 
   const handleGallery = async () => {
     const selected = await takeVideo("library");
-    console.log('library', selected)
 
     if (selected) setFile(selected);
   };
@@ -58,8 +57,6 @@ const player = useMemo(() => {
       });
 
       if (!finalUrl) return;
-
-      console.log("finalUrl", finalUrl);
 
       mutate({
         request: {

@@ -8,6 +8,7 @@ import {
   Dimensions,
   SafeAreaView,
   Image,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/auth";
@@ -112,6 +113,24 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       },
     },
     {
+      icon: "logo-whatsapp",
+      title: "Suporte",
+      onPress: async () => {
+        const phoneNumber = "+5511960882293";
+        const message =
+          "Olá! Estou com problemas com o app. Quero saber mais.";
+
+        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          alert("WhatsApp não está instalado ou não pode abrir o link.");
+        }
+        onClose();
+      },
+    },
+    {
       icon: "log-out-outline",
       title: "Sair",
       onPress: () => {
@@ -188,7 +207,10 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       >
         <SafeAreaView style={{ flex: 1 }}>
           {/* Header */}
-          <View className=" px-6 py-8" style={{backgroundColor: 'rgba(155, 209, 61, 0.1)'}}>
+          <View
+            className=" px-6 py-8"
+            style={{ backgroundColor: "rgba(155, 209, 61, 0.1)" }}
+          >
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Image

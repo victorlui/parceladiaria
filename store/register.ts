@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 type RegisterAuth = {
   cpf: string | null;
+  email: string | null;
   phone: string | null;
   code: string | null;
   address: AddressSchema | null;
@@ -15,6 +16,7 @@ type RegisterAuth = {
   setPhone: (phone: string) => void;
   setCode: (code: string) => void;
   setAddress: (address: AddressSchema) => void;
+  setEmail: (email: string) => void;
   clean: () => void;
 };
 
@@ -26,6 +28,8 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   isLoading: true,
   etapa: null,
   password: null,
+  email: null,
+
   setPassword: (password) => {
     set({ password });
   },
@@ -40,6 +44,11 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   setPhone: (phone) => {
     set({ phone });
   },
+
+  setEmail: (email) => {
+    set({ email });
+  },
+
 
   setCode: (code) => {
     set({ code });

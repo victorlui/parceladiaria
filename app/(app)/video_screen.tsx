@@ -8,8 +8,12 @@ import { Etapas } from "@/utils";
 import { StatusBar } from "expo-status-bar";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, AppState, AppStateStatus } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as SecureStore from 'expo-secure-store';
+
+const VIDEO_PROGRESS_KEY = 'video_progress';
+const VIDEO_COMPLETED_KEY = 'video_completed';
 
 export default function VideoScreen() {
   useDisableBackHandler();
@@ -20,21 +24,104 @@ export default function VideoScreen() {
 
   const { mutate: registerMutate, isSuccess } = useUpdateUserMutation();
   const [progress, setProgress] = useState(0);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [appState, setAppState] = useState(AppState.currentState);
 
   const videoPlayer = useVideoPlayer(
     require("../../assets/videos/cadastro-em-analise.mp4") ?? "",
     (player) => {
-      player.loop = false; // Disable loop to detect when video ends
-      player.play();
-      player.currentTime = player.duration - 10;
+      player.loop = false;
+      // Não inicia automaticamente - será controlado pelo useEffect
     }
   );
 
   const videoRef = useRef<VideoView>(null);
 
+  // Função para salvar o progresso do vídeo
+  const saveVideoProgress = async (currentTime: number) => {
+    try {
+      await SecureStore.setItemAsync(VIDEO_PROGRESS_KEY, currentTime.toString());
+    } catch (error) {
+      console.log('Erro ao salvar progresso do vídeo:', error);
+    }
+  };
+
+  // Função para carregar o progresso salvo
+  const loadVideoProgress = async () => {
+    try {
+      const savedProgress = await SecureStore.getItemAsync(VIDEO_PROGRESS_KEY);
+      const isCompleted = await SecureStore.getItemAsync(VIDEO_COMPLETED_KEY);
+      
+      if (isCompleted === 'true') {
+        // Se o vídeo já foi completado, pula para o final
+        onContinue();
+        return;
+      }
+      
+      if (savedProgress && videoPlayer.duration) {
+        const progressTime = parseFloat(savedProgress);
+        if (progressTime > 0 && progressTime < videoPlayer.duration) {
+          videoPlayer.currentTime = progressTime;
+        }
+      }
+      
+      videoPlayer.play();
+      setIsVideoLoaded(true);
+    } catch (error) {
+      console.log('Erro ao carregar progresso do vídeo:', error);
+      videoPlayer.play();
+      setIsVideoLoaded(true);
+    }
+  };
+
+  // Função para marcar vídeo como completado
+  const markVideoCompleted = async () => {
+    try {
+      await SecureStore.setItemAsync(VIDEO_COMPLETED_KEY, 'true');
+      await SecureStore.deleteItemAsync(VIDEO_PROGRESS_KEY);
+    } catch (error) {
+      console.log('Erro ao marcar vídeo como completado:', error);
+    }
+  };
+
+  // Carrega o progresso do vídeo quando o componente monta
+  useEffect(() => {
+    const initializeVideo = async () => {
+      // Aguarda um pouco para garantir que o vídeo está carregado
+      setTimeout(() => {
+        loadVideoProgress();
+      }, 1000);
+    };
+    
+    initializeVideo();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+  // Controla o estado do app (background/foreground)
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        // App voltou ao foreground - retoma o vídeo se estava carregado
+        if (isVideoLoaded && !videoPlayer.playing) {
+          videoPlayer.play();
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        // App foi para background - salva o progresso
+        if (videoPlayer.currentTime) {
+          saveVideoProgress(videoPlayer.currentTime);
+        }
+      }
+      setAppState(nextAppState as AppStateStatus);
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [appState, isVideoLoaded, videoPlayer]);
+
   useEffect(() => {
     if (isSuccess) {
       videoPlayer.pause();
+      markVideoCompleted();
       showSuccess("", "Cadastro realizado com sucesso!", () => {
         mutate({
           cpf: cpf || "",
@@ -46,6 +133,7 @@ export default function VideoScreen() {
 
   useEffect(() => {
     const subscription = videoPlayer.addListener("playToEnd", () => {
+      markVideoCompleted();
       onContinue();
     });
     return () => {
@@ -53,6 +141,7 @@ export default function VideoScreen() {
     };
   }, [videoPlayer]); //eslint-disable-line react-hooks/exhaustive-deps
 
+  // Monitora o progresso do vídeo e salva periodicamente
   useEffect(() => {
     const checkTime = setInterval(() => {
       const duration = videoPlayer.duration;
@@ -60,11 +149,16 @@ export default function VideoScreen() {
       if (duration != null && current != null) {
         const prog = current / duration;
         setProgress(prog > 1 ? 1 : prog);
+        
+        // Salva o progresso a cada 5 segundos
+        if (current > 0 && Math.floor(current) % 5 === 0) {
+          saveVideoProgress(current);
+        }
       }
     }, 500);
 
     const subscription = videoPlayer.addListener("playToEnd", () => {
-      clearInterval(checkTime); // para o loop
+      clearInterval(checkTime);
     });
 
     return () => {
@@ -73,7 +167,8 @@ export default function VideoScreen() {
     };
   }, [videoPlayer]);
 
-  const onContinue = useCallback(() => {
+  const onContinue = useCallback(async () => {
+    await markVideoCompleted();
     registerMutate({
       request: {
         etapa: Etapas.FINALIZADO,

@@ -14,6 +14,8 @@ export default function Index() {
       try {
         // Restaurar token primeiro
         await restoreToken();
+
+        console.log('index',user)
         
         // Aguardar um pouco para garantir que o estado foi atualizado
         setTimeout(() => {
@@ -58,6 +60,15 @@ export default function Index() {
             return;
           }
 
+          if(user?.type === 'lead') {
+            if(user.status) {
+              if(user.status === StatusCadastro.PRE_APROVADO) {
+                router.replace('/pre_aprovado_screen')
+                return
+              }
+            }
+          }
+
           // Para outros tipos de usuário ou casos não especificados
           router.replace('/login');
         }, 100);
@@ -68,7 +79,7 @@ export default function Index() {
     };
 
     initializeApp();
-  }, []);
+  }, [restoreToken, router, token, user]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>

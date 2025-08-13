@@ -68,9 +68,9 @@ export default function InsertPassword() {
 
               {/* Welcome Card */}
               <View style={styles.welcomeCard}>
-                <View style={styles.iconContainer}>
+                {/* <View style={styles.iconContainer}>
                   <FontAwesome6 name="lock" size={40} color="white" />
-                </View>
+                </View> */}
                 
                 <Text style={styles.welcomeTitle}>
                   Senha de acesso
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    gap:20
   },
   logoContainer: {
     alignItems: 'center',
@@ -154,9 +153,7 @@ const styles = StyleSheet.create({
     height: 140,
   },
   welcomeCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    
     padding: 32,
     borderWidth: 1,
     borderColor: 'rgba(155, 209, 61, 0.1)',

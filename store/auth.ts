@@ -9,6 +9,7 @@ type AuthState = {
   login: (token: string, user: ApiUserData | null) => void;
   logout: () => void;
   setToken: (token: string ) => void;
+  setUser: (user: ApiUserData | null) => void;
   restoreToken: () => Promise<void>;
 };
 
@@ -20,6 +21,12 @@ export const useAuthStore = create<AuthState>((set,get) => ({
   login: (token,user) => {
     saveToken(token,user);
     set({ token,user:user });
+  },
+
+  setUser: (user) => {
+    const token = get().token;
+    set({ user });
+    saveToken(token!,user);
   },
 
   setToken: (token) => {
