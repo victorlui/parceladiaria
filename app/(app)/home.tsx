@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+// import { useAuthStore } from "@/store/auth"; // Removido pois não está sendo usado
 import {
   Text,
   View,
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ClientInfo, gerarQRCode, getLoanActive, getLoansOpen, getPaymentStatus } from "@/services/loans";
+import { ClientInfo, gerarQRCode, getLoanActive, getLoansOpen } from "@/services/loans";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import DrawerMenu from "@/components/DrawerMenu";
@@ -23,7 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { Colors } from "@/constants/Colors";
 import { PropsQRCode, useQRCodeStore } from "@/store/qrcode";
-import { renewList } from "@/services/renew";
+import { renewList, renewStatus } from "@/services/renew";
 
 interface Installment {
   id: number;
@@ -246,76 +245,22 @@ const HomeScreen: React.FC = () => {
     }).length;
   }, [installments]);
 
+  // Função para gerar QR Code e navegar
   const handleGenerateQRCode = useCallback(async () => {
-  if (selectedInstallments.length === 0) return;
-  
-  try {
-    setIsGeneratingQR(true);
+    if (selectedInstallments.length === 0) return;
+    console.log('parcelas selecionadas',selectedInstallments)
     
-    // Verificar status de pagamento de cada parcela selecionada
-    const paidInstallments: number[] = [];
-    const unpaidInstallments: number[] = [];
-    
-    for (const installmentId of selectedInstallments) {
-      try {
-        const paymentStatus = await getPaymentStatus(installmentId);
-        if (paymentStatus.paid === "Sim" || paymentStatus.paid === true || paymentStatus.status === "paid") {
-          paidInstallments.push(installmentId);
-        } else {
-          unpaidInstallments.push(installmentId);
-        }
-      } catch (error:unknown) 
-      {
-        unpaidInstallments.push(installmentId);
-      }
-    }
-    
-    
-    if (paidInstallments.length > 0) {
-     
-      
-      Alert.alert(
-        "Parcelas já pagas",
-        `As parcelas selecionada já foram pagas. Aguarde um momento enquanto atualizamos o sistema`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              fetchLoanData()
-             
-            }
-          }
-        ]
-      );
-    } else {
-      // Se nenhuma parcela foi paga, continuar normalmente
-      await generateQRCodeForUnpaidInstallments(selectedInstallments);
-    }
-    
-  } catch (error: unknown)
-  {
-    Alert.alert(
-      "Erro",
-      "Ocorreu um erro ao verificar o status das parcelas. Tente novamente."
-    );
-  } finally {
-    setIsGeneratingQR(false);
-  }
-}, [selectedInstallments, installments, setQRCodeData]); //eslint-disable-line
-
-  
-  const generateQRCodeForUnpaidInstallments = useCallback(async (unpaidIds: number[]) => {
-  try {
-    const qrCodeData = await gerarQRCode(unpaidIds);
-    setQRCodeData(qrCodeData as PropsQRCode);
-    router.push('/(app)/qr_code_screen');
-  } catch (error: unknown) {
-    Alert.alert(
-      "Erro",
-      "Ocorreu um erro ao gerar o QR Code. Tente novamente."
-    );
-  }
-}, [setQRCodeData]);
+    // try {
+    //   setIsGeneratingQR(true);
+    //   const qrCodeData = await gerarQRCode(selectedInstallments);
+    //   setQRCodeData(qrCodeData as PropsQRCode);
+    //   router.push('/(app)/qr_code_screen');
+    // } catch (error: unknown) {
+    //   console.error('Erro ao gerar QR Code:', error);
+    // } finally {
+    //   setIsGeneratingQR(false);
+    // }
+  }, [selectedInstallments, setQRCodeData]);
 
   // Função para alternar seleção de todas as parcelas
   const handleToggleSelectAll = useCallback(() => {

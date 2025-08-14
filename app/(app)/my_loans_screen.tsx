@@ -23,6 +23,7 @@ import { format, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { Colors } from "@/constants/Colors";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import DrawerMenu from "@/components/DrawerMenu";
 
 type LoanWithExpanded = Loan & {
   expanded?: boolean;
@@ -79,6 +80,7 @@ export default function MyLoansScreen() {
   const [loans, setLoans] = useState<LoanWithExpanded[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
   const fetchLoans = async () => {
     try {
@@ -145,7 +147,6 @@ export default function MyLoansScreen() {
   };
 
   const loadInstallments = async (loanId: number) => {
-    
     setLoans((prevLoans) =>
       prevLoans.map((loan) =>
         loan.id === loanId ? { ...loan, loadingInstallments: true } : loan
@@ -161,9 +162,9 @@ export default function MyLoansScreen() {
             const baseHeight = 300;
             // Aumenta o espaço por parcela para garantir que todas sejam visíveis
             const installmentHeight = installments.length * 73 + 20;
-           
+
             const totalHeight = baseHeight + installmentHeight;
- 
+
             // Ajusta a altura da animação
             if (loan.expanded) {
               Animated.timing(loan.animatedHeight!, {
@@ -176,7 +177,6 @@ export default function MyLoansScreen() {
             return { ...loan, installments, loadingInstallments: false };
           }
 
-          
           return loan;
         })
       );
@@ -199,8 +199,7 @@ export default function MyLoansScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR");
+    return format(parseISO(dateString), "dd/MM/yyyy", { locale: ptBR });
   };
 
   const getStatusColor = (dueDate: string) => {
@@ -211,16 +210,6 @@ export default function MyLoansScreen() {
     if (diffDays < 0) return "#EF4444"; // Vencido - vermelho
     if (diffDays <= 7) return "#F59E0B"; // Próximo do vencimento - amarelo
     return "#10B981"; // Em dia - verde
-  };
-
-  const getStatusText = (dueDate: string) => {
-    const today = startOfDay(new Date());
-    const due = startOfDay(parseISO(dueDate));
-    const diffDays = differenceInDays(due, today);
-
-    if (diffDays < 0) return "Vencido";
-    if (diffDays <= 7) return "Vence em breve";
-    return "Em dia";
   };
 
   if (loading) {
@@ -251,10 +240,10 @@ export default function MyLoansScreen() {
           <View style={styles.headerTop}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => setIsDrawerVisible(true)}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+              <MaterialIcons name="menu" size={24} color="#1F2937" />
             </TouchableOpacity>
             <View style={styles.headerContent}>
               <FontAwesome5 name="wallet" size={24} color="#9BD13D" />
@@ -307,16 +296,6 @@ export default function MyLoansScreen() {
                       <Text style={styles.loanTitle}>
                         Empréstimo #{loan.id}
                       </Text>
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          { backgroundColor: getStatusColor(loan.due_date) },
-                        ]}
-                      >
-                        <Text style={styles.statusText}>
-                          {getStatusText(loan.due_date)}
-                        </Text>
-                      </View>
                     </View>
 
                     <View style={styles.loanDetailsRow}>
@@ -324,13 +303,6 @@ export default function MyLoansScreen() {
                         <Text style={styles.amountLabel}>Valor</Text>
                         <Text style={styles.amountValue}>
                           {formatCurrency(loan.amount)}
-                        </Text>
-                      </View>
-
-                      <View style={styles.dateContainer}>
-                        <Text style={styles.dateLabel}>Vencimento</Text>
-                        <Text style={styles.dateValue}>
-                          {formatDate(loan.due_date)}
                         </Text>
                       </View>
                     </View>
@@ -381,7 +353,7 @@ export default function MyLoansScreen() {
                         />
                         <Text style={styles.detailLabel}>Taxa de juros:</Text>
                         <Text style={styles.detailValue}>
-                          {loan.loan_interest}%
+                          {parseFloat(loan.loan_interest).toFixed(0)}%
                         </Text>
                       </View>
 
@@ -402,7 +374,15 @@ export default function MyLoansScreen() {
                           color="#6B7280"
                         />
                         <Text style={styles.detailLabel}>Origem:</Text>
-                        <Text style={styles.detailValue}>{loan.origin}</Text>
+                        <Text style={styles.detailValue}>
+                          {loan.origin === "solicitacoes"
+                            ? "SOLICITAÇÃO"
+                            : loan.origin === "renovacao"
+                              ? "RENOVAÇÃO"
+                              : loan.origin === "renegociacao"
+                                ? "RENEGOCIAÇÕES"
+                                : "REFINANCIADO"}
+                        </Text>
                       </View>
 
                       {loan.installment_amount && (
@@ -526,6 +506,11 @@ export default function MyLoansScreen() {
           )}
         </ScrollView>
       </LinearGradient>
+      
+      <DrawerMenu
+        isVisible={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+      />
     </SafeAreaView>
   );
 }

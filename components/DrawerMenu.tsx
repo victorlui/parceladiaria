@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState } from "react";
 import {
   View,
@@ -67,7 +68,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "home-outline",
       title: "Início",
       onPress: () => {
-        console.log("Início pressed");
+        router.push("/(app)/home");
         onClose();
       },
     },
@@ -116,16 +117,16 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "logo-whatsapp",
       title: "Suporte",
       onPress: async () => {
-        const phoneNumber = "+5511960882293";
-        const message =
-          "Olá! Estou com problemas com o app. Quero saber mais.";
+        const phoneNumber = "5511960882293"; // sem +
+        const message = "Olá! Estou com problemas com o app. Quero saber mais.";
 
-        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+
         const supported = await Linking.canOpenURL(url);
         if (supported) {
           await Linking.openURL(url);
         } else {
-          alert("WhatsApp não está instalado ou não pode abrir o link.");
+          alert("WhatsApp não está instalado.");
         }
         onClose();
       },

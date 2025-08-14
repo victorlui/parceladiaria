@@ -20,6 +20,20 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "whatsapp"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "package": "com.victorlui.parceladiaria"
     },
     "web": {

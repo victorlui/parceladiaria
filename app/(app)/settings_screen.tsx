@@ -5,8 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   TextInput,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,13 +14,16 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
-import { changePassword } from "@/services/loans";
+
 import { AxiosError } from "axios";
+import DrawerMenu from "@/components/DrawerMenu";
+import { changePassword } from "@/services/loans";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
   const handleChangePassword = async () => {
     if (!newPassword.trim()) {
@@ -64,10 +67,10 @@ export default function SettingsScreen() {
           <View style={styles.headerTop}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.back()}
+              onPress={() => setIsDrawerVisible(true)}
               activeOpacity={0.7}
             >
-              <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+              <MaterialIcons name="menu" size={24} color="#1F2937" />
             </TouchableOpacity>
             <View style={styles.headerContent}>
               <MaterialIcons name="settings" size={24} color="#9BD13D" />
@@ -157,6 +160,11 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+      
+      <DrawerMenu
+        isVisible={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+      />
     </SafeAreaView>
   );
 }

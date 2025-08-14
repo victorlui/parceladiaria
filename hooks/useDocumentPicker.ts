@@ -13,8 +13,8 @@ interface SelectedFile {
 }
 
 export function useDocumentPicker(maxSizeMB: number = 10) {
-  // Para vídeos, usamos um limite maior (5x o limite padrão)
-  const maxVideoSizeMB = maxSizeMB * 5;
+  // Para vídeos, usamos um limite muito maior (20x o limite padrão)
+  const maxVideoSizeMB = maxSizeMB * 20; // Aumentado de 5x para 20x
 
   const checkFileSize = async (uri: string, customMaxSize?: number) => {
     try {
@@ -103,8 +103,10 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       const result = await picker({ 
         quality: 0.8, 
         allowsEditing: true,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images
+        mediaTypes: 'images'
       });
+
+
 
       if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
@@ -147,9 +149,12 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
           : ImagePicker.launchImageLibraryAsync;
 
       const result = await picker({
-        quality: 0.7,
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        videoMaxDuration: 300, // 5 minutos máximo
+        quality: 0.5, // Aumentado de 0 para 0.5 para melhor qualidade
+        mediaTypes: 'videos', // Corrigido para usar a constante correta
+        videoMaxDuration: 120, // 2 minutos máximo (conforme solicitado anteriormente)
+        allowsEditing: false, // Adicionado para evitar problemas de edição
+        videoQuality: ImagePicker.UIImagePickerControllerQualityType.Low , // Aumentado de 0 para 0.5 para melhor qualidade
+
       });
 
       if (!result.canceled && result.assets.length > 0) {

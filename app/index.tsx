@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
@@ -60,20 +61,19 @@ export default function Index() {
             return;
           }
 
-          if(user?.type === 'lead') {
-            if(user.status) {
-              if(user.status === StatusCadastro.PRE_APROVADO) {
-                router.replace('/pre_aprovado_screen')
-                return
-              }
-            }
-          }
+          // if(user?.type === 'lead') {
+          //   if(user.status) {
+          //     if(user.status === StatusCadastro.PRE_APROVADO) {
+          //       router.replace('/pre_aprovado_screen')
+          //       return
+          //     }
+          //   }
+          // }
 
           // Para outros tipos de usuário ou casos não especificados
           router.replace('/login');
         }, 100);
       } catch (error) {
-        console.error('Erro ao inicializar app:', error);
         router.replace('/login');
       }
     };

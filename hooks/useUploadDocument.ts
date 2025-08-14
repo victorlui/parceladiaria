@@ -13,14 +13,17 @@ type UploadFileParams = {
 export async function uploadFileToS3({ file }: UploadFileParams) {
   // 1. Verifica tamanho
   const fileInfo:any = await FileSystem.getInfoAsync(file.uri);
-  if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
+  const mimeType = file.mimeType || "image/jpeg";
+  
+  // Skip size validation for video files
+  const isVideo = mimeType.startsWith('video/');
+  if (!isVideo && fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
     Alert.alert("Arquivo muito grande (máx. 10MB)");
     return null;
   }
 
   // 2. Nome e tipo
-  const filename = file.name || "arquivo.jpg";
-  const mimeType = file.mimeType || "image/jpeg";
+  const filename = file.name || (isVideo ? "video.mp4" : "arquivo.jpg");
 
   // 3. Solicita link S3
   const { upload_url, final_url } = await solicitarLinkS3(filename, mimeType);

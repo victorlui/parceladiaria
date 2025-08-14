@@ -15,11 +15,13 @@ import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
+import DrawerMenu from "@/components/DrawerMenu";
 
 export default function ProfileScreen() {
     const router = useRouter();
     const [userInfo, setUserInfo] = useState<PropsDataUser>({} as PropsDataUser);
     const [loading, setLoading] = useState(true);
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
     useEffect(() => {
         const getInfo = async () => {
@@ -64,10 +66,10 @@ export default function ProfileScreen() {
                     <View style={styles.headerTop}>
                         <TouchableOpacity 
                             style={styles.backButton}
-                            onPress={() => router.back()}
+                            onPress={() => setIsDrawerVisible(true)}
                             activeOpacity={0.7}
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                            <MaterialIcons name="menu" size={24} color="#1F2937" />
                         </TouchableOpacity>
                         <View style={styles.headerContent}>
                             <FontAwesome5 name="user-circle" size={24} color="#9BD13D" />
@@ -176,6 +178,11 @@ export default function ProfileScreen() {
                    
                 </ScrollView>
             </LinearGradient>
+            
+            <DrawerMenu
+                isVisible={isDrawerVisible}
+                onClose={() => setIsDrawerVisible(false)}
+            />
         </SafeAreaView>
     )
 }

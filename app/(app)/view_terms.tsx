@@ -11,9 +11,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
+import DrawerMenu from "@/components/DrawerMenu";
 
 export default function ViewTermsScreen() {
     const router = useRouter();
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -27,10 +30,10 @@ export default function ViewTermsScreen() {
                     <View style={styles.headerTop}>
                         <TouchableOpacity 
                             style={styles.backButton}
-                            onPress={() => router.back()}
+                            onPress={() => setIsDrawerVisible(true)}
                             activeOpacity={0.7}
                         >
-                            <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                            <MaterialIcons name="menu" size={24} color="#1F2937" />
                         </TouchableOpacity>
                         <View style={styles.headerContent}>
                             <MaterialIcons name="description" size={24} color="#9BD13D" />
@@ -126,6 +129,11 @@ export default function ViewTermsScreen() {
                     </View>
                 </ScrollView>
             </LinearGradient>
+            
+            <DrawerMenu
+                isVisible={isDrawerVisible}
+                onClose={() => setIsDrawerVisible(false)}
+            />
         </SafeAreaView>
     )
 }

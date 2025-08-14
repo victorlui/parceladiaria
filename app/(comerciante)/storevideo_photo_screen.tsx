@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import { useVideoPlayer, VideoPlayer, VideoView } from "expo-video";
+import { Feather } from "@expo/vector-icons";
 
 export default function StoreVideoScreen() {
   useDisableBackHandler();
@@ -99,6 +100,11 @@ const player = useMemo(() => {
         </View>
 
         <View className="flex-1 mb-3">
+          {!file && (
+             <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
+          <Feather name="video" size={50} color="#9CA3AF" />
+        </View>
+          )}
           {file && file.type === "video" && (
             <VideoView
               style={{
