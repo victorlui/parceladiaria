@@ -1,6 +1,8 @@
 import { useAuthStore } from "@/store/auth";
 import api from "./api";
 import { Etapas } from "@/utils";
+import axios from "axios";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // etapa para criar a senha
 export async function registerService(
@@ -63,17 +65,24 @@ type RequestProps = {
 
 export async function updateUserService({
   request,
-}: RequestProps): Promise<{message:string,success:boolean,etapa:Etapas}> {
-    console.log('request update',request)
+}: RequestProps): Promise<{
+  message: string;
+  success: boolean;
+  etapa: Etapas;
+}> {
   try {
     const token = useAuthStore.getState().token;
+    console.log(' token update',token)
+
     if (!token) {
       throw new Error("Token não encontrado");
     }
+
     const { data } = await api.put("/v1/client/update", request);
-  
-    return {...data,success:true,etapa:request.etapa};
+
+    return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
+    console.log('error update',error.response)
     if (error.response) {
       throw {
         status: error.response.status,

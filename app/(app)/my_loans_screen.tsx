@@ -16,14 +16,14 @@ import {
   Installment,
 } from "@/services/loans";
 import { LinearGradient } from "expo-linear-gradient";
-import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ptBR } from "date-fns/locale";
 import { format, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { Colors } from "@/constants/Colors";
-import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import DrawerMenu from "@/components/DrawerMenu";
+import Header from "@/components/Header";
 
 type LoanWithExpanded = Loan & {
   expanded?: boolean;
@@ -76,7 +76,6 @@ const SkeletonItem = () => {
 };
 
 export default function MyLoansScreen() {
-  const router = useRouter();
   const [loans, setLoans] = useState<LoanWithExpanded[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -236,24 +235,14 @@ export default function MyLoansScreen() {
         style={styles.gradientBackground}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setIsDrawerVisible(true)}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="menu" size={24} color="#1F2937" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <FontAwesome5 name="wallet" size={24} color="#9BD13D" />
-              <Text style={styles.headerTitle}>Meus Empréstimos</Text>
-            </View>
-          </View>
-          <Text style={styles.headerSubtitle}>
-            {loans.length} {loans.length === 1 ? "empréstimo" : "empréstimos"}
-          </Text>
-        </View>
+        <Header
+          title="Meus Empréstimos"
+          subtitle={`${loans.length} ${loans.length === 1 ? "empréstimo" : "empréstimos"}`}
+          iconName="wallet"
+          iconLibrary="FontAwesome5"
+          onMenuPress={() => setIsDrawerVisible(true)}
+          showMenuButton={true}
+        />
 
         {/* Loans List */}
         <ScrollView
@@ -506,7 +495,7 @@ export default function MyLoansScreen() {
           )}
         </ScrollView>
       </LinearGradient>
-      
+
       <DrawerMenu
         isVisible={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}

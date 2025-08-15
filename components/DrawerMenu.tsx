@@ -31,7 +31,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
 }) => {
   const [slideAnim] = useState(new Animated.Value(-DRAWER_WIDTH));
   const [overlayOpacity] = useState(new Animated.Value(0));
-  const { logout } = useAuthStore();
+  const { logout,can_renew } = useAuthStore();
 
   React.useEffect(() => {
     if (isVisible) {
@@ -81,14 +81,14 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       },
     },
 
-    //  {
-    //   icon: 'reload-outline',
-    //   title: 'Renovação',
-    //   onPress: () => {
-    //     console.log('Configurações pressed');
-    //     onClose();
-    //   },
-    // },
+     {
+      icon: 'reload-outline',
+      title: 'Renovação',
+      onPress: () => {
+        router.push('/(app)/renew_screen')
+        onClose();
+      },
+    },
     {
       icon: "person-outline",
       title: "Meu Perfil",
@@ -231,23 +231,25 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
 
           {/* Menu Items */}
           <View className="flex-1 pt-4">
-            {menuItems.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={item.onPress}
-                className="flex-row items-center px-6 py-4 border-b border-gray-100"
-              >
-                <Ionicons
-                  name={item.icon as any}
-                  size={24}
-                  color="#374151"
-                  style={{ marginRight: 16 }}
-                />
-                <Text className="text-gray-700 text-base font-medium">
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {menuItems
+              .filter(item => item.title !== 'Renovação' || can_renew)
+              .map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={item.onPress}
+                  className="flex-row items-center px-6 py-4 border-b border-gray-100"
+                >
+                  <Ionicons
+                    name={item.icon as any}
+                    size={24}
+                    color="#374151"
+                    style={{ marginRight: 16 }}
+                  />
+                  <Text className="text-gray-700 text-base font-medium">
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
           </View>
 
           {/* Footer */}

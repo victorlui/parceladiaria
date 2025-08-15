@@ -18,9 +18,9 @@ import { StatusBar } from "expo-status-bar";
 import { AxiosError } from "axios";
 import DrawerMenu from "@/components/DrawerMenu";
 import { changePassword } from "@/services/loans";
+import Header from "@/components/Header";
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -63,22 +63,14 @@ export default function SettingsScreen() {
         style={styles.gradientBackground}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setIsDrawerVisible(true)}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="menu" size={24} color="#1F2937" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <MaterialIcons name="settings" size={24} color="#9BD13D" />
-              <Text style={styles.headerTitle}>Configurações</Text>
-            </View>
-          </View>
-          <Text style={styles.headerSubtitle}>Altere sua senha de acesso</Text>
-        </View>
+        <Header
+          title="Configurações"
+          iconName="settings"
+          iconLibrary="MaterialIcons"
+          onMenuPress={() => setIsDrawerVisible(true)}
+          showMenuButton={true}
+          subtitle="Altere sua senha de acesso"
+        />
 
         {/* Settings Content */}
         <ScrollView
@@ -160,7 +152,7 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
-      
+
       <DrawerMenu
         isVisible={isDrawerVisible}
         onClose={() => setIsDrawerVisible(false)}

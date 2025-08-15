@@ -103,7 +103,9 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       const result = await picker({ 
         quality: 0.8, 
         allowsEditing: true,
-        mediaTypes: 'images'
+        mediaTypes: 'images',
+
+        cameraType: ImagePicker.CameraType.back,
       });
 
 

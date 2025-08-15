@@ -6,8 +6,6 @@ import { Etapas, getRouteByEtapa } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
-import { useLoginMutation } from "./useLoginMutation";
-import { useAlerts } from "@/components/useAlert";
 
 export function useRegisterMutation() {
   const { mutate, isPending, isError, isSuccess, error, data } = useMutation({
@@ -124,7 +122,7 @@ export function useUpdateUserMutation() {
       return data;
     },
     onError: (error: any) => {
-      alert(error.message || "Erro ao atualizar dados do usuário");
+      Alert.alert("Atenção","Informações inválidas. Tente novamente.");
     },
   });
 }

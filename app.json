@@ -34,7 +34,7 @@
           ]
         }
       ],
-      "package": "com.victorlui.parceladiaria"
+      "package": "com.parceladiaria"
     },
     "web": {
       "bundler": "metro",

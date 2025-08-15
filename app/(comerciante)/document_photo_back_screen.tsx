@@ -45,9 +45,9 @@ export default function DocumentBackScreen() {
       });
 
       if (!finalUrl) return;
-
+    // Etapas.REGISTRANDO_TIPO_COMERCIO
       const request = {
-        etapa: Etapas.REGISTRANDO_TIPO_COMERCIO,
+        etapa: Etapas.COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL,
         foto_verso_doc: finalUrl,
       };
       mutate({ request: request });

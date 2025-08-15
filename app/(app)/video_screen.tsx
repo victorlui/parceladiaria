@@ -52,12 +52,14 @@ export default function VideoScreen() {
       const savedProgress = await SecureStore.getItemAsync(VIDEO_PROGRESS_KEY);
       const isCompleted = await SecureStore.getItemAsync(VIDEO_COMPLETED_KEY);
       
+      // ✅ CORREÇÃO: Se já foi completado, limpa os dados e permite assistir novamente
       if (isCompleted === 'true') {
-        // Se o vídeo já foi completado, pula para o final
-        onContinue();
-        return;
+        // Limpa o status de completado para permitir assistir novamente
+        await SecureStore.deleteItemAsync(VIDEO_COMPLETED_KEY);
+        await SecureStore.deleteItemAsync(VIDEO_PROGRESS_KEY);
       }
       
+      // ✅ CORREÇÃO: Sempre verifica o progresso salvo, mesmo se estava completado
       if (savedProgress && videoPlayer.duration) {
         const progressTime = parseFloat(savedProgress);
         if (progressTime > 0 && progressTime < videoPlayer.duration) {

@@ -15,6 +15,8 @@ export default function LayoutComerciante() {
       <Stack.Screen name="storefront_photo_screen" options={options} />
       <Stack.Screen name="storeinterior_photo_screen" options={options} />
       <Stack.Screen name="storevideo_photo_screen" options={options} />
+      <Stack.Screen name="recognition_face" options={options} />
+
     </Stack>
   );
 }

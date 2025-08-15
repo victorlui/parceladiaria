@@ -1,44 +1,29 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useEffect } from "react";
+
 import "react-native-reanimated";
 
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
-import { StatusCadastro } from "@/utils";
 import "../global.css";
 
 export default function RootLayout() {
-  const { restoreToken, token, user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { restoreToken } = useAuthStore();
 
-  // Restaurar token ao iniciar
   useEffect(() => {
     const restore = async () => {
       try {
         await restoreToken();
       } catch (error) {
         console.error('Erro ao restaurar token:', error);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
     restore();
   }, [restoreToken]);
 
-  // A lógica de redirecionamento agora está no index.tsx
-
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <StatusBar style="dark" />
-        <ActivityIndicator color="#dc2626" size="large" />
-      </View>
-    );
-  }
+  
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -44,10 +44,11 @@ export default function CnhFrontScreen() {
       if (!finalUrl) return;
 
       console.log("finalUrl", finalUrl);
-
+ // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
       mutate({
         request: {
-          etapa:  file.type === "pdf" ? Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO : Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
+          etapa:  file.type === "pdf" ? Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL : Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
+
           foto_frente_doc: finalUrl,
         },
       });

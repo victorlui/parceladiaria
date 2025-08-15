@@ -17,11 +17,14 @@ import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import { useQRCodeStore } from "@/store/qrcode";
 import QRCode from 'react-native-qrcode-svg';
+import Header from "@/components/Header";
+import DrawerMenu from "@/components/DrawerMenu";
 
 export default function QRCodeScreen() {
     const router = useRouter();
     const { qrCodeData } = useQRCodeStore();
     const [loading, setLoading] = useState(true);
+     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
     useEffect(() => {
         // Simula um pequeno delay para mostrar o loading
@@ -82,24 +85,16 @@ export default function QRCodeScreen() {
                 style={styles.gradientBackground}
             >
                 {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.headerTop}>
-                        <TouchableOpacity 
-                            style={styles.backButton}
-                            onPress={() => router.back()}
-                            activeOpacity={0.7}
-                        >
-                            <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
-                        </TouchableOpacity>
-                        <View style={styles.headerContent}>
-                            <MaterialIcons name="qr-code" size={24} color="#9BD13D" />
-                            <Text style={styles.headerTitle}>QR Code de Pagamento</Text>
-                        </View>
-                    </View>
-                    <Text style={styles.headerSubtitle}>
-                        Escaneie o código para realizar o pagamento
-                    </Text>
-                </View>
+                <Header
+          title="QR Code de Pagamento"
+          iconName="settings"
+          iconLibrary="MaterialIcons"
+          onMenuPress={() => setIsDrawerVisible(true)}
+          showMenuButton={true}
+          subtitle="Escaneie o código para realizar o pagamento"
+        />
+
+                
 
                 {/* QR Code Content */}
                 <ScrollView
@@ -178,6 +173,10 @@ export default function QRCodeScreen() {
                     </View>
                 </ScrollView>
             </LinearGradient>
+            <DrawerMenu
+        isVisible={isDrawerVisible}
+        onClose={() => setIsDrawerVisible(false)}
+      />
         </SafeAreaView>
     );
 }

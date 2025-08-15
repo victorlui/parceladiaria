@@ -23,7 +23,7 @@ import { useRegisterAuthStore } from "@/store/register";
 
 export default function EmailScreen() {
   const { control, handleSubmit } = useEmailForm();
-  const { setEmail, email } = useRegisterAuthStore();
+  const { setEmail } = useRegisterAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
 
   const onSubmit = (data: EmailSchema) => {
@@ -31,7 +31,7 @@ export default function EmailScreen() {
       email: data.email,
       etapa: Etapas.REGISTRANDO_ENDERECO,
     };
-    setEmail(email!);
+    setEmail(data.email!);
     mutate({ request: request });
   };
 

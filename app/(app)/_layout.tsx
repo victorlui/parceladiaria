@@ -11,7 +11,8 @@ export default function AppLayout() {
       <Stack.Screen name="profile_screen" options={{ headerShown: false }} />
       <Stack.Screen name="settings_screen" options={{ headerShown: false }} />
       <Stack.Screen name="qr_code_screen" options={{ headerShown: false }} />
-      <Stack.Screen name="view_terms" options={{ headerShown: false, }} />
+      <Stack.Screen name="view_terms" options={{ headerShown: false, title: 'Termos e Condições' }} />
+      <Stack.Screen name="renew_screen" options={{ headerShown: false, title: 'Renovação' }} />
     </Stack>
   );
 }

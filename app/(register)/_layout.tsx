@@ -47,6 +47,11 @@ export default function RegisterLayout() {
           name="address_document"
           options={options}
         />
+        <Stack.Screen 
+          name="recognition_face"
+          options={options}
+        />
+
       </Stack>
      </>
    );

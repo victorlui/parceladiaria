@@ -1,49 +1,72 @@
-import { useAuthStore } from "@/store/auth";
-import {
-  Alert,
-  Linking,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  Image,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { TermsCheckbox } from "@/components/TermsCheckbox";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-import { Etapas } from "@/utils";
-import { updateUserService } from "@/services/register";
-import { Ionicons } from "@expo/vector-icons";
 import DrawerMenu from "@/components/DrawerMenu";
 import { Colors } from "@/constants/Colors";
-import * as Network from "expo-network";
-import { acceptedTerms } from "@/services/terms";
+import { PropsListRenew, renewList } from "@/services/renew";
+import { useAuthStore } from "@/store/auth";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  Modal,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import WebView from "react-native-webview";
+import { TermsCheckbox } from "@/components/TermsCheckbox";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
-import WebView from "react-native-webview";
+import { router } from "expo-router";
+import api from "@/services/api";
+import * as Network from "expo-network";
+import { getClientInfo } from "@/services/loans";
+import { convertData } from "@/utils";
 
-const { width } = Dimensions.get("window");
-const isTablet = width > 768;
-
-export default function PreAprovadoScreen() {
-  const { logout, user } = useAuthStore();
+export default function RenewScreen() {
+  const [list, setList] = useState<PropsListRenew[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState({
     terms: false,
     dataSharing: false,
     payments: false,
     ccb: false,
   });
-
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
-  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
-  const [termsModalVisible, setTermsModalVisible] = useState(false);
+
+  const { user } = useAuthStore();
+
+  const allTermsAccepted = Object.values(termsAccepted).every((value) => value);
+
+  const fetchRenewList = async () => {
+    try {
+      const response = await renewList();
+      console.log("res list renew", response);
+      const renewWithSelection = response.map((item) => ({
+        ...item,
+        selected: false,
+      }));
+      setList(renewWithSelection);
+    } catch (error: any) {
+      console.log("error", error.response);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [htmlContent, setHtmlContent] = useState("");
 
   useEffect(() => {
@@ -120,33 +143,26 @@ export default function PreAprovadoScreen() {
     loadHtml();
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/login");
+  useEffect(() => {
+    fetchRenewList();
+  }, []);
+
+  const toggleItemSelection = (renewId: number) => {
+    setSelectedItems(renewId);
   };
 
-  const handleMenuPress = () => {
-    setIsDrawerVisible(true);
+  const formatCurrency = (value: string | number) => {
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(numValue);
   };
 
-  const handleCloseDrawer = () => {
-    setIsDrawerVisible(false);
-  };
-
-  const allTermsAccepted = Object.values(termsAccepted).every((value) => value);
-  const phoneNumber = "++5511960882293";
-  const message =
-    "Olá! Aceitei os Termos e Condições. Vamos fazer a videochamada?";
-
-  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
-  const openWhatsApp = async () => {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      alert("WhatsApp não está instalado ou não pode abrir o link.");
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRenewList();
+    setRefreshing(false);
   };
 
   const handleContinue = async () => {
@@ -154,43 +170,44 @@ export default function PreAprovadoScreen() {
       setIsLoading(true);
       try {
         const ip = await Network.getIpAddressAsync();
+
+        const response_client = await getClientInfo();
+
         const termsData = {
-          sign_info_date: new Date()
-            .toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-            .replace(
-              /(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)\s(AM|PM)/,
-              (_, month, day, year, hours, minutes, seconds, period) => {
-                const h =
-                  period === "PM" ? parseInt(hours) + 12 : parseInt(hours);
-                return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minutes}:${seconds}-03:00`;
-              }
-            ),
+          id: selectedItems,
+          sign_info_date: convertData(),
           sign_info_ip_address: ip,
-          sign_info_city: user?.cidade ?? "",
-          sign_info_state: user?.estado ?? "",
+          sign_info_city: response_client?.city ?? "",
+          sign_info_state: response_client?.uf ?? "",
           sign_info_country: "BR",
         };
-       
-        await acceptedTerms(termsData);
-        Alert.alert(
-          "Sucesso",
-          `Agora entraremos em contato para chamada de vídeo para finalizar o processo`,
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                openWhatsApp();
 
-                logout();
-                router.replace("/login");
-              },
+        await api.post("/v1/renew", termsData);
+        console.log("sucesso", termsData);
+        
+       
+        
+        Alert.alert("Sucesso", `Renovação concluida com sucesso`, [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace("/(app)/home");
             },
-          ]
-        );
-      } catch (error) {
-        console.error("Error uploading documents:", error);
+          },
+        ]);
+
+        setTermsModalVisible(false);
+      } catch (error: any) {
+        console.log("Erro o realizar a renovação:", error.response);
       } finally {
         setIsLoading(false);
+         // Resetar as caixas de seleção dos termos
+        setTermsAccepted({
+          terms: false,
+          dataSharing: false,
+          payments: false,
+          ccb: false,
+        });
       }
     }
   };
@@ -243,229 +260,222 @@ export default function PreAprovadoScreen() {
     },
   ];
 
-  return (
-    <SafeAreaView
-      edges={["top", "bottom"]}
-      className="flex-1 bg-gradient-to-b from-green-50 to-white"
-    >
-      {/* Container principal com padding responsivo */}
-      <View className={`flex-1 ${isTablet ? "px-12 py-8" : "px-6 py-4"}`}>
-        {/* Header com logo e menu */}
-        <View className="flex-row items-center justify-between mb-8">
-          <TouchableOpacity onPress={handleMenuPress} className="p-2">
-            <Ionicons name="menu" size={28} color="#374151" />
-          </TouchableOpacity>
-
-          <View className="flex-1 items-center">
-            <Image
-              source={require("@/assets/images/apenas-logo.png")}
-              className={`w-full ${isTablet ? "h-32" : "h-24"}`}
-              resizeMode="contain"
-            />
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+          style={styles.gradientBackground}
+        >
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#9BD13D" />
+            <Text style={styles.loadingText}>Carregando renovações...</Text>
           </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
 
-          <View className="w-12" />
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
+        style={styles.gradientBackground}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => setIsDrawerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="menu" size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <View style={styles.headerContent}>
+              <View>
+                <Text style={styles.headerTitle}>Renovações</Text>
+                <Text style={styles.headerSubtitle}>
+                  {list.length} {list.length === 1 ? "renovação" : "renovações"}{" "}
+                  disponível{list.length === 1 ? "" : "is"}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Renderização condicional baseada em user?.termos */}
-        {user?.termos === 1 ? (
-          // Conteúdo para videochamada (termos = 1)
-          <>
-            {/* Card de videochamada */}
-            <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-6 border border-gray-100">
-              <View className="items-center">
-                {/* Ícone de videochamada */}
-                <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-blue-100">
-                  <Ionicons name="videocam" size={32} color="#3b82f6" />
-                </View>
-
-                {/* Título */}
-                <Text
-                  className={`font-bold text-center mb-3 ${
-                    isTablet ? "text-3xl" : "text-2xl"
-                  } text-gray-800 leading-tight`}
-                >
-                  Hora da videochamada!
-                </Text>
-
-                {/* Subtítulo */}
-                <Text
-                  className={`text-center text-gray-600 leading-relaxed ${
-                    isTablet ? "text-lg" : "text-base"
-                  }`}
-                >
-                  Agora vamos fazer uma videochamada para finalizar seu cadastro.
-                </Text>
-
-                {/* Badge de status */}
-                <View className="mt-4 px-4 py-2 rounded-full bg-blue-100">
-                  <Text className="font-semibold text-sm text-blue-800">
-                    VIDEOCHAMADA AGENDADA
-                  </Text>
-                </View>
-              </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#9BD13D"]}
+              tintColor="#9BD13D"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          {list.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <MaterialIcons name="refresh" size={64} color="#D1D5DB" />
+              <Text style={styles.emptyTitle}>
+                Nenhuma renovação disponível
+              </Text>
+              <Text style={styles.emptySubtitle}>
+                Você não possui renovações disponíveis no momento
+              </Text>
             </View>
-
-            {/* Conteúdo central para videochamada */}
-            <View className="flex-1 justify-center items-center px-4">
-              <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">
-                <View className="items-center">
-                  <Text
-                    className={`text-center text-gray-600 leading-relaxed ${
-                      isTablet ? "text-lg" : "text-base"
-                    } mb-6`}
-                  >
-                    Clique no botão abaixo para iniciar a videochamada via WhatsApp e finalizar seu processo de cadastro.
-                  </Text>
-
-                  <Text
-                    className={`text-center text-gray-500 ${
-                      isTablet ? "text-base" : "text-sm"
-                    }`}
-                  >
-                    Nossa equipe está pronta para atendê-lo!
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Botões para videochamada */}
-            <View className="px-6 pb-6 pt-4">
-              <View className="gap-3">
-                {/* Botão principal - Iniciar Videochamada */}
+          ) : (
+            list.map((item) => {
+              const isSelected = selectedItems === item.id;
+              return (
                 <TouchableOpacity
-                  onPress={openWhatsApp}
-                  className="rounded-xl py-4 px-6"
-                  style={{ backgroundColor: Colors.primaryColor }}
+                  onPress={() => toggleItemSelection(item.id)}
+                  key={item.id}
+                  style={[
+                    styles.renewCard,
+                    isSelected && styles.renewCardSelected,
+                  ]}
                 >
-                  <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="videocam" size={20} color="white" />
-                    <Text className="text-white font-semibold text-base">
-                      Fazer Videochamada Agora
-                    </Text>
+                  <View style={styles.statusContainer}>
+                    <MaterialIcons
+                      name="check-circle"
+                      size={16}
+                      color="#10B981"
+                    />
+                    <Text style={styles.statusText}>Ativo</Text>
+                  </View>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.titleContainer}>
+                      <Text>Empréstimo de</Text>
+                      <Text
+                        style={[
+                          styles.renewTitle,
+                          isSelected && styles.renewTitleSelected,
+                        ]}
+                      >
+                        {formatCurrency(item.loan_value).replace("R$ ", "")}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.selectButton,
+                        isSelected && styles.selectButtonSelected,
+                      ]}
+                      onPress={() => toggleItemSelection(item.id)}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialIcons
+                        name={
+                          isSelected ? "check-circle" : "radio-button-unchecked"
+                        }
+                        size={24}
+                        color={isSelected ? "#9BD13D" : "#6B7280"}
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.highlightedValuesSection}>
+                    <View style={styles.highlightedValuesSection}>
+                      <View style={styles.highlightedValueRow}>
+                        <Text style={styles.highlightedLabel}>
+                          IOF (0,63%):
+                        </Text>
+                        <Text style={styles.highlightedValue}>
+                          - R${" "}
+                          {(parseFloat(item.loan_value) * 0.0063).toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={styles.highlightedValueRow}>
+                        <Text style={styles.highlightedLabel}>
+                          Taxa T.I.C (1,68%):
+                        </Text>
+                        <Text style={styles.highlightedValue}>
+                          - R${" "}
+                          {(parseFloat(item.loan_value) * 0.0168).toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={styles.highlightedValueRow}>
+                        <Text style={styles.highlightedLabel}>
+                          Saldo Devedor:
+                        </Text>
+                        <Text style={styles.highlightedValue}>
+                          - {formatCurrency(item.debt)}
+                        </Text>
+                      </View>
+                      <View style={styles.highlightedValueRow}>
+                        <Text style={styles.highlightedLabel}>
+                          Quantidade de parcelas:
+                        </Text>
+                        <Text style={styles.detailRowLabel}>
+                          {item.installments}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.highlightedValueRow, styles.totalRow]}>
+                      <Text style={styles.totalLabel}>Valor a Receber:</Text>
+                      <Text style={styles.totalValue}>
+                        {formatCurrency(item.to_receive)}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
-
-                {/* Botão secundário - Sair */}
-                <TouchableOpacity
-                  onPress={handleLogout}
-                  className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
-                >
-                  <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="log-out-outline" size={20} color="#6b7280" />
-                    <Text className="text-gray-600 font-semibold text-base">
-                      Sair
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
-        ) : (
-          // Conteúdo original para aceitar termos (termos = 0 ou undefined)
-          <>
-            {/* Card principal com informações de pré-aprovação */}
-            <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-6 border border-gray-100">
-              <View className="items-center">
-                {/* Ícone de status */}
-                <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-green-100">
-                  <Text className="text-2xl text-green-600">✅</Text>
-                </View>
-
-                {/* Título principal */}
-                <Text
-                  className={`font-bold text-center mb-3 ${
-                    isTablet ? "text-3xl" : "text-2xl"
-                  } text-gray-800 leading-tight`}
-                >
-                  Você foi pré-aprovado!
-                </Text>
-
-                {/* Subtítulo */}
-                <Text
-                  className={`text-center text-gray-600 leading-relaxed ${
-                    isTablet ? "text-lg" : "text-base"
-                  }`}
-                >
-                  Para prosseguir, aceite os termos abaixo:
-                </Text>
-
-                {/* Badge de status */}
-                <View className="mt-4 px-4 py-2 rounded-full bg-green-100">
-                  <Text className="font-semibold text-sm text-green-800">
-                    PRÉ-APROVADO
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Conteúdo central simplificado */}
-            <View className="flex-1 justify-center items-center px-4">
-              {/* Informações adicionais */}
-              <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">
-                <View className="items-center">
-                  <Text
-                    className={`text-center text-gray-600 leading-relaxed ${
-                      isTablet ? "text-lg" : "text-base"
-                    } mb-6`}
-                  >
-                    Parabéns! Seu cadastro foi pré-aprovado. Para finalizar o
-                    processo, você precisa aceitar nossos termos e condições.
-                  </Text>
-
-                  <Text
-                    className={`text-center text-gray-500 ${
-                      isTablet ? "text-base" : "text-sm"
-                    }`}
-                  >
-                    Clique no botão abaixo para revisar e aceitar os termos.
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Botões refatorados */}
-            <View className="px-6 pb-6 pt-4">
-              <View className="gap-3">
-                {/* Botão principal - Aceitar Termos */}
-                <TouchableOpacity
-                  onPress={() => setTermsModalVisible(true)}
-                  className="rounded-xl py-4 px-6"
-                  style={{ backgroundColor: Colors.primaryColor }}
-                >
-                  <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="document-text" size={20} color="white" />
-                    <Text className="text-white font-semibold text-base">
-                      Revisar e Aceitar Termos
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                {/* Botão secundário - Sair */}
-                <TouchableOpacity
-                  onPress={handleLogout}
-                  className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
-                >
-                  <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="log-out-outline" size={20} color="#6b7280" />
-                    <Text className="text-gray-600 font-semibold text-base">
-                      Sair
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
+              );
+            })
+          )}
+        </ScrollView>
+        {selectedItems > 0 && (
+          <View
+            style={{
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              borderTopWidth: 1,
+              borderTopColor: "rgba(155, 209, 61, 0.2)",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+            }}
+          >
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 16,
+                marginBottom: 8,
+                color: "#6B7280",
+              }}
+            >
+              Renovação selecionada
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#9BD13D",
+                paddingVertical: 16,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#84CC16",
+              }}
+              onPress={() => {
+                setTermsModalVisible(true);
+              }}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 18,
+                }}
+              >
+                Fazer Empréstimo
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
-      </View>
-
-      {/* DrawerMenu */}
+      </LinearGradient>
       <DrawerMenu
         isVisible={isDrawerVisible}
-        onClose={handleCloseDrawer}
-        showOnlyLogout={true}
+        onClose={() => setIsDrawerVisible(false)}
       />
-
       {/* Modal dos Termos e Condições */}
       <Modal visible={termsModalVisible} animationType="slide">
         <SafeAreaView className="flex-1 bg-white">
@@ -774,3 +784,305 @@ export default function PreAprovadoScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.dark.background,
+  },
+  gradientBackground: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(155, 209, 61, 0.1)",
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 12,
+    borderRadius: 8,
+    backgroundColor: "rgba(155, 209, 61, 0.1)",
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 80,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#374151",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+  },
+  renewCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginBottom: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(155, 209, 61, 0.5)",
+  },
+  renewCardSelected: {
+    borderColor: "#9BD13D",
+    borderWidth: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  renewTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  renewTitleSelected: {
+    color: "#222222",
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#10B981",
+    fontWeight: "600",
+    marginLeft: 4,
+  },
+  selectButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(155, 209, 61, 0.1)",
+  },
+  selectButtonSelected: {
+    backgroundColor: "rgba(139, 195, 74, 0.2)",
+  },
+  mainValuesContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(155, 209, 61, 0.1)",
+  },
+  valueItem: {
+    flex: 1,
+  },
+  valueLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  loanValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#9BD13D",
+  },
+  debtValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#EF4444",
+    textAlign: "center",
+  },
+  receiveValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#3B82F6",
+    textAlign: "center",
+  },
+  detailsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  detailItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "48%",
+    marginBottom: 12,
+    backgroundColor: "rgba(155, 209, 61, 0.05)",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(155, 209, 61, 0.4)",
+  },
+  detailIconContainer: {
+    marginRight: 8,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  paidValue: {
+    color: "#10B981",
+  },
+  pendingValue: {
+    color: "#F59E0B",
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#9BD13D",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginHorizontal: 8,
+  },
+  highlightedValuesSection: {
+    borderRadius: 12,
+  },
+  highlightedValueRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  highlightedLabel: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  highlightedValue: {
+    fontSize: 14,
+    color: "#EF4444",
+    fontWeight: "600",
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: "#9BD13D",
+    paddingTop: 12,
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  totalLabel: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "bold",
+  },
+  totalValue: {
+    fontSize: 18,
+    color: "#059669",
+    fontWeight: "bold",
+  },
+  detailsSection: {
+    marginBottom: 16,
+  },
+  detailsSectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  detailRowLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  detailRowValue: {
+    fontSize: 14,
+    color: "#1F2937",
+    fontWeight: "600",
+  },
+  warningSection: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#FEF3C7",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 12,
+    color: "#92400E",
+    marginLeft: 8,
+    lineHeight: 16,
+  },
+});

@@ -34,7 +34,6 @@ export const useLoginMutation = () => {
     onSuccess: (data) => {
       const { etapa, status, type } = data.data;
 
-      console.log("login", data);
 
       useAuthStore.getState().login(data.token, data.data);
 

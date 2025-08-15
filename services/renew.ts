@@ -1,22 +1,37 @@
 import api from "./api";
-import { errorHandler } from "@/utils";
 
-export async function renewList() {
+export async function renewStatus() {
   try {
-    const response = await api.get("/v1/renew");
-    console.log("res", response);
+    const response = await api.get("v1/renew/rules");
+    return response;
   } catch (error) {
-    errorHandler(error);
     throw error;
   }
 }
 
-export async function renewStatus() {
+export type PropsListRenew = {
+  debt: number;
+  discount_iof: string;
+  discount_tic: string;
+  id: number;
+  installments: number;
+  loan_value: string;
+  paidAmount: number;
+  qtyPaid: number;
+  qtyUnpaid: number;
+  tax: string;
+  tax_iof: string;
+  tax_tic: string;
+  to_receive: string;
+  unpaidAmount: number;
+};
+
+export async function renewList(): Promise<PropsListRenew[]> {
   try {
-    const response = await api.get("/v1/renew/rules");
-    console.log("res rules", response);
+    const response = await api.get("/v1/renew");
+
+    return response.data.data;
   } catch (error) {
-    errorHandler(error);
     throw error;
   }
 }

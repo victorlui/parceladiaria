@@ -82,7 +82,7 @@ export default function AddressDocument() {
       <View className="mb-4 rounded-lg overflow-hidden">
         <Image
           source={{ uri: file.uri }}
-          className="w-full h-40"
+          className="w-full h-44"
           resizeMode="contain"
         />
       </View>

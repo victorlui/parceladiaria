@@ -1,7 +1,9 @@
 import { useAuthStore } from "@/store/auth";
 import axios, { AxiosError } from "axios";
 import { router } from "expo-router";
-const BASE_URL = "https://app.parceladiaria.com.br/api";
+import { Alert } from "react-native";
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -29,12 +31,12 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    console.log("error response", error.response);
-    // if (error.response?.status === 401) {
-    //   useAuthStore.getState().logout()
-    //   router.replace('/login')
+    if (error.response?.status === 401) {
+      Alert.alert('Sessão expirada', 'Por favor, faça login novamente.')
+      useAuthStore.getState().logout()
+      router.replace('/login')
       
-    // }
+    }
 
     return Promise.reject(error);
   }

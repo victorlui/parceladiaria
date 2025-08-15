@@ -46,6 +46,9 @@ export enum StatusCadastro {
 export enum Etapas {
   INICIO = "Inicio",
   INICIO_BIRTH = "inicio",
+  ASSISTINDO_VIDEO = "assistindo_video",
+  FINALIZADO = "Finalizado",
+  APP_ANALISE = "analise",
   REGISTRANDO_COMPROVANTE_ENDERECO = "registrando_comprovante_endereco",
   REGISTRANDO_PROFISSAO = "registrando_profissao",
   REGISTRANDO_EMAIL = "registrando_email",
@@ -53,6 +56,7 @@ export enum Etapas {
   REGISTRANDO_PIX = "registrando_pix",
   REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO = "registrando_frente_documento_comercio",
   REGISTRANDO_VERSO_DOCUMENTO_COMERCIO = "registrando_verso_documento_comercio",
+  COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL = "comerciante_registrando_reconhecimento_facial",
   REGISTRANDO_TIPO_COMERCIO = "registrando_tipo_comercio",
   REGISTRANDO_EMPRESA_ABERTA = "registrando_empresa_aberta",
   REGISTRANDO_TEM_COMERCIO = "registrando_tem_comercio",
@@ -60,8 +64,6 @@ export enum Etapas {
   REGISTRANDO_FRENTE_COMERCIO = "registrando_frente_comercio",
   REGISTRANDO_INTERIOR_COMERCIO = "registrando_interior_comercio",
   REGISTRANDO_VIDEO_COMERCIO = "registrando_video_comercio",
-  ASSISTINDO_VIDEO = "assistindo_video",
-  FINALIZADO = "Finalizado",
   MOTORISTA_REGISTRANDO_FRENTE_CNH = "registrando_frente_cnh",
   MOTORISTA_REGISTRANDO_VERSO_CNH = "registrando_verso_cnh",
   MOTORISTA_REGISTRANDO_PLACA_VEICULO = "registrando_placa_veiculo",
@@ -70,7 +72,7 @@ export enum Etapas {
   MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO = "registrando_documento_proprietario",
   MOTORISTA_REGISTRANDO_PRINT_ADICIONAL = "registrando_print_adicional",
   MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS = "registrando_comprovante_ganhos",
-  APP_ANALISE = "analise",
+  MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL = "motorista_registrando_reconhecimento_facial",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -85,6 +87,8 @@ const routeMap: Record<Etapas, string> = {
     "/(comerciante)/document_photo_front_screen",
   [Etapas.REGISTRANDO_VERSO_DOCUMENTO_COMERCIO]:
     "/(comerciante)/document_photo_back_screen",
+  [Etapas.COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL]:
+    "/(comerciante)/recognition_face",
   [Etapas.REGISTRANDO_TIPO_COMERCIO]: "/(comerciante)/bussines_type_screen",
   [Etapas.REGISTRANDO_EMPRESA_ABERTA]:
     "/(comerciante)/bussines_description_screen",
@@ -111,6 +115,7 @@ const routeMap: Record<Etapas, string> = {
     "/(motorista)/additional_print_screen",
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
+  [Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL]: "/(motorista)/recognition_face",
 
   [Etapas.FINALIZADO]: "/login",
 };
@@ -133,4 +138,16 @@ export function errorHandler(error: any) {
       ]);
     }
   }
+}
+
+export function convertData() {
+  return new Date()
+    .toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+    .replace(
+      /(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)\s(AM|PM)/,
+      (_, month, day, year, hours, minutes, seconds, period) => {
+        const h = period === "PM" ? parseInt(hours) + 12 : parseInt(hours);
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minutes}:${seconds}-03:00`;
+      }
+    );
 }

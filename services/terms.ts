@@ -16,12 +16,7 @@ export async function acceptedTerms(data: TermsAcceptanceData) {
     const response = await api.post('/v1/client/acept-term', data);
     return response;
   } catch (error) {
-     if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        useAuthStore.getState().logout();
-        router.replace("/login");
-      }
-    }
+     
     throw error;
   }
 }
