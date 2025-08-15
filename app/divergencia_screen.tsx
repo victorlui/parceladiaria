@@ -84,6 +84,17 @@ export default function DivergenciaScreen() {
     }
   };
 
+  const takeCameraPhoto = async (documentType: string) => {
+    const result = await takePhoto("camera");
+
+    if (result && result.uri) {
+      setSelectedFiles((prev) => ({
+        ...prev,
+        [documentType]: result.uri,
+      }));
+    }
+  };
+
   const handleSubmitDocuments = async () => {
     setIsLoading(true);
     try {
@@ -91,8 +102,12 @@ export default function DivergenciaScreen() {
 
       // Faz upload de cada arquivo selecionado
       for (const [key, uri] of Object.entries(selectedFiles)) {
+        // Gera nome único baseado no tipo de documento e timestamp
+        const timestamp = Date.now();
+        const fileName = `${key}_${timestamp}.jpg`;
+        
         const uploadedUrl = await uploadFileToS3({
-          file: { uri, name: "file.jpg", mimeType: "image/jpeg" },
+          file: { uri, name: fileName, mimeType: "image/jpeg" },
         });
         uploadedFiles[key] = uploadedUrl; // salva a URL retornada do S3
       }
@@ -101,6 +116,8 @@ export default function DivergenciaScreen() {
         etapa: Etapas.FINALIZADO,
         ...uploadedFiles,
       };
+
+     
 
       await updateUserService({ request: requestData });
       Alert.alert(
@@ -122,37 +139,62 @@ export default function DivergenciaScreen() {
 
   // Render document request sections based on divergencias
   const renderDocumentRequests = () => {
-    return divergenciasArray.map((item: string, index: number) => (
-      <View
-        key={index}
-        className="border border-dashed gap-3 rounded-md p-3 mt-5 w-full"
-      >
-        <Text className="text-[17px] font-semibold">
-          {documentDisplayNames[item] || item}
-        </Text>
+    return divergenciasArray.map((item: string, index: number) => {
+      const isFaceRecognition = item === 'face';
+      
+      return (
+        <View
+          key={index}
+          className="border border-dashed gap-3 rounded-md p-3 mt-5 w-full"
+        >
+          <Text className="text-[17px] font-semibold">
+            {documentDisplayNames[item] || item}
+          </Text>
 
-        {selectedFiles[item] ? (
-          <View className="gap-3">
-            <Image
-              source={{ uri: selectedFiles[item] }}
-              className="w-full h-48 rounded-md"
-              resizeMode="cover"
-            />
-            <Button
-              title="Trocar arquivo"
-              variant="outline"
-              onPress={() => pickImage(item)}
-            />
-          </View>
-        ) : (
-          <Button
-            title="Escolher arquivo"
-            variant="outline"
-            onPress={() => pickImage(item)}
-          />
-        )}
-      </View>
-    ));
+          {selectedFiles[item] ? (
+            <View className="gap-3">
+              <Image
+                source={{ uri: selectedFiles[item] }}
+                className="w-full h-48 rounded-md"
+                resizeMode="cover"
+              />
+              <Button
+                title={isFaceRecognition ? "Tirar nova foto" : "Trocar arquivo"}
+                variant="outline"
+                onPress={() => {
+                  if (isFaceRecognition) {
+                    takeCameraPhoto(item);
+                  } else {
+                    pickImage(item);
+                  }
+                }}
+              />
+            </View>
+          ) : (
+            <>
+              {isFaceRecognition ? (
+                <Button
+                  title="Tirar foto"
+                  variant="outline"
+                  onPress={() => takeCameraPhoto(item)}
+                />
+              ) : (
+                <Button
+                  title="Escolher arquivo"
+                  variant="outline"
+                  onPress={() => pickImage(item)}
+                />
+              )}
+            </>
+          )}
+        </View>
+      );
+    });
+  };
+
+    // Adicionar esta função helper após as outras funções
+  const areAllDocumentsSelected = () => {
+    return divergenciasArray.every((docType: string) => selectedFiles[docType]);
   };
 
   return (
@@ -257,7 +299,7 @@ export default function DivergenciaScreen() {
               >
                 <View className="flex-row items-center justify-center gap-3">
                   <Ionicons name="cloud-upload" size={20} color="white" />
-                  <Text className="text-white font-semibold text-base">
+                  <Text className=" text-white font-semibold text-base">
                     Reenviar Documentos
                   </Text>
                 </View>
@@ -325,22 +367,21 @@ export default function DivergenciaScreen() {
               {/* Botões do Modal */}
               <View className="p-5 border-t border-gray-200 bg-white">
                 <View className="gap-3">
-                  {/* Botão Enviar Documentos */}
-                  <TouchableOpacity
-                    onPress={() => {
+                
+                <TouchableOpacity
+                  onPress={() => {
                       setDocumentsModalVisible(false);
                       handleSubmitDocuments();
                     }}
                     disabled={
-                      Object.keys(selectedFiles).length === 0 || isLoading
+                      !areAllDocumentsSelected() || isLoading
                     }
-                    className={`rounded-xl py-4 px-6 ${
-                      Object.keys(selectedFiles).length > 0 && !isLoading
-                        ? `bg-[${Colors.primaryColor}]`
-                        : "bg-gray-300"
-                    }`}
-                  >
-                    <View className="flex-row items-center justify-center gap-3">
+                  className="rounded-xl py-4 px-6"
+                  style={{ backgroundColor: areAllDocumentsSelected() && !isLoading 
+                        ? Colors.primaryColor
+                        : "#d1d5db" }}
+                >
+                   <View className="flex-row items-center justify-center gap-3">
                       {isLoading ? (
                         <View className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
@@ -348,7 +389,7 @@ export default function DivergenciaScreen() {
                           name="checkmark-circle"
                           size={20}
                           color={
-                            Object.keys(selectedFiles).length > 0
+                            areAllDocumentsSelected()
                               ? "white"
                               : "#9ca3af"
                           }
@@ -356,17 +397,19 @@ export default function DivergenciaScreen() {
                       )}
                       <Text
                         className={`font-semibold text-base ${
-                          Object.keys(selectedFiles).length > 0 && !isLoading
+                          areAllDocumentsSelected() && !isLoading
                             ? "text-white"
                             : "text-gray-500"
                         }`}
                       >
                         {isLoading
                           ? "Enviando..."
-                          : `Enviar ${Object.keys(selectedFiles).length > 0 ? `(${Object.keys(selectedFiles).length})` : "Documentos"}`}
+                          : `Enviar ${areAllDocumentsSelected() ? `(${Object.keys(selectedFiles).length})` : `(${Object.keys(selectedFiles).length}/${divergenciasArray.length})`}`}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                </TouchableOpacity>
+
+
 
                   {/* Botão Cancelar */}
                   <TouchableOpacity

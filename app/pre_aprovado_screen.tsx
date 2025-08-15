@@ -134,18 +134,19 @@ export default function PreAprovadoScreen() {
   };
 
   const allTermsAccepted = Object.values(termsAccepted).every((value) => value);
-  const phoneNumber = "++5511960882293";
-  const message =
-    "Olá! Aceitei os Termos e Condições. Vamos fazer a videochamada?";
-
-  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+ 
 
   const openWhatsApp = async () => {
+    const phoneNumber = "5511960882293"; // sem +
+    const message = "Olá! Vamos realizar a vídeo chamada agora?";
+
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+
     const supported = await Linking.canOpenURL(url);
     if (supported) {
       await Linking.openURL(url);
     } else {
-      alert("WhatsApp não está instalado ou não pode abrir o link.");
+      alert("WhatsApp não está instalado.");
     }
   };
 
@@ -170,7 +171,7 @@ export default function PreAprovadoScreen() {
           sign_info_state: user?.estado ?? "",
           sign_info_country: "BR",
         };
-       
+
         await acceptedTerms(termsData);
         Alert.alert(
           "Sucesso",
@@ -294,7 +295,8 @@ export default function PreAprovadoScreen() {
                     isTablet ? "text-lg" : "text-base"
                   }`}
                 >
-                  Agora vamos fazer uma videochamada para finalizar seu cadastro.
+                  Agora vamos fazer uma videochamada para finalizar seu
+                  cadastro.
                 </Text>
 
                 {/* Badge de status */}
@@ -315,7 +317,8 @@ export default function PreAprovadoScreen() {
                       isTablet ? "text-lg" : "text-base"
                     } mb-6`}
                   >
-                    Clique no botão abaixo para iniciar a videochamada via WhatsApp e finalizar seu processo de cadastro.
+                    Clique no botão abaixo para iniciar a videochamada via
+                    WhatsApp e finalizar seu processo de cadastro.
                   </Text>
 
                   <Text
@@ -352,7 +355,11 @@ export default function PreAprovadoScreen() {
                   className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
                 >
                   <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="log-out-outline" size={20} color="#6b7280" />
+                    <Ionicons
+                      name="log-out-outline"
+                      size={20}
+                      color="#6b7280"
+                    />
                     <Text className="text-gray-600 font-semibold text-base">
                       Sair
                     </Text>
@@ -447,7 +454,11 @@ export default function PreAprovadoScreen() {
                   className="bg-gray-100 border border-gray-300 rounded-xl py-4 px-6 active:bg-gray-200"
                 >
                   <View className="flex-row items-center justify-center gap-3">
-                    <Ionicons name="log-out-outline" size={20} color="#6b7280" />
+                    <Ionicons
+                      name="log-out-outline"
+                      size={20}
+                      color="#6b7280"
+                    />
                     <Text className="text-gray-600 font-semibold text-base">
                       Sair
                     </Text>
