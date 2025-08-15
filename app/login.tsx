@@ -15,7 +15,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useAlerts } from "@/components/useAlert";
-import { FontAwesome, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
@@ -61,9 +61,7 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.welcomeCard}>
-                {/* <View style={styles.iconContainer}>
-                  <FontAwesome6 name="lock" size={40} color="white" />
-                </View> */}
+            
 
                 <Text style={styles.welcomeTitle}>Bem-vindo</Text>
                 <Text style={styles.welcomeSubtitle}>

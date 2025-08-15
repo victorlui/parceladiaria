@@ -12,6 +12,7 @@ export const useCheckCPFMutation = () => {
   return useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPF(cpf),
     onSuccess: ({ data: { type }, message }) => {
+       
       if (!type && message === "Sem cadastro") {
         router.push("/(register)/terms-of-use");
       }
@@ -34,7 +35,7 @@ export const useLoginMutation = () => {
     onSuccess: (data) => {
       const { etapa, status, type } = data.data;
 
-
+    
       useAuthStore.getState().login(data.token, data.data);
 
       if (type === "client") {

@@ -40,8 +40,9 @@ export default function RootLayout() {
         <Stack.Screen name="reanalise_screen" options={{ headerShown: false }} />
         <Stack.Screen name="pre_aprovado_screen" options={{ headerShown: false }} />
         <Stack.Screen name="analise_screen" options={{ headerShown: false }} />
+        <Stack.Screen name="reset_password" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar style="dark" />
     </QueryClientProvider>
   );
 }

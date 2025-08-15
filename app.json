@@ -34,7 +34,8 @@
           ]
         }
       ],
-      "package": "com.parceladiaria"
+      "package": "com.parceladiaria",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
