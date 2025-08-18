@@ -22,6 +22,7 @@ import { FormInput } from "@/components/FormInput";
 import { Colors } from "@/constants/Colors";
 import { useState } from "react";
 import api from "@/services/api";
+import { router } from "expo-router";
 
 export default function CpfOtpScreen() {
   const { handleSubmit, control } = useCPFForm();
@@ -42,11 +43,18 @@ export default function CpfOtpScreen() {
         method: method,
       });
 
-      const methodText = method === "whatsapp" ? "WhatsApp" : "SMS";
-      showSuccess(
-        "Código enviado!",
-        `O código de verificação foi enviado via ${methodText} com sucesso.`
-      );
+      //   const methodText = method === "whatsapp" ? "WhatsApp" : "SMS";
+      //   showSuccess(
+      //     "Código enviado!",
+      //     `O código de verificação foi enviado via ${methodText} com sucesso.`
+      //   );
+      router.push({
+        pathname: "/(auth)/otp-screen",
+        params: {
+          cpf: data.cpf,
+          method: method,
+        },
+      });
     } catch (error) {
       console.log("error", error);
       showError(

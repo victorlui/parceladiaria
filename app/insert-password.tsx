@@ -24,7 +24,7 @@ import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 
 export default function InsertPassword() {
-  const { AlertDisplay, showError, showWarning } = useAlerts();
+  const { AlertDisplay, showError, showWarning, hideAlert } = useAlerts();
   const { control, handleSubmit } = usePasswordsLoginForm();
 
   const { cpf, setPassword } = useRegisterAuthStore();
@@ -32,7 +32,8 @@ export default function InsertPassword() {
 
   useEffect(() => {
     if (isError) {
-      showError("Acesso negado", "");
+      hideAlert();
+      showError("Senha incorreta", "");
     }
   }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
 

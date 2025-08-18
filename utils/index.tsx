@@ -3,6 +3,8 @@ import * as ImagePicker from "expo-image-picker";
 import { AxiosError } from "axios";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
+import * as Crypto from "expo-crypto";
+import { uuid } from "zod";
 
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -34,6 +36,19 @@ export async function requestPermissions() {
   return true;
 }
 
+export async function generateSignature(
+  uuid: string,
+  secret: string,
+  timestamp: string
+) {
+  const payload = `${uuid}${timestamp}${secret}`;
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    payload
+  );
+  return hash;
+}
+
 export enum StatusCadastro {
   DIVERGENTE = "divergente",
   RECUSADO = "recusado",
@@ -41,6 +56,8 @@ export enum StatusCadastro {
   REANALISE = "reanalise",
   PRE_APROVADO = "pre-aprovado",
   ANALISE = "analise",
+  FINALIZADO = "Finalizado",
+  FINALIZADO_APP = "finalizado",
 }
 
 export enum Etapas {
@@ -115,7 +132,8 @@ const routeMap: Record<Etapas, string> = {
     "/(motorista)/additional_print_screen",
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
-  [Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL]: "/(motorista)/recognition_face",
+  [Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL]:
+    "/(motorista)/recognition_face",
 
   [Etapas.FINALIZADO]: "/login",
 };

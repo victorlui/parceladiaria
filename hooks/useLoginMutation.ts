@@ -12,7 +12,6 @@ export const useCheckCPFMutation = () => {
   return useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPF(cpf),
     onSuccess: ({ data: { type }, message }) => {
-       
       if (!type && message === "Sem cadastro") {
         router.push("/(register)/terms-of-use");
       }
@@ -35,7 +34,7 @@ export const useLoginMutation = () => {
     onSuccess: (data) => {
       const { etapa, status, type } = data.data;
 
-    
+      console.log("login", data);
       useAuthStore.getState().login(data.token, data.data);
 
       if (type === "client") {
@@ -62,6 +61,7 @@ export const useLoginMutation = () => {
       return data;
     },
     onError: (error: any) => {
+      console.log("error login", error.response);
       showError("Ops!", error.message || "Ocorreu um erro inesperado.");
     },
   });

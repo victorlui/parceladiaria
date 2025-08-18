@@ -10,7 +10,11 @@ export function useAlerts() {
     onPress?: () => void; // Adicionamos a ação customizada aqui
   } | null>(null);
 
-  const showSuccess = (title: string, message: string, onOkPress?: () => void) => {
+  const showSuccess = (
+    title: string,
+    message: string,
+    onOkPress?: () => void
+  ) => {
     setAlert({ type: "success", title, message, onPress: onOkPress });
   };
 
