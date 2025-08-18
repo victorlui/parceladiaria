@@ -27,31 +27,30 @@ export default function CpfOtpScreen() {
   const { handleSubmit, control } = useCPFForm();
   const { AlertDisplay, showSuccess, showError } = useAlerts();
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMethod, setLoadingMethod] = useState<"whatsapp" | "sms" | null>(null);
+  const [loadingMethod, setLoadingMethod] = useState<"whatsapp" | "sms" | null>(
+    null
+  );
 
   const onSubmit = async (data: CPFSchema, method: "whatsapp" | "sms") => {
     Keyboard.dismiss();
     setIsLoading(true);
     setLoadingMethod(method);
-    
+
     try {
-      const res = await api.post(`auth/otp`, {
+      await api.post(`auth/otp`, {
         cpf: data.cpf,
         method: method,
       });
-      console.log("res", res);
-      
-      // Mensagem de sucesso
+
       const methodText = method === "whatsapp" ? "WhatsApp" : "SMS";
       showSuccess(
-        "Código enviado!", 
+        "Código enviado!",
         `O código de verificação foi enviado via ${methodText} com sucesso.`
       );
-      
     } catch (error) {
       console.log("error", error);
       showError(
-        "Erro ao enviar código", 
+        "Erro ao enviar código",
         "Não foi possível enviar o código. Verifique o CPF e tente novamente."
       );
     } finally {
@@ -127,44 +126,54 @@ export default function CpfOtpScreen() {
                   <TouchableOpacity
                     style={[
                       styles.whatsappButton,
-                      (isLoading && loadingMethod !== "whatsapp") && styles.buttonDisabled
+                      isLoading &&
+                        loadingMethod !== "whatsapp" &&
+                        styles.buttonDisabled,
                     ]}
                     onPress={handleSubmit(onSubmitWhatsApp)}
                     disabled={isLoading}
                     activeOpacity={0.8}
                   >
                     {isLoading && loadingMethod === "whatsapp" ? (
-                      <MaterialIcons name="hourglass-empty" size={20} color="#FFFFFF" />
+                      <MaterialIcons
+                        name="hourglass-empty"
+                        size={20}
+                        color="#FFFFFF"
+                      />
                     ) : (
                       <FontAwesome name="whatsapp" size={20} color="#FFFFFF" />
                     )}
                     <Text style={styles.buttonText}>
-                      {isLoading && loadingMethod === "whatsapp" 
-                        ? "Enviando..." 
-                        : "Enviar via WhatsApp"
-                      }
+                      {isLoading && loadingMethod === "whatsapp"
+                        ? "Enviando..."
+                        : "Enviar via WhatsApp"}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[
                       styles.smsButton,
-                      (isLoading && loadingMethod !== "sms") && styles.buttonDisabled
+                      isLoading &&
+                        loadingMethod !== "sms" &&
+                        styles.buttonDisabled,
                     ]}
                     onPress={handleSubmit(onSubmitSMS)}
                     disabled={isLoading}
                     activeOpacity={0.8}
                   >
                     {isLoading && loadingMethod === "sms" ? (
-                      <MaterialIcons name="hourglass-empty" size={20} color="#FFFFFF" />
+                      <MaterialIcons
+                        name="hourglass-empty"
+                        size={20}
+                        color="#FFFFFF"
+                      />
                     ) : (
                       <MaterialIcons name="sms" size={20} color="#FFFFFF" />
                     )}
                     <Text style={styles.buttonText}>
-                      {isLoading && loadingMethod === "sms" 
-                        ? "Enviando..." 
-                        : "Enviar via SMS"
-                      }
+                      {isLoading && loadingMethod === "sms"
+                        ? "Enviando..."
+                        : "Enviar via SMS"}
                     </Text>
                   </TouchableOpacity>
                 </View>
