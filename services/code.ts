@@ -12,7 +12,7 @@ export async function sendCode(
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao enviar codigo:", error);
+    console.error("Erro ao enviar codigo:", error.response);
     throw error;
   }
 }
@@ -29,9 +29,8 @@ export async function checkOTP(
       phone,
       otp: code,
     });
-    
-    return response.data;  
 
+    return response.data;
   } catch (error: any) {
     if (error.response) {
       throw {
@@ -42,7 +41,6 @@ export async function checkOTP(
         data: error.response.data,
       };
     }
-    return error
-    
+    return error;
   }
 }

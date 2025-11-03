@@ -2,7 +2,18 @@ import { FormInput } from "@/components/FormInput";
 import { useAddressForm } from "@/hooks/useRegisterForm";
 import { AddressSchema } from "@/lib/address_validation";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Image, Keyboard, Text, TextInput, View, KeyboardAvoidingView, ScrollView, StyleSheet, Platform, TouchableOpacity } from "react-native";
+import {
+  Image,
+  Keyboard,
+  Text,
+  TextInput,
+  View,
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { useRegisterAuthStore } from "@/store/register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
@@ -13,9 +24,10 @@ import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function AddressScreen() {
-  const {showWarning,AlertDisplay} = useAlerts()
+  const { showWarning, AlertDisplay } = useAlerts();
   const { setAddress } = useRegisterAuthStore();
   const { control, handleSubmit, setValue, watch } = useAddressForm();
   const { mutate, isPending } = useUpdateUserMutation();
@@ -32,27 +44,32 @@ export default function AddressScreen() {
     useRef<TextInput>(null), // Para a Cidade (index 5)
   ];
 
-  const fetchAddressData = useCallback(async (cleanCep: string) => {
-    setLoading(true);
-    Keyboard.dismiss();
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
-      
-      if (!data.erro) {
-        setValue("rua", data.logradouro || "");
-        setValue("bairro", data.bairro || "");
-        setValue("cidade", data.localidade || "");
-        setValue("estado", data.uf || "");
-      } else {
-        showWarning("Atenção", "CEP não encontrado. Tente novamente");
+  const fetchAddressData = useCallback(
+    async (cleanCep: string) => {
+      setLoading(true);
+      Keyboard.dismiss();
+      try {
+        const response = await fetch(
+          `https://viacep.com.br/ws/${cleanCep}/json/`
+        );
+        const data = await response.json();
+
+        if (!data.erro) {
+          setValue("rua", data.logradouro || "");
+          setValue("bairro", data.bairro || "");
+          setValue("cidade", data.localidade || "");
+          setValue("estado", data.uf || "");
+        } else {
+          showWarning("Atenção", "CEP não encontrado. Tente novamente");
+        }
+      } catch (error) {
+        // lidar com erro se quiser
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      // lidar com erro se quiser
-    } finally {
-      setLoading(false);
-    }
-  }, [setValue, showWarning]);
+    },
+    [setValue, showWarning]
+  );
 
   useEffect(() => {
     const cleanCep = cep?.replace(/\D/g, "");
@@ -105,23 +122,18 @@ export default function AddressScreen() {
                     style={styles.backButton}
                     onPress={() => router.back()}
                   >
-                    <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                    <MaterialIcons
+                      name="arrow-back"
+                      size={24}
+                      color="#1F2937"
+                    />
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.logoContainer}>
-                  <Image
-                    source={require("@/assets/images/apenas-logo.png")}
-                    style={styles.logo}
-                    resizeMode="contain"
-                  />
-                </View>
+                <LogoComponent logoWithText={false} width={240} />
 
                 <View style={styles.welcomeCard}>
-                 
-                  <Text style={styles.welcomeTitle}>
-                    Informe seu endereço
-                  </Text>
+                  <Text style={styles.welcomeTitle}>Informe seu endereço</Text>
                   <Text style={styles.welcomeSubtitle}>
                     Preencha todos os campos obrigatórios
                   </Text>
@@ -129,7 +141,11 @@ export default function AddressScreen() {
 
                 <View style={styles.inputCard}>
                   <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="map-marker" size={20} color="#9BD13D" />
+                    <MaterialCommunityIcons
+                      name="map-marker"
+                      size={20}
+                      color="#9BD13D"
+                    />
                     <Text style={styles.cardTitle}>Endereço</Text>
                   </View>
 
@@ -196,12 +212,16 @@ export default function AddressScreen() {
                     activeOpacity={0.8}
                   >
                     <MaterialIcons
-                      name={(loading || isPending) ? "hourglass-empty" : "arrow-forward"}
+                      name={
+                        loading || isPending
+                          ? "hourglass-empty"
+                          : "arrow-forward"
+                      }
                       size={20}
                       color="#FFFFFF"
                     />
                     <Text style={styles.buttonText}>
-                      {(loading || isPending) ? "Processando..." : "Continuar"}
+                      {loading || isPending ? "Processando..." : "Continuar"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -231,7 +251,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-   
   },
   header: {
     flexDirection: "row",

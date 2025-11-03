@@ -31,7 +31,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
 }) => {
   const [slideAnim] = useState(new Animated.Value(-DRAWER_WIDTH));
   const [overlayOpacity] = useState(new Animated.Value(0));
-  const { logout,can_renew } = useAuthStore();
+  const { logout, can_renew } = useAuthStore();
 
   React.useEffect(() => {
     if (isVisible) {
@@ -81,11 +81,11 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       },
     },
 
-     {
-      icon: 'reload-outline',
-      title: 'Renovação',
+    {
+      icon: "reload-outline",
+      title: "Renovação",
       onPress: () => {
-        router.push('/(app)/renew_screen')
+        router.push("/(app)/renew_screen");
         onClose();
       },
     },
@@ -213,11 +213,11 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
             style={{ backgroundColor: "rgba(155, 209, 61, 0.1)" }}
           >
             <View className="flex-row items-center justify-between">
-              <View className="flex-1">
+              <View className="flex-1 items-center">
                 <Image
-                  source={require("@/assets/images/parcela-logo.png")}
-                  className="w-full h-16"
-                  resizeMode="contain"
+                  source={require("@/assets/images/logo.png")}
+                  className="w-24 h-24"
+                  resizeMode="cover"
                 />
               </View>
               {/* <TouchableOpacity
@@ -232,7 +232,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
           {/* Menu Items */}
           <View className="flex-1 pt-4">
             {menuItems
-              .filter(item => item.title !== 'Renovação' || can_renew)
+              .filter((item) => item.title !== "Renovação" || can_renew)
               .map((item, index) => (
                 <TouchableOpacity
                   key={index}

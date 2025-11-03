@@ -15,8 +15,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { WebView } from "react-native-webview";
 import { Asset } from "expo-asset";
+import { File, Paths } from "expo-file-system";
 import * as FileSystem from "expo-file-system";
 import { useEffect, useState } from "react";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function TermsOfUse() {
   const [htmlContent, setHtmlContent] = useState("");
@@ -25,10 +27,15 @@ export default function TermsOfUse() {
   useEffect(() => {
     const loadHtml = async () => {
       try {
-        const asset = Asset.fromModule(require('@/assets/termodeuso.html'));
+        const asset = Asset.fromModule(require("@/assets/termodeuso.html"));
         await asset.downloadAsync();
-        let html = await FileSystem.readAsStringAsync(asset.localUri!);
-        
+        // 2️⃣ Garante o caminho local
+        const fileUri = asset.localUri || asset.uri;
+        if (!fileUri) throw new Error("URI do termo de uso inválida");
+
+        const response = await fetch(fileUri);
+        const html = await response.text();
+
         // CSS simplificado para evitar conflitos
         const cssStyle = `
           <style>
@@ -69,22 +76,14 @@ export default function TermsOfUse() {
             }
           </style>
         `;
-        
-        // Inserir o CSS no HTML de forma mais segura
-        if (html.includes('</head>')) {
-          html = html.replace('</head>', cssStyle + '</head>');
-        } else if (html.includes('<body>')) {
-          html = html.replace('<body>', '<head>' + cssStyle + '</head><body>');
-        } else {
-          html = '<html><head>' + cssStyle + '</head><body>' + html + '</body></html>';
-        }
-        
-        setHtmlContent(html);
+
+        const finalHtml = `<html><head>${cssStyle}</head><body>${html}</body></html>`;
+        setHtmlContent(finalHtml);
       } catch (error) {
-        setHtmlContent('<html><head><style>body{font-size:16px;padding:16px;}</style></head><body><p>Erro ao carregar os termos de uso. Tente novamente.</p></body></html>');
-        return error
-        
-        
+        setHtmlContent(
+          "<html><head><style>body{font-size:16px;padding:16px;}</style></head><body><p>Erro ao carregar os termos de uso. Tente novamente.</p></body></html>"
+        );
+        return error;
       }
     };
 
@@ -123,7 +122,7 @@ export default function TermsOfUse() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      
+
       <LinearGradient
         colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
         style={styles.gradientBackground}
@@ -145,17 +144,10 @@ export default function TermsOfUse() {
             </View>
 
             {/* Logo */}
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("@/assets/images/apenas-logo.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
+            <LogoComponent logoWithText={false} height={100} />
 
             {/* Card de boas-vindas */}
             <View style={styles.welcomeCard}>
-             
               <Text style={styles.welcomeTitle}>Termos e Condições</Text>
               <Text style={styles.welcomeSubtitle}>
                 Leia atentamente nossos termos de uso antes de continuar
@@ -170,7 +162,7 @@ export default function TermsOfUse() {
 
               <View style={styles.webViewContainer}>
                 <WebView
-                  originWhitelist={['*']}
+                  originWhitelist={["*"]}
                   source={{ html: htmlContent }}
                   style={styles.webView}
                   showsVerticalScrollIndicator={true}
@@ -186,15 +178,18 @@ export default function TermsOfUse() {
                   bounces={false}
                   renderLoading={() => (
                     <View style={styles.webViewLoading}>
-                      <MaterialIcons name="hourglass-empty" size={24} color="#9BD13D" />
+                      <MaterialIcons
+                        name="hourglass-empty"
+                        size={24}
+                        color="#9BD13D"
+                      />
                       <Text style={styles.loadingText}>Carregando...</Text>
                     </View>
                   )}
                   onError={(syntheticEvent) => {
                     const { nativeEvent } = syntheticEvent;
-                    console.warn('WebView error: ', nativeEvent);
+                    console.warn("WebView error: ", nativeEvent);
                   }}
-                
                 />
               </View>
 
@@ -238,10 +233,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding:20,
-    
+    padding: 20,
   },
- header: {
+  header: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -254,7 +248,6 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    
   },
   logo: {
     width: "100%",

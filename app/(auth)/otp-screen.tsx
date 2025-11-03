@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Image,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -19,8 +18,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import api from "@/services/api";
-import { generateSignature } from "@/utils";
 import { useAuthStore } from "@/store/auth";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function OtpScreen() {
   const { AlertDisplay, showWarning, showSuccess, showError, hideAlert } =
@@ -177,13 +176,7 @@ export default function OtpScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Código de Verificação</Text>

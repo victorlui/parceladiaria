@@ -1,5 +1,4 @@
 import {
-  Image,
   Keyboard,
   Text,
   View,
@@ -23,6 +22,7 @@ import { Colors } from "@/constants/Colors";
 import { useState } from "react";
 import api from "@/services/api";
 import { router } from "expo-router";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function CpfOtpScreen() {
   const { handleSubmit, control } = useCPFForm();
@@ -95,13 +95,7 @@ export default function CpfOtpScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Recuperar Senha</Text>

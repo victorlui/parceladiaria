@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
+import LogoComponent from "@/components/ui/Logo";
 export default function LoginScreen() {
   const { handleSubmit, control } = useCPFForm();
   const { AlertDisplay } = useAlerts();
@@ -52,17 +53,9 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent />
 
               <View style={styles.welcomeCard}>
-            
-
                 <Text style={styles.welcomeTitle}>Bem-vindo</Text>
                 <Text style={styles.welcomeSubtitle}>
                   Faça login com seu CPF para acessar sua conta
@@ -134,17 +127,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-   
   },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logo: {
-    width: "100%",
-    height: 140,
-  },
+
   welcomeCard: {
-    
     borderRadius: 16,
     padding: 32,
     borderWidth: 1,

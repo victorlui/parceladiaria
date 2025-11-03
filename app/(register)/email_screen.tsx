@@ -20,6 +20,7 @@ import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRegisterAuthStore } from "@/store/register";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function EmailScreen() {
   const { control, handleSubmit } = useEmailForm();
@@ -64,13 +65,7 @@ export default function EmailScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Insira seu email</Text>

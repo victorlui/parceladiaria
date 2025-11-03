@@ -17,6 +17,7 @@ interface ApiHeaders {
   "X-UUID": string;
   "X-Timestamp": string;
   Authorization?: string;
+  "X-UserAgent": string;
 }
 
 // Configuração da API
@@ -47,6 +48,7 @@ const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
       "X-Signature": signature,
       "X-UUID": apiConfig.uuid,
       "X-Timestamp": timestamp,
+      "X-UserAgent": "mobile",
     };
   } catch (error) {
     console.error("Erro ao gerar assinatura:", error);
@@ -66,15 +68,17 @@ api.interceptors.request.use(
     try {
       // Gera headers dinâmicos para cada requisição
       const dynamicHeaders = await generateHeaders();
+
+      // Garante que headers não seja undefined antes do merge
       config.headers = {
-        ...config.headers,
+        ...(config.headers || {}),
         ...dynamicHeaders,
       };
 
       // Adiciona token de autenticação se disponível
       const token = useAuthStore.getState().token;
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        (config.headers as any).Authorization = `Bearer ${token}`;
       }
 
       return config;

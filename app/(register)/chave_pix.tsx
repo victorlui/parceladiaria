@@ -17,11 +17,12 @@ import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LogoComponent from "@/components/ui/Logo";
 
 const pixKeyTypes = [
   { value: "cpf", label: "CPF", icon: "card-outline" },
@@ -30,26 +31,34 @@ const pixKeyTypes = [
 ];
 
 export default function ChavePixScreen() {
-  const { cpf, email: emailRegister, phone: phoneRegister } = useRegisterAuthStore();
+  const {
+    cpf,
+    email: emailRegister,
+    phone: phoneRegister,
+  } = useRegisterAuthStore();
 
   const { user } = useAuthStore();
   const [selectedProfile, setSelectedProfile] = useState<string>("");
-  const [email, setEmail] = useState<string>(user?.email ?? emailRegister ?? "");
-  const [phone, setPhone] = useState<string>(user?.whatsapp ?? phoneRegister ?? "");
+  const [email, setEmail] = useState<string>(
+    user?.email ?? emailRegister ?? ""
+  );
+  const [phone, setPhone] = useState<string>(
+    user?.whatsapp ?? phoneRegister ?? ""
+  );
   const [modalVisible, setModalVisible] = useState(false);
   const [tempPixValue, setTempPixValue] = useState("");
   const { mutate, isPending } = useUpdateUserMutation();
 
-  const getIconBackgroundColor = (value:string) => {
+  const getIconBackgroundColor = (value: string) => {
     switch (value) {
-      case 'cpf':
-        return '#00C851';
-      case 'email':
-        return '#00C851';
-      case 'phone':
-        return '#00C851';
+      case "cpf":
+        return "#00C851";
+      case "email":
+        return "#00C851";
+      case "phone":
+        return "#00C851";
       default:
-        return '#607D8B';
+        return "#607D8B";
     }
   };
 
@@ -60,7 +69,10 @@ export default function ChavePixScreen() {
     }
 
     if (!phone && selectedProfile === "phone") {
-      Alert.alert("Atenção!!", "Por favor, insira um número de telefone como pix");
+      Alert.alert(
+        "Atenção!!",
+        "Por favor, insira um número de telefone como pix"
+      );
       return;
     }
 
@@ -71,7 +83,12 @@ export default function ChavePixScreen() {
 
     const request = {
       chave: selectedProfile,
-      pix: selectedProfile === "cpf" ? cpf : selectedProfile === "email" ? email : `+55${phone}`,
+      pix:
+        selectedProfile === "cpf"
+          ? cpf
+          : selectedProfile === "email"
+            ? email
+            : `+55${phone}`,
       etapa: Etapas.REGISTRANDO_PROFISSAO,
     };
 
@@ -114,17 +131,15 @@ export default function ChavePixScreen() {
                     style={styles.backButton}
                     onPress={() => router.back()}
                   >
-                    <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                    <MaterialIcons
+                      name="arrow-back"
+                      size={24}
+                      color="#1F2937"
+                    />
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.logoContainer}>
-                  <Image
-                    source={require("@/assets/images/apenas-logo.png")}
-                    style={styles.logo}
-                    resizeMode="contain"
-                  />
-                </View>
+                <LogoComponent logoWithText={false} width={240} />
 
                 <View style={styles.welcomeCard}>
                   <View style={styles.iconContainer}>
@@ -140,7 +155,11 @@ export default function ChavePixScreen() {
 
                 <View style={styles.inputCard}>
                   <View style={styles.cardHeader}>
-                    <MaterialIcons name="account-balance-wallet" size={20} color="#9BD13D" />
+                    <MaterialIcons
+                      name="account-balance-wallet"
+                      size={20}
+                      color="#9BD13D"
+                    />
                     <Text style={styles.cardTitle}>Tipos de chave PIX</Text>
                   </View>
 
@@ -150,35 +169,51 @@ export default function ChavePixScreen() {
                       const bgColor = getIconBackgroundColor(option.value);
 
                       return (
-                        <View key={option.value} style={styles.pixOptionContainer}>
+                        <View
+                          key={option.value}
+                          style={styles.pixOptionContainer}
+                        >
                           <TouchableOpacity
                             onPress={() => {
                               setSelectedProfile(option.value);
                               if (option.value !== "cpf") {
-                                setTempPixValue(option.value === "email" ? email : phone);
+                                setTempPixValue(
+                                  option.value === "email" ? email : phone
+                                );
                                 setModalVisible(true);
                               }
                             }}
                             style={[
                               styles.pixOption,
                               {
-                                borderColor: isSelected ? Colors.primaryColor : "#E5E7EB",
-                                backgroundColor: isSelected ? `${bgColor}15` : 'transparent',
-                              }
+                                borderColor: isSelected
+                                  ? Colors.primaryColor
+                                  : "#E5E7EB",
+                                backgroundColor: isSelected
+                                  ? `${bgColor}15`
+                                  : "transparent",
+                              },
                             ]}
                           >
                             <View
                               style={[
                                 styles.pixIconContainer,
                                 {
-                                  backgroundColor: isSelected ? bgColor : '#f5f5f5',
-                                }
+                                  backgroundColor: isSelected
+                                    ? bgColor
+                                    : "#f5f5f5",
+                                },
                               ]}
                             >
-                              <Ionicons 
-                                name={option.icon as 'card-outline' | 'mail-outline' | 'call-outline'}
-                                size={24} 
-                                color={isSelected ? '#fff' : '#666'} 
+                              <Ionicons
+                                name={
+                                  option.icon as
+                                    | "card-outline"
+                                    | "mail-outline"
+                                    | "call-outline"
+                                }
+                                size={24}
+                                color={isSelected ? "#fff" : "#666"}
                               />
                             </View>
                             <View style={styles.pixOptionContent}>
@@ -186,37 +221,50 @@ export default function ChavePixScreen() {
                                 style={[
                                   styles.pixOptionLabel,
                                   {
-                                    color: isSelected ? bgColor : '#222222',
-                                  }
+                                    color: isSelected ? bgColor : "#222222",
+                                  },
                                 ]}
                               >
                                 {option.label}
                               </Text>
                               <Text style={styles.pixOptionDescription}>
-                                {option.value === 'cpf' ? 'Seu CPF como chave' : 
-                                 option.value === 'email' ? 'Seu e-mail como chave' : 
-                                 'Seu telefone como chave'}
+                                {option.value === "cpf"
+                                  ? "Seu CPF como chave"
+                                  : option.value === "email"
+                                    ? "Seu e-mail como chave"
+                                    : "Seu telefone como chave"}
                               </Text>
                             </View>
                           </TouchableOpacity>
 
                           {selectedProfile === "cpf" && isSelected && (
                             <Text style={styles.selectedPixKey}>
-                              Chave PIX: <Text style={styles.selectedPixValue}>{cpf}</Text>
+                              Chave PIX:{" "}
+                              <Text style={styles.selectedPixValue}>{cpf}</Text>
                             </Text>
                           )}
 
-                          {selectedProfile === "email" && isSelected && email && (
-                            <Text style={styles.selectedPixKey}>
-                              Chave PIX: <Text style={styles.selectedPixValue}>{email}</Text>
-                            </Text>
-                          )}
+                          {selectedProfile === "email" &&
+                            isSelected &&
+                            email && (
+                              <Text style={styles.selectedPixKey}>
+                                Chave PIX:{" "}
+                                <Text style={styles.selectedPixValue}>
+                                  {email}
+                                </Text>
+                              </Text>
+                            )}
 
-                          {selectedProfile === "phone" && isSelected && phone && (
-                            <Text style={styles.selectedPixKey}>
-                              Chave PIX: <Text style={styles.selectedPixValue}>{phone}</Text>
-                            </Text>
-                          )}
+                          {selectedProfile === "phone" &&
+                            isSelected &&
+                            phone && (
+                              <Text style={styles.selectedPixKey}>
+                                Chave PIX:{" "}
+                                <Text style={styles.selectedPixValue}>
+                                  {phone}
+                                </Text>
+                              </Text>
+                            )}
                         </View>
                       );
                     })}
@@ -247,50 +295,54 @@ export default function ChavePixScreen() {
         </LinearGradient>
       </SafeAreaView>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white p-6 rounded-lg w-[90%]">
-              <Text className="text-xl font-bold mb-4">
-                {selectedProfile === "email" ? "Digite seu e-mail" : "Digite seu telefone"}
-              </Text>
-              <TextInput
-                placeholder={selectedProfile === "email" ? "E-mail" : "Telefone"}
-                className="border p-3 rounded-md h-[58px] mb-4"
-                keyboardType={selectedProfile === "email" ? "email-address" : "phone-pad"}
-                value={tempPixValue}
-                onChangeText={setTempPixValue}
-                style={{ borderColor: Colors.borderColor }}
-              />
-              <View className="flex-row justify-between gap-2">
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  className="bg-red-500 p-3 rounded-md flex-1"
-                >
-                  <Text className="text-white text-center">Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleConfirmPix}
-                  className="bg-green-500 p-3 rounded-md flex-1"
-                >
-                  <Text className="text-white text-center">Confirmar</Text>
-                </TouchableOpacity>
-              </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white p-6 rounded-lg w-[90%]">
+            <Text className="text-xl font-bold mb-4">
+              {selectedProfile === "email"
+                ? "Digite seu e-mail"
+                : "Digite seu telefone"}
+            </Text>
+            <TextInput
+              placeholder={selectedProfile === "email" ? "E-mail" : "Telefone"}
+              className="border p-3 rounded-md h-[58px] mb-4"
+              keyboardType={
+                selectedProfile === "email" ? "email-address" : "phone-pad"
+              }
+              value={tempPixValue}
+              onChangeText={setTempPixValue}
+              style={{ borderColor: Colors.borderColor }}
+            />
+            <View className="flex-row justify-between gap-2">
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="bg-red-500 p-3 rounded-md flex-1"
+              >
+                <Text className="text-white text-center">Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleConfirmPix}
+                className="bg-green-500 p-3 rounded-md flex-1"
+              >
+                <Text className="text-white text-center">Confirmar</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </>
-    );
+        </View>
+      </Modal>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background
+    backgroundColor: Colors.dark.background,
   },
   gradientBackground: {
     flex: 1,
@@ -304,16 +356,14 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-   
   },
   header: {
-   flexDirection: "row",
+    flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
     marginBottom: 10,
     marginLeft: 20,
     marginTop: 20,
-
   },
   backButton: {
     padding: 8,
@@ -321,20 +371,20 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(155, 209, 61, 0.1)",
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 30,
   },
   logo: {
     height: 120,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   welcomeCard: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -345,24 +395,24 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
     marginBottom: 8,
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     lineHeight: 22,
   },
   inputCard: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -372,25 +422,25 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginLeft: 8,
   },
   iconContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 15,
-    backgroundColor: '#9BD13D',
+    backgroundColor: "#9BD13D",
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignSelf: 'center',
+    justifyContent: "center",
+    alignSelf: "center",
   },
   inputContainer: {
     marginBottom: 20,
@@ -399,8 +449,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   pixOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderWidth: 2,
     borderRadius: 12,
@@ -410,8 +460,8 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
   },
   pixOptionContent: {
@@ -419,39 +469,39 @@ const styles = StyleSheet.create({
   },
   pixOptionLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
   },
   pixOptionDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   selectedPixKey: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 8,
     paddingLeft: 16,
   },
   selectedPixValue: {
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   continueButton: {
     backgroundColor: Colors.primaryColor,
     paddingVertical: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
 });

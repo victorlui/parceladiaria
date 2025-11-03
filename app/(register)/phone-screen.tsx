@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef,useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Keyboard,
   Text,
@@ -19,20 +19,25 @@ import {
 } from "@/hooks/useRegisterMutation";
 import { PhoneSchema } from "@/lib/phone_validation";
 import { useRegisterAuthStore } from "@/store/register";
-import { FontAwesome, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { useAlerts } from "@/components/useAlert";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
-
+import LogoComponent from "@/components/ui/Logo";
 
 export default function PhoneScreen() {
   const { control, handleSubmit, getValues } = usePhoneForm();
   const { mutate, isPending, data } = useRegisterMutation();
   const { setPhone } = useRegisterAuthStore();
-  const { AlertDisplay, showWarning, showSuccess, showError,hideAlert } = useAlerts();
+  const { AlertDisplay, showWarning, showSuccess, showError, hideAlert } =
+    useAlerts();
   const mutation = useCheckOTPMutation();
   const [sendCode, setSendCode] = useState(false);
   const [code, setCode] = useState("");
@@ -57,7 +62,7 @@ export default function PhoneScreen() {
       setResendTimer(0);
       setCanUseWhatsapp(false);
       setWhatsappTimer(0);
-      
+
       // Clear any existing timers
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -67,7 +72,7 @@ export default function PhoneScreen() {
         clearTimeout(whatsappTimerRef.current);
         whatsappTimerRef.current = null;
       }
-      
+
       // Reset mutation state to prevent success modal from showing
       mutation.reset();
     }, [])
@@ -77,7 +82,7 @@ export default function PhoneScreen() {
     if (mutation.isError) {
       showError("Erro", mutation.error?.message || "Erro desconhecido");
     }
-  }, [mutation.isError, mutation.error?.message]); 
+  }, [mutation.isError, mutation.error?.message]);
 
   useEffect(() => {
     // Only show success if we actually sent a code and it was successful
@@ -124,8 +129,6 @@ export default function PhoneScreen() {
     };
   }, [whatsappTimer, canUseWhatsapp]);
 
-
-
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -163,7 +166,7 @@ export default function PhoneScreen() {
 
   const handleSubmitagain = () => {
     if (!canResend) return;
-    
+
     const phoneNumber = data?.data?.phone ?? number ?? "";
     if (!phoneNumber) {
       showError("Erro", "Número de telefone não encontrado");
@@ -172,7 +175,7 @@ export default function PhoneScreen() {
 
     mutate({ phone: phoneNumber, method: "whatsapp" });
     showSuccess("Código enviado", "Novo código foi enviado via WhatsApp");
-    
+
     // Start 15 second timer for resend
     setCanResend(false);
     setResendTimer(15);
@@ -187,7 +190,7 @@ export default function PhoneScreen() {
     Keyboard.dismiss();
     setPhone(number);
     hideAlert();
-    
+
     mutation.mutate({
       phone: number ?? "",
       code,
@@ -213,8 +216,8 @@ export default function PhoneScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[styles.content,{gap: sendCode ? 0 : 20}]}>
-               <View style={styles.header}>
+            <View style={[styles.content, { gap: sendCode ? 0 : 20 }]}>
+              <View style={styles.header}>
                 <TouchableOpacity
                   style={styles.backButton}
                   onPress={() => router.back()}
@@ -222,29 +225,20 @@ export default function PhoneScreen() {
                   <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
                 </TouchableOpacity>
               </View>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
-              
-
                 <Text style={styles.welcomeTitle}>
                   {!sendCode ? "Verificação" : "Código Enviado"}
                 </Text>
                 <Text style={styles.welcomeSubtitle}>
-                  {!sendCode 
+                  {!sendCode
                     ? "Insira seu número de telefone (WhatsApp) para receber um código de verificação"
-                    : `Um código de 6 dígitos foi enviado para ${number?.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3") || ""}`
-                  }
+                    : `Um código de 6 dígitos foi enviado para ${number?.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3") || ""}`}
                 </Text>
 
                 {sendCode && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.changeNumberButton}
                     onPress={() => {
                       setSendCode(false);
@@ -268,7 +262,11 @@ export default function PhoneScreen() {
 
               <View style={styles.inputCard}>
                 <View style={styles.cardHeader}>
-                  <MaterialCommunityIcons name="phone" size={20} color="#9BD13D" />
+                  <MaterialCommunityIcons
+                    name="phone"
+                    size={20}
+                    color="#9BD13D"
+                  />
                   <Text style={styles.cardTitle}>
                     {!sendCode ? "Telefone" : "Código de Verificação"}
                   </Text>
@@ -285,7 +283,11 @@ export default function PhoneScreen() {
                       returnKeyType="done"
                       onSubmitEditing={handleSubmit(onSubmit)}
                       icon={
-                        <FontAwesome name="phone-square" size={24} color="#9CA3AF" />
+                        <FontAwesome
+                          name="phone-square"
+                          size={24}
+                          color="#9CA3AF"
+                        />
                       }
                     />
                   ) : (
@@ -310,18 +312,22 @@ export default function PhoneScreen() {
                     <MaterialIcons
                       name="message"
                       size={20}
-                      color={(!canResend || !canUseWhatsapp) ? "#9CA3AF" : "#9BD13D"}
-                    />
-                    <Text style={[
-                      styles.whatsappButtonText,
-                      (!canResend || !canUseWhatsapp) && styles.buttonTextDisabled,
-                    ]}>
-                      {!canUseWhatsapp 
-                        ? `Reenviar código em ${Math.floor(whatsappTimer / 60)}:${(whatsappTimer % 60).toString().padStart(2, '0')}`
-                        : !canResend 
-                          ? `Aguarde ${resendTimer}s para reenviar`
-                          : 'Receber código via WhatsApp'
+                      color={
+                        !canResend || !canUseWhatsapp ? "#9CA3AF" : "#9BD13D"
                       }
+                    />
+                    <Text
+                      style={[
+                        styles.whatsappButtonText,
+                        (!canResend || !canUseWhatsapp) &&
+                          styles.buttonTextDisabled,
+                      ]}
+                    >
+                      {!canUseWhatsapp
+                        ? `Reenviar código em ${Math.floor(whatsappTimer / 60)}:${(whatsappTimer % 60).toString().padStart(2, "0")}`
+                        : !canResend
+                          ? `Aguarde ${resendTimer}s para reenviar`
+                          : "Receber código via WhatsApp"}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -336,7 +342,11 @@ export default function PhoneScreen() {
                       ? handleSubmit(onSubmit)
                       : code
                         ? () => handleSendCode(code)
-                        : () => showWarning("Atenção", "Insira o código de verificação")
+                        : () =>
+                            showWarning(
+                              "Atenção",
+                              "Insira o código de verificação"
+                            )
                   }
                   disabled={isPending}
                   activeOpacity={0.8}
@@ -391,7 +401,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-   
     height: 140,
   },
   welcomeCard: {
@@ -405,7 +414,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#9BD13D",
     padding: 16,
     borderRadius: 16,
-    
   },
   welcomeTitle: {
     fontSize: 28,

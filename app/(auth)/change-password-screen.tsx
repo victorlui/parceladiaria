@@ -23,6 +23,7 @@ import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { useAlerts } from "@/components/useAlert";
 import api from "@/services/api";
+import LogoComponent from "@/components/ui/Logo";
 
 const ChangePasswordScreen: React.FC = () => {
   const { control, handleSubmit } = usePasswordsForm();
@@ -84,13 +85,7 @@ const ChangePasswordScreen: React.FC = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Alterar senha</Text>

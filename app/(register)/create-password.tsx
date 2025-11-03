@@ -22,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function CreatePassword() {
   const { control, handleSubmit } = usePasswordsForm();
@@ -54,22 +55,16 @@ export default function CreatePassword() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-               <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backButton}
-                 onPress={() => router.back()}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
-              </TouchableOpacity>
-            </View>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
+              <View style={styles.header}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => router.back()}
+                  activeOpacity={0.7}
+                >
+                  <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
+                </TouchableOpacity>
               </View>
+              <LogoComponent logoWithText={false} width={140} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Crie sua senha</Text>

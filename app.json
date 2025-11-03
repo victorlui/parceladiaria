@@ -8,6 +8,7 @@
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "ios": {
       "supportsTablet": true
     },
@@ -17,7 +18,9 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": ["android.permission.RECORD_AUDIO"],
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -26,11 +29,13 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
-      "package": "com.parceladiaria",
-      "versionCode": 3
+      "package": "br.com.parceladiaria"
     },
     "web": {
       "bundler": "metro",
@@ -71,8 +76,8 @@
       [
         "expo-video",
         {
-          "supportsBackgroundPlayback": true,
-          "supportsPictureInPicture": true
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
         }
       ],
       "expo-asset"

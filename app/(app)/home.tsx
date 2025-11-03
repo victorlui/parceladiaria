@@ -120,7 +120,7 @@ const DashboardCard: React.FC<{
 };
 
 const HomeScreen: React.FC = () => {
-  const {setCanRenew} = useAuthStore()
+  const { setCanRenew } = useAuthStore();
   const { setQRCodeData } = useQRCodeStore();
   const [loanActive, setLoanActive] = useState<ClientInfo>();
   const [installments, setInstallments] = useState<Installment[]>([]);
@@ -144,7 +144,7 @@ const HomeScreen: React.FC = () => {
       try {
         const response = await renewStatus();
         console.log("res status renovação", response);
-        setCanRenew(response.data.data.can_renew)
+        setCanRenew(response.data.data.can_renew);
         setStatusRenew(response.data.data);
       } catch (error: any) {
         console.log("error de status renovação", error.response);
@@ -192,8 +192,9 @@ const HomeScreen: React.FC = () => {
       setIsLoading(true);
       const response = await getLoanActive();
       const response_list = await getLoansOpen(response.data.data.lastLoan.id);
+      console.log("response_list", response_list.data);
       const unpaidInstallments = response_list.data.data.filter(
-        (item: Installment) => item.paid === "Não"
+        (item: Installment) => item.paid === "Não" || item.paid === ""
       );
 
       setLoanActive(response.data);
@@ -360,20 +361,20 @@ const HomeScreen: React.FC = () => {
                     fontWeight: "bold",
                   }}
                 >
-                  Olá {loanActive?.name?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')},
+                  Olá{" "}
+                  {loanActive?.name
+                    ?.split(" ")
+                    .map(
+                      (word) =>
+                        word.charAt(0).toUpperCase() +
+                        word.slice(1).toLowerCase()
+                    )
+                    .join(" ")}
+                  ,
                 </Text>
                 {/* Status de Renovação */}
-             
               </View>
             </View>
-            <Image
-              source={require("@/assets/images/apenas-logo.png")}
-              style={{
-                width: isSmallScreen ? 40 : 50,
-                height: isSmallScreen ? 40 : 50,
-                resizeMode: "contain",
-              }}
-            />
           </View>
         </View>
 
@@ -400,36 +401,56 @@ const HomeScreen: React.FC = () => {
                   </Text>
                 </View> */}
           <View style={{ paddingHorizontal: 20, paddingVertical: 5 }}>
-            <View style={{flex:1,flexDirection:'row',justifyContent:'flex-end'}}>
-                 <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginVertical: 8
-                }}>
-                  <View style={{
-                    backgroundColor: statusRenew.can_renew ? '#E8F5E8' : '#FFF2F2',
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "flex-end",
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginVertical: 8,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: statusRenew.can_renew
+                      ? "#E8F5E8"
+                      : "#FFF2F2",
                     paddingHorizontal: 8,
                     paddingVertical: 4,
                     borderRadius: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                  }}>
-                    <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
                       width: 8,
                       height: 8,
                       borderRadius: 3,
-                      backgroundColor: statusRenew.can_renew ? '#9BD13D' : '#FF5252',
-                      marginRight: 6
-                    }} />
-                    <Text style={{
-                      color: statusRenew.can_renew ? '#2E7D32' : '#C62828',
+                      backgroundColor: statusRenew.can_renew
+                        ? "#9BD13D"
+                        : "#FF5252",
+                      marginRight: 6,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: statusRenew.can_renew ? "#2E7D32" : "#C62828",
                       fontSize: isSmallScreen ? 10 : 14,
-                      fontWeight: '500'
-                    }}>
-                      {statusRenew.can_renew ? 'Apto para renovação' : 'Não apto para renovação'}
-                    </Text>
-                  </View>
+                      fontWeight: "500",
+                    }}
+                  >
+                    {statusRenew.can_renew
+                      ? "Apto para renovação"
+                      : "Não apto para renovação"}
+                  </Text>
                 </View>
+              </View>
             </View>
             <View style={{ flexDirection: "row", marginBottom: 12 }}>
               <DashboardCard

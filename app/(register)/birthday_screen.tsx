@@ -4,12 +4,22 @@ import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas, formatDateToISO } from "@/utils";
 import { Fontisto, MaterialIcons } from "@expo/vector-icons";
 import { useForm } from "react-hook-form";
-import { Image, Text, View,  KeyboardAvoidingView, ScrollView, StyleSheet, Platform, TouchableOpacity } from "react-native";
+import {
+  Image,
+  Text,
+  View,
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LogoComponent from "@/components/ui/Logo";
 
 interface FormData {
   birthDate: Date;
@@ -57,16 +67,9 @@ export default function BirthdatScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
-                
                 <Text style={styles.welcomeTitle}>
                   Informe sua data de nascimento
                 </Text>
@@ -94,7 +97,9 @@ export default function BirthdatScreen() {
                           today.getMonth(),
                           today.getDate()
                         );
-                        return value <= minDate || "Você deve ter pelo menos 18 anos";
+                        return (
+                          value <= minDate || "Você deve ter pelo menos 18 anos"
+                        );
                       },
                     }}
                   />

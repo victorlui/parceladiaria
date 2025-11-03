@@ -1,5 +1,4 @@
 import {
-  Image,
   Keyboard,
   StyleSheet,
   Text,
@@ -22,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
+import LogoComponent from "@/components/ui/Logo";
 
 export default function InsertPassword() {
   const { AlertDisplay, showError, showWarning, hideAlert } = useAlerts();
@@ -68,13 +68,7 @@ export default function InsertPassword() {
           >
             <View style={styles.content}>
               {/* Logo Section */}
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require("@/assets/images/apenas-logo.png")}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
+              <LogoComponent logoWithText={false} width={240} />
 
               <View style={styles.welcomeCard}>
                 <Text style={styles.welcomeTitle}>Senha de acesso</Text>
