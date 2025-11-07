@@ -111,7 +111,7 @@ export default function TermsOfUse() {
           style={styles.gradientBackground}
         >
           <View style={styles.loadingContainer}>
-            <MaterialIcons name="hourglass-empty" size={40} color="#9BD13D" />
+            <MaterialIcons name="hourglass-empty" size={40} color="#053D39" />
             <Text style={styles.loadingText}>Carregando termos de uso...</Text>
           </View>
         </LinearGradient>
@@ -181,7 +181,7 @@ export default function TermsOfUse() {
                       <MaterialIcons
                         name="hourglass-empty"
                         size={24}
-                        color="#9BD13D"
+                        color="#053D39"
                       />
                       <Text style={styles.loadingText}>Carregando...</Text>
                     </View>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   iconContainer: {
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 20,

@@ -114,7 +114,7 @@ export default function ProfileSelection() {
               {/* Profile Options Card */}
               <View style={styles.inputCard}>
                 <View style={styles.cardHeader}>
-                  <MaterialIcons name="work" size={20} color="#9BD13D" />
+                  <MaterialIcons name="work" size={20} color="#053D39" />
                   <Text style={styles.cardTitle}>Opções de Perfil</Text>
                 </View>
 
@@ -138,7 +138,7 @@ export default function ProfileSelection() {
                                 option.iconName as "car" | "motorbike" | "store"
                               }
                               size={32}
-                              color={isSelected ? "#ffffff" : "#9BD13D"}
+                              color={isSelected ? "#ffffff" : "#053D39"}
                               style={styles.profileIcon}
                             />
                             <Text
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   iconContainer: {
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
@@ -298,8 +298,8 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   profileOptionSelected: {
-    backgroundColor: "#9BD13D",
-    borderColor: "#9BD13D",
+    backgroundColor: "#053D39",
+    borderColor: "#053D39",
   },
   profileOptionContent: {
     flexDirection: "row",
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,

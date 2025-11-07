@@ -17,12 +17,14 @@ interface Props {
   installments: InstallmentsProps[];
   totalInstallments: number;
   loading: boolean;
+  loan: any;
 }
 
 const HistoryRecent: React.FC<Props> = ({
   installments,
   totalInstallments,
   loading,
+  loan,
 }) => {
   return (
     <View>
@@ -62,6 +64,8 @@ const HistoryRecent: React.FC<Props> = ({
               installment={item.installment}
               totalInstallments={totalInstallments}
               isLast={index === installments.length - 1}
+              date_due={item.due_date}
+              loan={loan}
             />
           ))}
         </View>

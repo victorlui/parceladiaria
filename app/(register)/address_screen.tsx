@@ -3,8 +3,6 @@ import { useAddressForm } from "@/hooks/useRegisterForm";
 import { AddressSchema } from "@/lib/address_validation";
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  Image,
-  Keyboard,
   Text,
   TextInput,
   View,
@@ -13,6 +11,8 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import { useRegisterAuthStore } from "@/store/register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
@@ -34,36 +34,39 @@ export default function AddressScreen() {
   const [loading, setLoading] = useState(false);
   const cep = watch("cep");
 
-  // Ajuste aqui: agora temos um useRef para cada campo
-  const formRefs = [
-    useRef<TextInput>(null), // Para o CEP (index 0)
-    useRef<TextInput>(null), // Para a Rua (index 1)
-    useRef<TextInput>(null), // Para o Número (index 2)
-    useRef<TextInput>(null), // Para o Bairro (index 3)
-    useRef<TextInput>(null), // Para o Estado (index 4)
-    useRef<TextInput>(null), // Para a Cidade (index 5)
-  ];
+  // Refs para navegação entre inputs
+  const ruaRef = useRef<TextInput>(null);
+  const numeroRef = useRef<TextInput>(null);
+  const bairroRef = useRef<TextInput>(null);
+  const estadoRef = useRef<TextInput>(null);
+  const cidadeRef = useRef<TextInput>(null);
 
+  // Função de busca de CEP
   const fetchAddressData = useCallback(
     async (cleanCep: string) => {
-      setLoading(true);
-      Keyboard.dismiss();
+      if (cleanCep.length !== 8) return;
       try {
-        const response = await fetch(
-          `https://viacep.com.br/ws/${cleanCep}/json/`
-        );
-        const data = await response.json();
+        setLoading(true);
+        const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await res.json();
 
-        if (!data.erro) {
-          setValue("rua", data.logradouro || "");
-          setValue("bairro", data.bairro || "");
-          setValue("cidade", data.localidade || "");
-          setValue("estado", data.uf || "");
-        } else {
-          showWarning("Atenção", "CEP não encontrado. Tente novamente");
+        if (data.erro) {
+          showWarning("Atenção", "CEP não encontrado. Tente novamente.");
+          return;
         }
-      } catch (error) {
-        // lidar com erro se quiser
+
+        setValue("rua", data.logradouro || "");
+        setValue("bairro", data.bairro || "");
+        setValue("cidade", data.localidade || "");
+        setValue("estado", data.uf || "");
+
+        // Foca automaticamente no campo número
+        numeroRef.current?.focus();
+      } catch {
+        showWarning(
+          "Erro",
+          "Não foi possível buscar o CEP. Verifique sua conexão."
+        );
       } finally {
         setLoading(false);
       }
@@ -71,15 +74,17 @@ export default function AddressScreen() {
     [setValue, showWarning]
   );
 
+  // Debounce da busca automática do CEP
   useEffect(() => {
     const cleanCep = cep?.replace(/\D/g, "");
-    if (cleanCep && cleanCep.length === 8) {
-      fetchAddressData(cleanCep);
-    }
+    if (!cleanCep || cleanCep.length < 8) return;
+    const timeout = setTimeout(() => fetchAddressData(cleanCep), 300);
+    return () => clearTimeout(timeout);
   }, [cep, fetchAddressData]);
 
   const onSubmit = (data: AddressSchema) => {
     setAddress(data);
+
     const request = {
       cep: data.cep,
       endereco: data.rua,
@@ -91,8 +96,7 @@ export default function AddressScreen() {
       etapa: Etapas.REGISTRANDO_COMPROVANTE_ENDERECO,
     };
 
-    mutate({ request: request });
-    //router.push('/(register)/address_document')
+    mutate({ request });
   };
 
   return (
@@ -116,7 +120,7 @@ export default function AddressScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.content}>
-                {/* Header com botão voltar */}
+                {/* Header */}
                 <View style={styles.header}>
                   <TouchableOpacity
                     style={styles.backButton}
@@ -144,7 +148,7 @@ export default function AddressScreen() {
                     <MaterialCommunityIcons
                       name="map-marker"
                       size={20}
-                      color="#9BD13D"
+                      color="#053D39"
                     />
                     <Text style={styles.cardTitle}>Endereço</Text>
                   </View>
@@ -157,48 +161,56 @@ export default function AddressScreen() {
                       name="cep"
                       maskType="custom"
                       maskOptions={{ mask: "99999-999" }}
-                      onSubmitEditing={() => formRefs[1].current?.focus()}
-                      ref={formRefs[0]}
+                      returnKeyType="next"
+                      onSubmitEditing={() => ruaRef.current?.focus()}
                     />
+
+                    {loading && (
+                      <View style={styles.loadingBox}>
+                        <ActivityIndicator color={Colors.green.primary} />
+                        <Text style={styles.loadingText}>Buscando CEP...</Text>
+                      </View>
+                    )}
+
                     <FormInput
                       control={control}
                       label="Rua"
                       placeholder="Informe sua Rua"
                       name="rua"
-                      onSubmitEditing={() => formRefs[2].current?.focus()}
-                      ref={formRefs[1]}
+                      ref={ruaRef}
+                      onSubmitEditing={() => numeroRef.current?.focus()}
                     />
                     <FormInput
                       control={control}
                       label="Número"
                       placeholder="Informe seu Número"
                       name="numero"
-                      onSubmitEditing={() => formRefs[3].current?.focus()}
-                      ref={formRefs[2]}
+                      ref={numeroRef}
+                      onSubmitEditing={() => bairroRef.current?.focus()}
                     />
                     <FormInput
                       control={control}
                       label="Bairro"
                       placeholder="Informe seu Bairro"
                       name="bairro"
-                      onSubmitEditing={() => formRefs[4].current?.focus()}
-                      ref={formRefs[3]}
+                      ref={bairroRef}
+                      onSubmitEditing={() => estadoRef.current?.focus()}
                     />
                     <FormInput
                       control={control}
                       label="Estado"
                       placeholder="Informe seu Estado"
                       name="estado"
-                      onSubmitEditing={() => formRefs[5].current?.focus()}
-                      ref={formRefs[4]}
+                      ref={estadoRef}
+                      onSubmitEditing={() => cidadeRef.current?.focus()}
                     />
                     <FormInput
                       control={control}
                       label="Cidade"
                       placeholder="Informe sua Cidade"
                       name="cidade"
+                      ref={cidadeRef}
                       onSubmitEditing={() => Keyboard.dismiss()}
-                      ref={formRefs[5]}
                     />
                   </View>
 
@@ -211,18 +223,18 @@ export default function AddressScreen() {
                     disabled={loading || isPending}
                     activeOpacity={0.8}
                   >
-                    <MaterialIcons
-                      name={
-                        loading || isPending
-                          ? "hourglass-empty"
-                          : "arrow-forward"
-                      }
-                      size={20}
-                      color="#FFFFFF"
-                    />
-                    <Text style={styles.buttonText}>
-                      {loading || isPending ? "Processando..." : "Continuar"}
-                    </Text>
+                    {loading || isPending ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <>
+                        <MaterialIcons
+                          name="arrow-forward"
+                          size={20}
+                          color="#fff"
+                        />
+                        <Text style={styles.buttonText}>Continuar</Text>
+                      </>
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -235,40 +247,16 @@ export default function AddressScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.dark.background,
-  },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-  },
-  content: {
-    padding: 20,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginBottom: 10,
-  },
+  container: { flex: 1, backgroundColor: Colors.dark.background },
+  gradientBackground: { flex: 1 },
+  keyboardAvoidingView: { flex: 1 },
+  scrollContent: { flexGrow: 1, justifyContent: "center" },
+  content: { padding: 20 },
+  header: { flexDirection: "row", marginBottom: 10 },
   backButton: {
     padding: 8,
     borderRadius: 8,
     backgroundColor: "rgba(155, 209, 61, 0.1)",
-  },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logo: {
-    width: "100%",
-    height: 140,
   },
   welcomeCard: {
     borderRadius: 16,
@@ -276,12 +264,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(155, 209, 61, 0.1)",
     alignItems: "center",
-  },
-  iconContainer: {
-    backgroundColor: "#9BD13D",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
   },
   welcomeTitle: {
     fontSize: 28,
@@ -294,45 +276,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6B7280",
     textAlign: "center",
-    lineHeight: 22,
   },
   inputCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 28,
     borderWidth: 1,
     borderColor: "rgba(155, 209, 61, 0.1)",
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
+  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
   cardTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#1F2937",
     marginLeft: 8,
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
+  inputContainer: { marginBottom: 20 },
   continueButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 24,
   },
-  buttonDisabled: {
-    backgroundColor: "#D1D5DB",
-  },
+  buttonDisabled: { backgroundColor: "#9CA3AF" },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#fff",
     marginLeft: 8,
   },
+  loadingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 8,
+  },
+  loadingText: { color: "#6B7280", fontSize: 14 },
 });

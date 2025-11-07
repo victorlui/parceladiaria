@@ -1,50 +1,49 @@
+import { FormInput } from "@/components/FormInput";
+import { useCPFForm } from "@/hooks/useLoginForm";
+import { useCheckCPFMutation } from "@/hooks/useLoginMutation";
+import { CPFSchema } from "@/lib/cpf_validation";
+import { useRegisterAuthStore } from "@/store/register";
 import {
+  Image,
   Keyboard,
-  StyleSheet,
   Text,
   View,
+  StyleSheet,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { usePasswordsLoginForm } from "@/hooks/useRegisterForm";
-import { FormInput } from "@/components/FormInput";
-import { useRegisterAuthStore } from "@/store/register";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { useAlerts } from "@/components/useAlert";
-import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
-import { useEffect } from "react";
-import { PasswordLoginSchema } from "@/lib/password_validation";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
 import LogoComponent from "@/components/ui/Logo";
+// import { useEffect, useRef } from "react";
 
-export default function InsertPassword() {
-  const { AlertDisplay, showError, showWarning, hideAlert } = useAlerts();
-  const { control, handleSubmit } = usePasswordsLoginForm();
+export default function RegisterScreen() {
+  const { handleSubmit, control } = useCPFForm();
+  const { AlertDisplay } = useAlerts();
+  const { mutate, isPending } = useCheckCPFMutation();
+  const { setCpf } = useRegisterAuthStore();
+  //   const hasShownWarning = useRef(false);
 
-  const { cpf, setPassword } = useRegisterAuthStore();
-  const { mutate, isPending, isError } = useLoginMutation();
+  //   useEffect(() => {
+  //     if (isSuccess && !hasShownWarning.current) {
+  //       hasShownWarning.current = true;
+  //       showWarning("Atenção", "CPF já está cadastrado. Faça o login. ");
+  //     }
+  //     if (!isSuccess) {
+  //       hasShownWarning.current = false;
+  //     }
+  //   }, [isSuccess, showWarning]);
 
-  useEffect(() => {
-    if (isError) {
-      hideAlert();
-      showError("Senha incorreta", "");
-    }
-  }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const onSubmit = (data: PasswordLoginSchema) => {
-    if (!data.password) {
-      showWarning("Atenção", "Por favor, insira sua senha.");
-      return;
-    }
+  const onSubmit = (data: CPFSchema) => {
     Keyboard.dismiss();
-    setPassword(data.password || "");
-    mutate({ cpf: cpf ?? "", password: data.password! });
+    setCpf(data.cpf);
+    mutate(data);
   };
 
   return (
@@ -67,44 +66,34 @@ export default function InsertPassword() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.content}>
-              {/* Logo Section */}
-              <LogoComponent logoWithText={false} width={240} />
+              <LogoComponent />
 
               <View style={styles.welcomeCard}>
-                <Text style={styles.welcomeTitle}>Senha de acesso</Text>
+                <Text style={styles.welcomeTitle}>Bem-vindo</Text>
                 <Text style={styles.welcomeSubtitle}>
-                  Digite sua senha para acessar sua conta
+                  Informe seu CPF para continuar
                 </Text>
               </View>
 
-              {/* Password Input Card */}
               <View style={styles.inputCard}>
                 <View style={styles.cardHeader}>
-                  <MaterialIcons name="lock" size={20} color="#053D39" />
-                  <Text style={styles.cardTitle}>Autenticação</Text>
+                  <Text style={styles.cardTitle}>CPF</Text>
                 </View>
 
                 <View style={styles.inputContainer}>
                   <FormInput
-                    name="password"
                     control={control}
-                    secureTextEntry
-                    placeholder="Digite sua senha"
+                    name="cpf"
+                    placeholder="000.000.000-00"
+                    keyboardType="numeric"
+                    rules={{ required: "CPF é obrigatório" }}
+                    maskType="cpf"
                     returnKeyType="done"
                     onSubmitEditing={handleSubmit(onSubmit)}
-                    icon={<FontAwesome6 name="key" size={24} color="#9CA3AF" />}
+                    icon={
+                      <FontAwesome name="id-card" size={24} color="#9CA3AF" />
+                    }
                   />
-
-                  <TouchableOpacity
-                    style={styles.forgotPasswordLink}
-                    onPress={() => {
-                      router.push("/(auth)/cpf-otp-screen");
-                    }}
-                  >
-                    <Text style={styles.forgotPasswordText}>
-                      Esqueci minha senha
-                    </Text>
-                  </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -122,7 +111,7 @@ export default function InsertPassword() {
                     color="#FFFFFF"
                   />
                   <Text style={styles.buttonText}>
-                    {isPending ? "Verificando..." : "Entrar"}
+                    {isPending ? "Verificando..." : "Continuar"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -152,13 +141,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logo: {
-    width: "100%",
-    height: 140,
-  },
+
   welcomeCard: {
     borderRadius: 16,
     padding: 32,
@@ -224,14 +207,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
     marginLeft: 8,
-  },
-  forgotPasswordLink: {
-    alignSelf: "flex-end",
-    paddingVertical: 4,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: "#053D39",
-    fontWeight: "500",
   },
 });

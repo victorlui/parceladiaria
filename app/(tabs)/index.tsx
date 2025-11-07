@@ -38,6 +38,7 @@ const HomeScreen: React.FC = () => {
             .slice()
             .sort((a: any, b: any) => b.id - a.id);
           setInstallments(sorted);
+
           setTotalInstallments(
             responseClient.data.data.data.lastLoan.installments.length
           );
@@ -80,6 +81,7 @@ const HomeScreen: React.FC = () => {
           totalInstallments={totalInstallments}
           installments={installments}
           loading={loading}
+          loan={userData?.lastLoan}
         />
       </SafeAreaView>
     </ScrollView>

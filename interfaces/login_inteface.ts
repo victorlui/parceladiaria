@@ -74,6 +74,7 @@ export interface ApiUserData {
     }[];
   } | null;
   pixKey: string | null;
+  isLoggedIn?: boolean;
 }
 
 export interface ApiUserResponse {

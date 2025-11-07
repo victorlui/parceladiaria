@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/auth";
 import { useAlerts } from "@/components/useAlert";
 import api from "@/services/api";
 import { ApiUserData } from "@/interfaces/login_inteface";
+import { is } from "zod/v4/locales";
 
 export const useCheckCPFMutation = () => {
   const { showError } = useAlerts();
@@ -36,30 +37,9 @@ export const useLoginMutation = () => {
     onSuccess: async (data) => {
       const { etapa, status, type } = data.data;
       const { token } = data;
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      const response = await api.get(`/v1/client/data/info`);
 
-      const user: ApiUserData = {
-        nome: response.data.data.name,
-        email: response.data.data.email,
-        cpf: response.data.data.cpf,
-        cidade: response.data.data.city,
-        bairro: response.data.data.neighborhood,
-        status: response.data.data.status,
-        estado: response.data.data.uf,
-        endereco: response.data.data.address,
-        msg_painel: response.data.data.msg_painel,
-        msg_status: response.data.data.msg_status,
-        lastLoan: data.data.lastLoan,
-        zip_code: response.data.data.zip_code,
-        phone: response.data.data.phone,
-      };
-
-      useAuthStore.getState().login(data.token, user);
-
-      if (type === "client") {
-        router.push("/(tabs)");
-      } else {
+      if (type === "lead") {
+        useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
         } else if (status === StatusCadastro.DIVERGENTE) {
@@ -76,7 +56,34 @@ export const useLoginMutation = () => {
             router.replace(rota as any);
           }
         }
+      } else {
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        const response = await api.get(`/v1/client/data/info`);
+
+        const user: ApiUserData = {
+          nome: response.data.data.name,
+          email: response.data.data.email,
+          cpf: response.data.data.cpf,
+          cidade: response.data.data.city,
+          bairro: response.data.data.neighborhood,
+          status: response.data.data.status,
+          estado: response.data.data.uf,
+          endereco: response.data.data.address,
+          msg_painel: response.data.data.msg_painel,
+          msg_status: response.data.data.msg_status,
+          lastLoan: data.data.lastLoan,
+          zip_code: response.data.data.zip_code,
+          phone: response.data.data.phone,
+          pixKey: "",
+          isLoggedIn: true,
+        };
+
+        useAuthStore.getState().login(data.token, user);
+        router.push("/(tabs)");
+        //router.replace("/recusado_screen");
       }
+
+      console.log("data.data", data.data);
 
       return data;
     },

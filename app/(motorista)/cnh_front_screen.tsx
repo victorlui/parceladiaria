@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
@@ -7,13 +7,12 @@ import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
-import { useRegisterAuthStore } from "@/store/register";
+
 import { Etapas } from "@/utils";
 import DocumentIcon from "../../assets/icons/document.svg";
 import { renderFile } from "@/components/RenderFile";
 
 export default function CnhFrontScreen() {
-  const { etapa } = useRegisterAuthStore();
   const { mutate } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
@@ -44,10 +43,13 @@ export default function CnhFrontScreen() {
       if (!finalUrl) return;
 
       console.log("finalUrl", finalUrl);
- // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
+      // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
       mutate({
         request: {
-          etapa:  file.type === "pdf" ? Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL : Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
+          etapa:
+            file.type === "pdf"
+              ? Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL
+              : Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH,
 
           foto_frente_doc: finalUrl,
         },
@@ -58,9 +60,6 @@ export default function CnhFrontScreen() {
       setIsLoading(false);
     }
   };
-  
-
-  
 
   return (
     <LayoutRegister
@@ -77,7 +76,7 @@ export default function CnhFrontScreen() {
         />
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
-          Foto da frente da CNH
+            Foto da frente da CNH
           </Text>
           <Text className="text-base text-center">
             Por favor, envie uma foto nítida da frente da sua CNH. Somente CNH
@@ -85,7 +84,7 @@ export default function CnhFrontScreen() {
           </Text>
         </View>
 
-      {renderFile(file)}
+        {renderFile(file)}
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity

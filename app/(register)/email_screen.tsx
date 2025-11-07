@@ -79,7 +79,7 @@ export default function EmailScreen() {
                   <MaterialCommunityIcons
                     name="email"
                     size={20}
-                    color="#9BD13D"
+                    color="#053D39"
                   />
                   <Text style={styles.cardTitle}>E-mail</Text>
                 </View>
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   iconContainer: {
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,

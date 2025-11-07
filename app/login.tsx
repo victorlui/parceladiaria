@@ -1,198 +1,240 @@
-import { FormInput } from "@/components/FormInput";
-import { useCPFForm } from "@/hooks/useLoginForm";
-import { useCheckCPFMutation } from "@/hooks/useLoginMutation";
-import { CPFSchema } from "@/lib/cpf_validation";
-import { useRegisterAuthStore } from "@/store/register";
+import { Colors } from "@/constants/Colors";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   Keyboard,
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import { useAlerts } from "@/components/useAlert";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { Colors } from "@/constants/Colors";
-import { StatusBar } from "expo-status-bar";
-import LogoComponent from "@/components/ui/Logo";
-export default function LoginScreen() {
-  const { handleSubmit, control } = useCPFForm();
-  const { AlertDisplay } = useAlerts();
-  const mutation = useCheckCPFMutation();
-  const { setCpf } = useRegisterAuthStore();
+import InputComponent from "@/components/ui/Input";
+import { FontAwesome } from "@expo/vector-icons";
+import ButtonComponent from "@/components/ui/Button";
+import { useAlerts } from "@/components/useAlert";
+import { validateCPF } from "@/utils/validation";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
+import { router } from "expo-router";
 
-  const onSubmit = (data: CPFSchema) => {
+const Login: React.FC = () => {
+  const { AlertDisplay, showWarning, showError } = useAlerts();
+  const { mutate, isPending, isError } = useLoginMutation();
+  const [cpf, setCpf] = useState("414.906.718-03");
+  const [password, setPassword] = useState("Senha@123");
+  const cpfRef = useRef<TextInput>(null);
+  const senhaRef = useRef<TextInput>(null);
+  const hasShownError = useRef(false);
+
+  useEffect(() => {
+    if (isError && !hasShownError.current) {
+      hasShownError.current = true;
+      showError("Atenção", "Login ou senha inválida.");
+    }
+    if (!isError) {
+      hasShownError.current = false;
+    }
+  }, [isError, showError]);
+
+  const onSubmit = () => {
     Keyboard.dismiss();
-    setCpf(data.cpf);
-    mutation.mutate(data);
+    if (!cpf || !password) {
+      showWarning("Atenção", "Preencha todos os campos");
+      return;
+    }
+
+    const isValid = validateCPF(cpf);
+    if (isValid !== "") {
+      showError("Atenção", "CPF inválido");
+      return;
+    }
+
+    mutate({
+      cpf,
+      password,
+    });
+  };
+
+  const navigationForgotPassword = () => {
+    router.push("/(auth)/cpf-otp-screen");
+  };
+
+  const navigationRegister = () => {
+    router.push("/register");
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <SafeAreaView style={styles.safeArea}>
       <AlertDisplay />
-
-      <LinearGradient
-        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
-        style={styles.gradientBackground}
-      >
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        animated={true}
+      />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
+          style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.content}>
-              <LogoComponent />
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("@/assets/images/logo-verde.png")}
+                resizeMode="contain"
+                style={styles.logo}
+              />
+            </View>
 
-              <View style={styles.welcomeCard}>
-                <Text style={styles.welcomeTitle}>Bem-vindo</Text>
-                <Text style={styles.welcomeSubtitle}>
-                  Faça login com seu CPF para acessar sua conta
-                </Text>
-              </View>
+            <Text style={styles.title}>Parcela Diária</Text>
+            <Text style={styles.subtitle}>
+              Insira seu CPF e sua senha para continuar
+            </Text>
 
-              <View style={styles.inputCard}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>CPF</Text>
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <FormInput
-                    control={control}
-                    name="cpf"
-                    placeholder="000.000.000-00"
-                    keyboardType="numeric"
-                    rules={{ required: "CPF é obrigatório" }}
-                    maskType="cpf"
-                    returnKeyType="done"
-                    onSubmitEditing={handleSubmit(onSubmit)}
-                    icon={
-                      <FontAwesome name="id-card" size={24} color="#9CA3AF" />
-                    }
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.loginButton,
-                    mutation.isPending && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={mutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <MaterialIcons
-                    name={mutation.isPending ? "hourglass-empty" : "login"}
+            <View style={styles.formContainer}>
+              <InputComponent
+                ref={cpfRef}
+                placeholder="Seu CPF"
+                keyboardType="numeric"
+                maxLength={11}
+                value={cpf}
+                maskType="cpf"
+                icon={
+                  <FontAwesome
+                    name="vcard"
                     size={20}
-                    color="#FFFFFF"
+                    color={Colors.gray.primary}
                   />
-                  <Text style={styles.buttonText}>
-                    {mutation.isPending ? "Verificando..." : "Continuar"}
+                }
+                onChangeText={setCpf}
+                returnKeyType="next"
+                onSubmitEditing={() => senhaRef.current?.focus()}
+              />
+              <InputComponent
+                ref={senhaRef}
+                placeholder="Senha"
+                secureTextEntry
+                value={password}
+                icon={
+                  <FontAwesome
+                    name="lock"
+                    size={22}
+                    color={Colors.gray.primary}
+                  />
+                }
+                onChangeText={setPassword}
+                returnKeyType="done"
+                onSubmitEditing={onSubmit}
+              />
+            </View>
+            <View style={styles.footerContainer}>
+              <ButtonComponent
+                title="Acessar"
+                onPress={onSubmit}
+                loading={isPending}
+              />
+              <TouchableOpacity
+                onPress={navigationForgotPassword}
+                style={styles.forgotPasswordContainer}
+              >
+                <Text style={styles.forgotPasswordText}>
+                  Esqueceu sua senha?
+                </Text>
+              </TouchableOpacity>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 3,
+                }}
+              >
+                <Text style={{ fontSize: 16, color: Colors.gray.text }}>
+                  Não tem uma conta?{" "}
+                </Text>
+                <TouchableOpacity onPress={navigationRegister}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: Colors.green.primary,
+                      fontWeight: "bold",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    Registre-se
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: Colors.white,
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
-  },
-  content: {
-    padding: 20,
-  },
-
-  welcomeCard: {
-    borderRadius: 16,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
     alignItems: "center",
-  },
-  iconContainer: {
-    backgroundColor: "#9BD13D",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  welcomeTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  inputCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-
-    padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginLeft: 8,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  loginButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#9BD13D",
-    borderRadius: 12,
-    paddingVertical: 16,
     paddingHorizontal: 24,
+    paddingVertical: 40,
   },
-  buttonDisabled: {
-    backgroundColor: "#D1D5DB",
+  logoContainer: {
+    marginBottom: 16,
+    alignItems: "center",
   },
-  buttonText: {
+  logo: {
+    height: 100,
+    width: 100,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.green.primary,
+    marginBottom: 10,
+  },
+  subtitle: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    marginLeft: 8,
+    color: Colors.gray.primary,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  formContainer: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 14,
+  },
+  footerContainer: {
+    width: "100%",
+    marginTop: 24,
+    justifyContent: "center",
+    gap: 14,
+  },
+  forgotPasswordContainer: {
+    padding: 3,
+  },
+  forgotPasswordText: {
+    fontSize: 16,
+    color: Colors.green.primary,
+    textDecorationLine: "underline",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });
+
+export default Login;

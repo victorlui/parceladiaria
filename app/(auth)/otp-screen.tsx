@@ -199,7 +199,7 @@ export default function OtpScreen() {
                   <MaterialCommunityIcons
                     name="shield-check"
                     size={20}
-                    color="#9BD13D"
+                    color="#053D39"
                   />
                   <Text style={styles.cardTitle}>Código de Verificação</Text>
                 </View>
@@ -226,7 +226,7 @@ export default function OtpScreen() {
                   <MaterialIcons
                     name={isLoading ? "hourglass-empty" : "refresh"}
                     size={20}
-                    color={!canResend || isLoading ? "#9CA3AF" : "#9BD13D"}
+                    color={!canResend || isLoading ? "#9CA3AF" : "#053D39"}
                   />
                   <Text
                     style={[
@@ -370,12 +370,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#9BD13D",
+    borderColor: "#053D39",
   },
   resendButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#9BD13D",
+    color: "#053D39",
     marginLeft: 8,
     textAlign: "center",
   },
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,

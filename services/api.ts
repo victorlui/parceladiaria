@@ -94,7 +94,8 @@ api.interceptors.request.use(
 );
 
 // Interceptor de resposta melhorado
-api.interceptors.response.use(
+// Dentro de: api.interceptors.response.use(...)
+(api.interceptors.response.use as any)(
   (response: AxiosResponse) => {
     return response;
   },
@@ -102,6 +103,13 @@ api.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
     };
+
+    const token = useAuthStore.getState().token;
+
+    if (!token) {
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
 
     if (
       error.response?.status === 401 &&
@@ -121,11 +129,6 @@ api.interceptors.response.use(
           },
         ]);
       }
-    } else if (error.response?.status === 403) {
-      Alert.alert(
-        "Acesso negado",
-        "Você não tem permissão para acessar este recurso."
-      );
     } else if (error.response && error.response.status >= 500) {
       Alert.alert(
         "Erro do servidor",

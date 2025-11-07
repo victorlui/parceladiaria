@@ -20,7 +20,7 @@ import { Etapas } from "@/utils";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import { router, useSegments } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LogoComponent from "@/components/ui/Logo";
 
@@ -37,17 +37,18 @@ export default function ChavePixScreen() {
     phone: phoneRegister,
   } = useRegisterAuthStore();
 
-  const { user } = useAuthStore();
+  const { userRegister } = useAuthStore();
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const [email, setEmail] = useState<string>(
-    user?.email ?? emailRegister ?? ""
+    userRegister?.email ?? emailRegister ?? ""
   );
   const [phone, setPhone] = useState<string>(
-    user?.whatsapp ?? phoneRegister ?? ""
+    userRegister?.whatsapp ?? phoneRegister ?? ""
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [tempPixValue, setTempPixValue] = useState("");
   const { mutate, isPending } = useUpdateUserMutation();
+  const segments = useSegments();
 
   const getIconBackgroundColor = (value: string) => {
     switch (value) {
@@ -129,7 +130,13 @@ export default function ChavePixScreen() {
                 <View style={styles.header}>
                   <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => {
+                      if (segments && segments[0] === "(register)") {
+                        router.replace("/login");
+                      } else {
+                        router.back();
+                      }
+                    }}
                   >
                     <MaterialIcons
                       name="arrow-back"
@@ -158,7 +165,7 @@ export default function ChavePixScreen() {
                     <MaterialIcons
                       name="account-balance-wallet"
                       size={20}
-                      color="#9BD13D"
+                      color="#053D39"
                     />
                     <Text style={styles.cardTitle}>Tipos de chave PIX</Text>
                   </View>
@@ -435,7 +442,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: "center",
     marginBottom: 15,
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     width: 48,
     height: 48,
     borderRadius: 24,

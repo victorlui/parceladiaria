@@ -1,17 +1,17 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import "../global.css";
-import * as NavigationBar from "expo-navigation-bar";
+import { ActivityIndicator, View } from "react-native";
+import { StatusCadastro } from "@/utils";
+import { useAlerts } from "@/components/useAlert";
 
 export default function RootLayout() {
-  const { restoreToken } = useAuthStore();
-  useEffect(() => {
-    // Define o estilo dos botões — "dark" deixa os ícones pretos
-    NavigationBar.setButtonStyleAsync("dark");
-  }, []);
+  const { restoreToken, isLoading, user, token } = useAuthStore();
+  const { AlertDisplay } = useAlerts();
+
   useEffect(() => {
     const restore = async () => {
       try {
@@ -23,8 +23,52 @@ export default function RootLayout() {
     restore();
   }, [restoreToken]);
 
+  const statusRedirectMap = useMemo(
+    () => ({
+      [StatusCadastro.ANALISE]: "/analise_screen",
+      [StatusCadastro.RECUSADO]: "/recusado_screen",
+      [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
+      [StatusCadastro.REANALISE]: "/reanalise_screen",
+      [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
+      [StatusCadastro.APROVADO]: "/(tabs)",
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    console.log("isLoading:", isLoading, "token:", token, "user:", user);
+
+    if (!token && !user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (user?.isLoggedIn) {
+      const route =
+        !user.status || !(user.status in statusRedirectMap)
+          ? "/(tabs)"
+          : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
+
+      router.replace(route as Parameters<typeof router.replace>[0]);
+      // router.replace("/recusado_screen");
+      return;
+    }
+  }, [isLoading, token, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (isLoading) {
+    // enquanto o token não for restaurado, não renderiza nada que faça requisições
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
+      <AlertDisplay />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -32,6 +76,7 @@ export default function RootLayout() {
 
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="insert-password" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
 
         <Stack.Screen name="(register)" options={{ headerShown: false }} />
 

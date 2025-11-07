@@ -65,17 +65,21 @@ export default function LayoutRegister({
                     title="Voltar"
                     onPress={() => router.back()}
                     variant="outline"
-                     icon={<Octicons name="chevron-left" size={20} color="#9BD13D" />}
-                     isBack
+                    icon={
+                      <Octicons name="chevron-left" size={20} color="#053D39" />
+                    }
+                    isBack
                   />
                 )}
               </View>
-              <View className="flex-1" >
+              <View className="flex-1">
                 <Button
                   title="Continuar"
                   onPress={() => onContinue?.()}
                   disabled={disabledButton}
-                  icon={<Octicons name="chevron-right" size={20} color="white" />}
+                  icon={
+                    <Octicons name="chevron-right" size={20} color="white" />
+                  }
                 />
               </View>
             </View>

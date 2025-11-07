@@ -71,6 +71,7 @@ export enum Etapas {
   REGISTRANDO_EMAIL = "registrando_email",
   REGISTRANDO_ENDERECO = "registrando_endereco",
   REGISTRANDO_PIX = "registrando_pix",
+  INFORMANDO_PIX = "Informando PIX",
   REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO = "registrando_frente_documento_comercio",
   REGISTRANDO_VERSO_DOCUMENTO_COMERCIO = "registrando_verso_documento_comercio",
   COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL = "comerciante_registrando_reconhecimento_facial",
@@ -100,6 +101,7 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_EMAIL]: "/(register)/email_screen",
   [Etapas.REGISTRANDO_ENDERECO]: "/(register)/address_screen",
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
+  [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
   [Etapas.REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO]:
     "/(comerciante)/document_photo_front_screen",
   [Etapas.REGISTRANDO_VERSO_DOCUMENTO_COMERCIO]:

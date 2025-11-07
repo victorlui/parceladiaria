@@ -63,17 +63,15 @@ type RequestProps = {
   request: any;
 };
 
-export async function updateUserService({
-  request,
-}: RequestProps): Promise<{
+export async function updateUserService({ request }: RequestProps): Promise<{
   message: string;
   success: boolean;
   etapa: Etapas;
 }> {
   try {
     const token = useAuthStore.getState().token;
-    console.log(' token update',token)
-
+    console.log("token update", token);
+    console.log("request", request);
     if (!token) {
       throw new Error("Token não encontrado");
     }
@@ -82,7 +80,7 @@ export async function updateUserService({
 
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
-    console.log('error update',error.response)
+    console.log("error update", error.response);
     if (error.response) {
       throw {
         status: error.response.status,

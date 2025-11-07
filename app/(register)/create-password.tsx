@@ -1,5 +1,4 @@
 import {
-  Image,
   Keyboard,
   Text,
   TextInput,
@@ -75,7 +74,7 @@ export default function CreatePassword() {
 
               <View style={styles.inputCard}>
                 <View style={styles.cardHeader}>
-                  <FontAwesome6 name="lock" size={20} color="#9BD13D" />
+                  <FontAwesome6 name="lock" size={20} color="#053D39" />
                   <Text style={styles.cardTitle}>Senha de Acesso</Text>
                 </View>
 
@@ -168,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   iconContainer: {
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,

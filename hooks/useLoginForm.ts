@@ -15,7 +15,7 @@ export const useCPFForm = () => {
     resolver: zodResolver(cpfSchema),
     mode: "onSubmit",
     defaultValues: {
-      cpf: "41490671803",
+      cpf: "40913814806",
     },
   });
 };

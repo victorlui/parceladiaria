@@ -2,7 +2,7 @@ import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import DocumentIcon from "../../assets/icons/document.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
@@ -15,7 +15,7 @@ import { renderFile } from "@/components/RenderFile";
 export default function StorefrontPhotoScreen() {
   useDisableBackHandler();
   const { mutate } = useUpdateUserMutation();
-  const { selectPDF, takePhoto } = useDocumentPicker(10);
+  const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,7 +81,7 @@ export default function StorefrontPhotoScreen() {
           </Text>
         </View>
 
-     {renderFile(file)}
+        {renderFile(file)}
 
         <View className="flex-2  justify-end gap-5 mb-5">
           {/* <TouchableOpacity

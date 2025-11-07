@@ -4,7 +4,7 @@ const TOKEN_KEY = "auth_token";
 const USER_KEY = "auth_user";
 
 export const saveToken = async (token: string, user: any) => {
-  console.log('saveToken',token)
+  console.log("saveToken", token);
   await SecureStore.setItemAsync(TOKEN_KEY, token);
   await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
 };
@@ -20,4 +20,5 @@ export const getToken = async () => {
 
 export const removeToken = async () => {
   await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await SecureStore.deleteItemAsync(USER_KEY);
 };

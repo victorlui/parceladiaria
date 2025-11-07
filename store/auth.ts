@@ -5,10 +5,13 @@ import { ApiUserData } from "@/interfaces/login_inteface";
 type AuthState = {
   token: string | null;
   user: ApiUserData | null;
+  userRegister: ApiUserData | null;
+  tokenRegister: string | null;
   isLoading: boolean;
   can_renew: boolean;
   setCanRenew: (can_renew: boolean) => void;
   login: (token: string, user: ApiUserData | null) => void;
+  register: (token: string, user: ApiUserData | null) => void;
   logout: () => void;
   setToken: (token: string) => void;
   setUser: (user: ApiUserData | null) => void;
@@ -18,15 +21,21 @@ type AuthState = {
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   user: null,
+  userRegister: null,
+  tokenRegister: null,
   isLoading: true,
   can_renew: false,
   setCanRenew: (can_renew) => {
     set({ can_renew });
   },
-  
+
   login: (token, user) => {
     saveToken(token, user);
-    set({ token, user: user });
+    set({ token, user: user ? { ...user, isLoggedIn: true } : null });
+  },
+
+  register: (token, user) => {
+    set({ tokenRegister: token, userRegister: user });
   },
 
   setUser: (user) => {
@@ -47,10 +56,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   restoreToken: async () => {
-    const token = await getToken();
-    const user = await getUser();
-    set({ token, isLoading: false, user });
+    set({ isLoading: true });
+    try {
+      const token = await getToken();
+      const user = await getUser();
+      set({ token, user, isLoading: false });
+    } catch (error: any) {
+      set({ token: null, user: null, isLoading: false });
+    }
   },
-
- 
 }));

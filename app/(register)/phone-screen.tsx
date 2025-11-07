@@ -265,7 +265,7 @@ export default function PhoneScreen() {
                   <MaterialCommunityIcons
                     name="phone"
                     size={20}
-                    color="#9BD13D"
+                    color="#053D39"
                   />
                   <Text style={styles.cardTitle}>
                     {!sendCode ? "Telefone" : "Código de Verificação"}
@@ -313,7 +313,7 @@ export default function PhoneScreen() {
                       name="message"
                       size={20}
                       color={
-                        !canResend || !canUseWhatsapp ? "#9CA3AF" : "#9BD13D"
+                        !canResend || !canUseWhatsapp ? "#9CA3AF" : "#053D39"
                       }
                     />
                     <Text
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   iconContainer: {
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     padding: 16,
     borderRadius: 16,
   },
@@ -468,12 +468,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#9BD13D",
+    borderColor: "#053D39",
   },
   whatsappButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#9BD13D",
+    color: "#053D39",
     marginLeft: 8,
     textAlign: "center",
   },
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,

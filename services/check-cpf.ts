@@ -10,7 +10,7 @@ export async function checkCPF(
         "Content-Type": "application/json",
       },
     });
-    console.log('chec',response.data)
+
     return response.data;
   } catch (error) {
     console.error("Erro ao verificar CPF:", error);

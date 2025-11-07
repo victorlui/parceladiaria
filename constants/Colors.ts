@@ -24,12 +24,13 @@ export const Colors = {
     tabIconDefault: "#9BA1A6",
     tabIconSelected: tintColorDark,
   },
-  primaryColor: "#7FD223",
+  primaryColor: "#053D39",
   borderColor: "#d1d5db",
   white: "#fff",
   black: "#000",
   green: {
-    primary: "#0F766E",
+    primary: "#053D39",
+    button: "#14524A",
   },
   blue: {
     primary: "#3B82F6",

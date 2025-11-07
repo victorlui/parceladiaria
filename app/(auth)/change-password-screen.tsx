@@ -96,7 +96,7 @@ const ChangePasswordScreen: React.FC = () => {
 
               <View style={styles.tipsCard}>
                 <View style={styles.cardHeader}>
-                  <MaterialIcons name="security" size={20} color="#9BD13D" />
+                  <MaterialIcons name="security" size={20} color="#053D39" />
                   <Text style={styles.cardTitle}>Dicas de Segurança</Text>
                 </View>
 
@@ -145,7 +145,7 @@ const ChangePasswordScreen: React.FC = () => {
 
               <View style={styles.inputCard}>
                 <View style={styles.cardHeader}>
-                  <FontAwesome6 name="lock" size={20} color="#9BD13D" />
+                  <FontAwesome6 name="lock" size={20} color="#053D39" />
                   <Text style={styles.cardTitle}>Nova Senha</Text>
                 </View>
 
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#9BD13D",
+    backgroundColor: "#053D39",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
