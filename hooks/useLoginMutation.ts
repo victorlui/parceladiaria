@@ -6,6 +6,8 @@ import { login } from "@/services/login";
 import { Etapas, getRouteByEtapa, StatusCadastro } from "@/utils";
 import { useAuthStore } from "@/store/auth";
 import { useAlerts } from "@/components/useAlert";
+import api from "@/services/api";
+import { ApiUserData } from "@/interfaces/login_inteface";
 
 export const useCheckCPFMutation = () => {
   const { showError } = useAlerts();
@@ -31,14 +33,32 @@ export const useLoginMutation = () => {
   return useMutation({
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       const { etapa, status, type } = data.data;
+      const { token } = data;
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      const response = await api.get(`/v1/client/data/info`);
 
-      console.log("login", data);
-      useAuthStore.getState().login(data.token, data.data);
+      const user: ApiUserData = {
+        nome: response.data.data.name,
+        email: response.data.data.email,
+        cpf: response.data.data.cpf,
+        cidade: response.data.data.city,
+        bairro: response.data.data.neighborhood,
+        status: response.data.data.status,
+        estado: response.data.data.uf,
+        endereco: response.data.data.address,
+        msg_painel: response.data.data.msg_painel,
+        msg_status: response.data.data.msg_status,
+        lastLoan: data.data.lastLoan,
+        zip_code: response.data.data.zip_code,
+        phone: response.data.data.phone,
+      };
+
+      useAuthStore.getState().login(data.token, user);
 
       if (type === "client") {
-        router.push("/(app)/home");
+        router.push("/(tabs)");
       } else {
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");

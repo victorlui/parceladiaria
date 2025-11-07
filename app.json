@@ -18,9 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
+      "permissions": ["android.permission.RECORD_AUDIO"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -29,10 +27,7 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "package": "br.com.parceladiaria"
@@ -78,6 +73,17 @@
         {
           "supportsBackgroundPlayback": false,
           "supportsPictureInPicture": false
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "backgroundColor": "#0f172a",
+          "barStyle": "light",
+          "borderColor": "#1f2937",
+          "visibility": "visible",
+          "behavior": "inset-swipe",
+          "position": "relative"
         }
       ],
       "expo-asset"

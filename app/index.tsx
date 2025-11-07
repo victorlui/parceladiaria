@@ -20,7 +20,7 @@ export default function Index() {
 
           if (user?.type === "client") {
             if (!user.status) {
-              router.replace("/(app)/home");
+              router.replace("/(tabs)");
               return;
             }
 
@@ -41,7 +41,7 @@ export default function Index() {
                 router.replace("/pre_aprovado_screen");
                 break;
               case StatusCadastro.APROVADO:
-                router.replace("/(app)/home");
+                router.replace("/(tabs)");
                 break;
 
               default:

@@ -4,10 +4,14 @@ import { useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import "../global.css";
+import * as NavigationBar from "expo-navigation-bar";
 
 export default function RootLayout() {
   const { restoreToken } = useAuthStore();
-
+  useEffect(() => {
+    // Define o estilo dos botões — "dark" deixa os ícones pretos
+    NavigationBar.setButtonStyleAsync("dark");
+  }, []);
   useEffect(() => {
     const restore = async () => {
       try {
@@ -22,13 +26,18 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="insert-password" options={{ headerShown: false }} />
+
         <Stack.Screen name="(register)" options={{ headerShown: false }} />
+
         <Stack.Screen name="(comerciante)" options={{ headerShown: false }} />
         <Stack.Screen name="(motorista)" options={{ headerShown: false }} />
-        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+
         <Stack.Screen name="recusado_screen" options={{ headerShown: false }} />
         <Stack.Screen
           name="divergencia_screen"
@@ -44,7 +53,6 @@ export default function RootLayout() {
         />
         <Stack.Screen name="analise_screen" options={{ headerShown: false }} />
         <Stack.Screen name="reset_password" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
     </QueryClientProvider>
   );

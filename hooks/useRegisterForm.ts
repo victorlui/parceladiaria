@@ -1,6 +1,9 @@
 import { addressSchema, AddressSchema } from "@/lib/address_validation";
 import { emailSchema, EmailSchema } from "@/lib/email_validation";
-import { passwordLoginSchema, PasswordLoginSchema } from "@/lib/password_validation";
+import {
+  passwordLoginSchema,
+  PasswordLoginSchema,
+} from "@/lib/password_validation";
 import { passwordsSchema, PasswordsSchema } from "@/lib/passwords._validation";
 import { phoneSchema, PhoneSchema } from "@/lib/phone_validation";
 import { plateSchema, PlateSchema } from "@/lib/plate_veiicle";
@@ -28,30 +31,32 @@ export const usePasswordsLoginForm = () => {
     resolver: zodResolver(passwordLoginSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
+    defaultValues: {
+      password: "Senha@123",
+    },
   });
 };
 
 export const useEmailForm = () => {
   return useForm<EmailSchema>({
     resolver: zodResolver(emailSchema),
-    mode: "onSubmit", 
-    reValidateMode: "onChange", 
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 };
 
 export const useAddressForm = () => {
   return useForm<AddressSchema>({
     resolver: zodResolver(addressSchema),
-    mode: "onSubmit", 
-    reValidateMode: "onChange", 
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 };
 
 export const usePlateForm = () => {
   return useForm<PlateSchema>({
     resolver: zodResolver(plateSchema),
-    mode: "onSubmit", 
-    reValidateMode: "onChange", 
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 };
-

@@ -16,6 +16,8 @@ export interface ApiUserData {
   endereco?: string | null;
   erro?: string | null;
   estado?: string | null;
+  zip_code?: string | null;
+  phone?: string | null;
   etapa?: string;
   face?: string | null;
   fachada?: string | null;
@@ -47,7 +49,9 @@ export interface ApiUserData {
   video_comercio?: string | null;
   whatsapp?: string | null;
   whatsapp2?: string | null;
-  lastLoan?: [{
+  msg_painel?: string | null;
+  msg_status?: string | null;
+  lastLoan?: {
     amount: string;
     customer: number;
     date: string;
@@ -57,7 +61,19 @@ export interface ApiUserData {
     installment_amount: string;
     loan_interest: string;
     origin: null;
-  }] | null;
+    installments: {
+      amount: string;
+      date: string;
+      description: string;
+      due_date: string;
+      gateway: string;
+      id: number;
+      installment: number;
+      paid: string;
+      payment_date: string | null;
+    }[];
+  } | null;
+  pixKey: string | null;
 }
 
 export interface ApiUserResponse {
