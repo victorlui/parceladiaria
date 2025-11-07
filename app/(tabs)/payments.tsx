@@ -1,14 +1,13 @@
 import InfoBalance from "@/components/ui/InfoBalance";
 import StatusBar from "@/components/ui/StatusBar";
+import api from "@/services/api";
 import { Colors } from "@/constants/Colors";
 import { InstallmentsProps } from "@/interfaces/installments";
 import { ApiUserData } from "@/interfaces/login_inteface";
-import api from "@/services/api";
-import { gerarQRCode } from "@/services/loans";
 import { useAuthStore } from "@/store/auth";
 import { useQRCodeStore } from "@/store/qrcode";
 import { formatCurrency } from "@/utils/formats";
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { format, parse, parseISO } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
