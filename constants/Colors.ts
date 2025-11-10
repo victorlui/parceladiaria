@@ -31,6 +31,8 @@ export const Colors = {
   green: {
     primary: "#053D39",
     button: "#14524A",
+    secondary: "#10B981",
+    text: "#2C8780",
   },
   blue: {
     primary: "#3B82F6",

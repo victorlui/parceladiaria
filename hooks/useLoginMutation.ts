@@ -38,6 +38,8 @@ export const useLoginMutation = () => {
       const { etapa, status, type } = data.data;
       const { token } = data;
 
+      console.log("login:", data);
+
       if (type === "lead") {
         useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {
@@ -79,8 +81,8 @@ export const useLoginMutation = () => {
         };
 
         useAuthStore.getState().login(data.token, user);
-        router.push("/(tabs)");
-        //router.replace("/recusado_screen");
+        //router.push("/(tabs)");
+        router.replace("/analise_screen");
       }
 
       console.log("data.data", data.data);

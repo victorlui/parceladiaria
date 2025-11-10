@@ -52,7 +52,7 @@ export default function RootLayout() {
           : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
 
       router.replace(route as Parameters<typeof router.replace>[0]);
-      // router.replace("/recusado_screen");
+      //   router.replace("/analise_screen");
       return;
     }
   }, [isLoading, token, user]); // eslint-disable-line react-hooks/exhaustive-deps

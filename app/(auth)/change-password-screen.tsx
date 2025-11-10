@@ -1,39 +1,65 @@
+import { Colors } from "@/constants/Colors";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   Keyboard,
-  Text,
-  TextInput,
-  View,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import { usePasswordsForm } from "@/hooks/useRegisterForm";
-import { FormInput } from "@/components/FormInput";
-import { PasswordsSchema } from "@/lib/passwords._validation";
-import { changePassword } from "@/services/loans";
-import { useRef, useState } from "react";
-import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { Colors } from "@/constants/Colors";
-import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import InputComponent from "@/components/ui/Input";
+import { FontAwesome } from "@expo/vector-icons";
+import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
+import { router } from "expo-router";
 import api from "@/services/api";
-import LogoComponent from "@/components/ui/Logo";
+import { useAuthStore } from "@/store/auth";
 
-const ChangePasswordScreen: React.FC = () => {
-  const { control, handleSubmit } = usePasswordsForm();
+const ChangePassword: React.FC = () => {
+  const { AlertDisplay, showSuccess, showError, hideAlert } = useAlerts();
+  const { tokenRegister } = useAuthStore();
+  const senhaRef = useRef<TextInput>(null);
+  const confirmSenhaRef = useRef<TextInput>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { AlertDisplay, showError, showSuccess, hideAlert } = useAlerts();
-  const formRefs = [useRef<TextInput>(null), useRef<TextInput>(null)];
 
-  const onSubmit = async (data: PasswordsSchema) => {
-    if (!data.password) {
-      showError("Erro", "Por favor, digite uma nova senha.");
+  // Validações em tempo real da senha
+  const passwordChecks = [
+    { label: "Mínimo 8 caracteres", valid: password.length >= 8 },
+    { label: "Pelo menos 1 letra", valid: /[A-Za-z]/.test(password) },
+    { label: "Pelo menos 1 número", valid: /\d/.test(password) },
+    {
+      label: "Pelo menos 1 símbolo (!@#$%&*)",
+      valid: /[!@#$%&*]/.test(password),
+    },
+  ];
+  const onSubmit = async () => {
+    if (!password || !confirmPassword) {
+      showError("Erro", "Por favor, digite a nova senha e confirme-a.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    // Validação da senha
+    const passwordValid = passwordChecks.every((check) => check.valid);
+    if (!passwordValid) {
+      showError(
+        "Erro",
+        "A senha não atende aos requisitos de segurança. Por favor, tente novamente."
+      );
       return;
     }
 
@@ -41,9 +67,17 @@ const ChangePasswordScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/v1/client/change-password", {
-        password: data.password,
-      });
+      const response = await api.post(
+        "/v1/client/change-password",
+        {
+          password: password,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenRegister}`,
+          },
+        }
+      );
       console.log("response", response);
 
       showSuccess("Sucesso", "Senha alterada com sucesso!", () => {
@@ -51,266 +85,223 @@ const ChangePasswordScreen: React.FC = () => {
         router.replace("/login");
       });
     } catch (error: unknown) {
-      throw error;
+      if (error instanceof Error) {
+        showError("Erro", error.message);
+      } else {
+        showError("Erro", "Ocorreu um erro desconhecido.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      <AlertDisplay />
+  const navigationRegister = () => {
+    router.replace("/login");
+  };
 
-      <LinearGradient
-        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
-        style={styles.gradientBackground}
-      >
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <AlertDisplay />
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        animated={true}
+      />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
+          style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.content}>
-              <View style={styles.header}>
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => router.back()}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons name="arrow-back" size={24} color="#1F2937" />
-                </TouchableOpacity>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("@/assets/images/logo-verde.png")}
+                resizeMode="contain"
+                style={styles.logo}
+              />
+            </View>
+
+            <Text style={styles.title}>Parcela Diária</Text>
+            <Text style={styles.subtitle}>Crie uma nova senha de acesso.</Text>
+
+            <View style={styles.formContainer}>
+              <InputComponent
+                ref={senhaRef}
+                placeholder="Nova senha"
+                secureTextEntry
+                value={password}
+                icon={
+                  <FontAwesome
+                    name="lock"
+                    size={22}
+                    color={Colors.gray.primary}
+                  />
+                }
+                onChangeText={setPassword}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmSenhaRef.current?.focus()}
+              />
+              <InputComponent
+                ref={confirmSenhaRef}
+                placeholder="Confirme a senha"
+                secureTextEntry
+                value={confirmPassword}
+                icon={
+                  <FontAwesome
+                    name="lock"
+                    size={22}
+                    color={Colors.gray.primary}
+                  />
+                }
+                onChangeText={setConfirmPassword}
+                returnKeyType="done"
+                onSubmitEditing={onSubmit}
+              />
+
+              {/* Validações da senha */}
+              <View style={styles.validationContainer}>
+                {passwordChecks.map((item, idx) => (
+                  <View key={idx} style={styles.validationRow}>
+                    <FontAwesome
+                      name={item.valid ? "check-circle" : "circle"}
+                      size={16}
+                      color={
+                        item.valid ? Colors.green.primary : Colors.gray.primary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.validationText,
+                        {
+                          color: item.valid
+                            ? Colors.green.primary
+                            : Colors.gray.text,
+                        },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                ))}
               </View>
+            </View>
+            <View style={styles.footerContainer}>
+              <ButtonComponent
+                title="Redefinir"
+                onPress={onSubmit}
+                loading={isLoading}
+              />
 
-              <LogoComponent logoWithText={false} width={240} />
-
-              <View style={styles.welcomeCard}>
-                <Text style={styles.welcomeTitle}>Alterar senha</Text>
-                <Text style={styles.welcomeSubtitle}>
-                  Digite sua nova senha e confirme para alterar
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 3,
+                }}
+              >
+                <Text style={{ fontSize: 16, color: Colors.gray.text }}>
+                  Já tem uma conta?{" "}
                 </Text>
-              </View>
-
-              <View style={styles.tipsCard}>
-                <View style={styles.cardHeader}>
-                  <MaterialIcons name="security" size={20} color="#053D39" />
-                  <Text style={styles.cardTitle}>Dicas de Segurança</Text>
-                </View>
-
-                <View style={styles.tipItem}>
-                  <MaterialIcons
-                    name="check-circle"
-                    size={16}
-                    color="#10B981"
-                  />
-                  <Text style={styles.tipText}>
-                    Use pelo menos 6 caracteres
-                  </Text>
-                </View>
-
-                <View style={styles.tipItem}>
-                  <MaterialIcons
-                    name="check-circle"
-                    size={16}
-                    color="#10B981"
-                  />
-                  <Text style={styles.tipText}>
-                    Inclua letras maiúsculas e minúsculas
-                  </Text>
-                </View>
-
-                <View style={styles.tipItem}>
-                  <MaterialIcons
-                    name="check-circle"
-                    size={16}
-                    color="#10B981"
-                  />
-                  <Text style={styles.tipText}>
-                    Adicione números e símbolos
-                  </Text>
-                </View>
-
-                <View style={styles.tipItem}>
-                  <MaterialIcons
-                    name="check-circle"
-                    size={16}
-                    color="#10B981"
-                  />
-                  <Text style={styles.tipText}>Evite espaços em branco</Text>
-                </View>
-              </View>
-
-              <View style={styles.inputCard}>
-                <View style={styles.cardHeader}>
-                  <FontAwesome6 name="lock" size={20} color="#053D39" />
-                  <Text style={styles.cardTitle}>Nova Senha</Text>
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <FormInput
-                    name="password"
-                    control={control}
-                    secureTextEntry
-                    label="Nova senha"
-                    onSubmitEditing={() => formRefs[1].current?.focus()}
-                    ref={formRefs[0]}
-                  />
-                  <FormInput
-                    name="confirmPassword"
-                    control={control}
-                    secureTextEntry
-                    label="Confirme a nova senha"
-                    onSubmitEditing={handleSubmit(onSubmit)}
-                    ref={formRefs[1]}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.continueButton,
-                    isLoading && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={isLoading}
-                  activeOpacity={0.8}
-                >
-                  <MaterialIcons
-                    name={isLoading ? "hourglass-empty" : "check"}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.buttonText}>
-                    {isLoading ? "Alterando..." : "Alterar Senha"}
+                <TouchableOpacity onPress={navigationRegister}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: Colors.green.primary,
+                      fontWeight: "bold",
+                      textDecorationLine: "underline",
+                    }}
+                  >
+                    Acessar
                   </Text>
                 </TouchableOpacity>
               </View>
-
-              {/* Security Tips Card */}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: Colors.white,
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
-  },
-  content: {
-    padding: 20,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
     alignItems: "center",
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(155, 209, 61, 0.1)",
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
   logoContainer: {
+    marginBottom: 16,
     alignItems: "center",
   },
   logo: {
-    width: "100%",
-    height: 140,
+    height: 100,
+    width: 100,
   },
-  welcomeCard: {
-    borderRadius: 16,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-    alignItems: "center",
-  },
-  welcomeTitle: {
+  title: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
+    fontWeight: "700",
+    color: Colors.green.primary,
+    marginBottom: 10,
   },
-  welcomeSubtitle: {
+  subtitle: {
     fontSize: 16,
-    color: "#6B7280",
+    color: Colors.gray.primary,
     textAlign: "center",
-    lineHeight: 22,
+    marginBottom: 24,
   },
-  inputCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-    marginBottom: 20,
-  },
-  tipsCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-    marginBottom: 20,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginLeft: 8,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  continueButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  formContainer: {
+    width: "100%",
     justifyContent: "center",
-    backgroundColor: "#053D39",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    alignItems: "center",
+    gap: 14,
   },
-  buttonDisabled: {
-    backgroundColor: "#D1D5DB",
+  footerContainer: {
+    width: "100%",
+    marginTop: 24,
+    justifyContent: "center",
+    gap: 14,
   },
-  buttonText: {
+  forgotPasswordContainer: {
+    padding: 3,
+  },
+  forgotPasswordText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    marginLeft: 8,
+    color: Colors.green.primary,
+    textDecorationLine: "underline",
+    textAlign: "center",
+    fontWeight: "bold",
   },
-  tipItem: {
+
+  // Estilos da validação
+  validationContainer: {
+    width: "100%",
+    marginTop: 8,
+    gap: 8,
+  },
+  validationRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
+    gap: 8,
   },
-  tipText: {
+  validationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  validationText: {
     fontSize: 14,
-    color: "#6B7280",
-    marginLeft: 8,
-    fontWeight: "500",
+    color: Colors.gray.text,
   },
 });
 
-export default ChangePasswordScreen;
+export default ChangePassword;

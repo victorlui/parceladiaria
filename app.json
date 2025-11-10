@@ -10,11 +10,11 @@
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "androidStatusBar": {
-      "barStyle": "dark-content",
+      "barStyle": "light",
       "backgroundColor": "#FFFFFF"
     },
     "androidNavigationBar": {
-      "barStyle": "dark-content",
+      "barStyle": "light",
       "backgroundColor": "#FFFFFF"
     },
     "ios": {
@@ -96,6 +96,12 @@
           "visibility": "visible",
           "behavior": "inset-swipe",
           "position": "relative"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
       ],
       "expo-asset"

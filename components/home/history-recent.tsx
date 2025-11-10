@@ -57,17 +57,30 @@ const HistoryRecent: React.FC<Props> = ({
         </View>
       ) : (
         <View style={styles.history}>
-          {installments.map((item, index) => (
+          {installments.length > 0 &&
+            installments.map((item, index) => (
+              <TimelineItem
+                key={index}
+                amount={item.amount}
+                installment={item.installment}
+                totalInstallments={totalInstallments}
+                isLast={index === installments.length - 1}
+                date_due={item.due_date}
+                loan={loan}
+              />
+            ))}
+
+          {installments.length === 0 && (
             <TimelineItem
-              key={index}
-              amount={item.amount}
-              installment={item.installment}
-              totalInstallments={totalInstallments}
-              isLast={index === installments.length - 1}
-              date_due={item.due_date}
-              loan={loan}
+              isLast={true} // para esconder a linha do timeline
+              isEmpty={true} // para garantir que o card apareça mesmo sem itens
+              loan={loan} // certifique-se de passar amount e date
+              amount={0}
+              installment={0}
+              totalInstallments={0}
+              date_due={loan?.date}
             />
-          ))}
+          )}
         </View>
       )}
     </View>

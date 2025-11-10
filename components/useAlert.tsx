@@ -1,5 +1,4 @@
 import { AlertComponent } from "@/components/AlertDialog";
-import { router } from "expo-router";
 import React, { useState } from "react";
 
 export function useAlerts() {

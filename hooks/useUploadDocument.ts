@@ -1,6 +1,6 @@
-import { solicitarLinkS3 } from "@/services/upload-files";
-import * as FileSystem from "expo-file-system";
 import { Alert } from "react-native";
+import { solicitarLinkS3 } from "@/services/upload-files";
+import { useAuthStore } from "@/store/auth";
 
 type UploadFileParams = {
   file: {
@@ -11,37 +11,47 @@ type UploadFileParams = {
 };
 
 export async function uploadFileToS3({ file }: UploadFileParams) {
-  // 1. Verifica tamanho
-  const fileInfo:any = await FileSystem.getInfoAsync(file.uri);
-  const mimeType = file.mimeType || "image/jpeg";
-  
-  // Skip size validation for video files
-  const isVideo = mimeType.startsWith('video/');
-  if (!isVideo && fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
-    Alert.alert("Arquivo muito grande (máx. 10MB)");
+  const tokenRegister = useAuthStore.getState().tokenRegister;
+  try {
+    const mimeType = file.mimeType || "image/jpeg";
+    const isVideo = mimeType.startsWith("video/");
+    const filename = file.name || (isVideo ? "video.mp4" : "arquivo.jpg");
+
+    // 1️⃣ Busca o arquivo via fetch
+    const response = await fetch(file.uri);
+    const blob = await response.blob();
+
+    // 2️⃣ Verifica tamanho
+    const fileSize = blob.size;
+    if (!isVideo && fileSize > 10 * 1024 * 1024) {
+      Alert.alert("Arquivo muito grande (máx. 10MB)");
+      return null;
+    }
+
+    console.log("file", file);
+
+    // 3️⃣ Solicita link S3
+    const { upload_url, final_url } = await solicitarLinkS3(
+      filename,
+      mimeType,
+      tokenRegister
+    );
+
+    // 4️⃣ Faz upload para o S3
+    const uploadResult = await fetch(upload_url, {
+      method: "PUT",
+      headers: { "Content-Type": mimeType },
+      body: blob,
+    });
+
+    if (!uploadResult.ok) {
+      throw new Error(`Falha no upload. Status: ${uploadResult.status}`);
+    }
+
+    // 5️⃣ Retorna URL final
+    return final_url;
+  } catch (error) {
+    Alert.alert("Erro no upload", "Não foi possível enviar o arquivo.");
     return null;
   }
-
-  // 2. Nome e tipo
-  const filename = file.name || (isVideo ? "video.mp4" : "arquivo.jpg");
-
-  // 3. Solicita link S3
-  const { upload_url, final_url } = await solicitarLinkS3(filename, mimeType);
-
-  // 4. Faz upload
-  const response = await fetch(file.uri);
-  const blob = await response.blob();
-
-  const uploadResult = await fetch(upload_url, {
-    method: "PUT",
-    headers: { "Content-Type": mimeType },
-    body: blob,
-  });
-
-  if (!uploadResult.ok) {
-    throw new Error(`Falha no upload. Status: ${uploadResult.status}`);
-  }
-
-  // 5. Retorna URL final
-  return final_url;
 }

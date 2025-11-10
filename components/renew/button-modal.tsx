@@ -7,7 +7,7 @@ interface Props {
   textButton2: string;
   onConfirm: () => void;
   handleChangePress: () => void;
-  loading: boolean;
+  loading?: boolean;
 }
 
 const ButtonModal: React.FC<Props> = ({
@@ -15,7 +15,7 @@ const ButtonModal: React.FC<Props> = ({
   textButton2,
   onConfirm,
   handleChangePress,
-  loading,
+  loading = false,
 }) => {
   return (
     <View className="mt-4 flex-row gap-3">

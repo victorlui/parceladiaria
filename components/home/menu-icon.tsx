@@ -67,12 +67,12 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
   return (
     <View className="flex-row justify-between px-4">
       {loading ? (
-        <>
+        <View className="flex-row justify-between w-full my-5">
           <SkeletonItem />
           <SkeletonItem />
           <SkeletonItem />
           <SkeletonItem />
-        </>
+        </View>
       ) : (
         items.map((item) => (
           <MenuItem
@@ -98,7 +98,7 @@ type Item = {
 
 const MenuItem: React.FC<Item> = ({ title, icon, available, onPress }) => {
   return (
-    <Animated.View className="items-center w-[25%]">
+    <Animated.View className="items-center w-[25%] my-5">
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.8}

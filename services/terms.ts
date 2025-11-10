@@ -1,7 +1,5 @@
-import { AxiosError } from "axios";
-import api from "./api";
 import { useAuthStore } from "@/store/auth";
-import { router } from "expo-router";
+import api from "./api";
 
 interface TermsAcceptanceData {
   sign_info_date: string;
@@ -12,11 +10,16 @@ interface TermsAcceptanceData {
 }
 
 export async function acceptedTerms(data: TermsAcceptanceData) {
+  const token = useAuthStore.getState().tokenRegister;
   try {
-    const response = await api.post('/v1/client/acept-term', data);
+    const response = await api.post("/v1/client/acept-term", data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response;
   } catch (error) {
-     
+    console.log("Error ao aceitar os termos:", error.response);
     throw error;
   }
 }

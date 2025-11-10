@@ -1,100 +1,94 @@
+import StatusBar from "@/components/ui/StatusBar";
+import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
-import React, { useState } from "react";
-import { Image, View, Text, Dimensions, TouchableOpacity } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import DocumentAnalisy from "@/assets/images/document-analysis.svg";
-import DrawerMenu from "@/components/DrawerMenu";
 
-const { width, height } = Dimensions.get('window');
-const isTablet = width > 768;
-
-export default function ReanaliseScreen() {
-  const { user } = useAuthStore();
-  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
-
-  const handleMenuPress = () => {
-    setIsDrawerVisible(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setIsDrawerVisible(false);
-  };
-
+const ReanaliseScreen: React.FC = () => {
+  const { logout } = useAuthStore();
   return (
-    <SafeAreaView 
-      edges={['top', 'bottom']} 
-      className="flex-1 bg-gradient-to-b from-blue-50 to-white"
-    >
-      {/* Container principal com padding responsivo */}
-      <View className={`flex-1 ${isTablet ? 'px-12 py-8' : 'px-6 py-4'}`}>
-        
-        {/* Header com logo e menu */}
-        <View className="flex-row items-center justify-between mb-8">
-          <TouchableOpacity 
-            onPress={handleMenuPress}
-            className="p-2"
-          >
-            <Ionicons name="menu" size={28} color="#374151" />
-          </TouchableOpacity>
-          
-          <View className="flex-1 items-center">
-            <Image 
-              source={require("@/assets/images/apenas-logo.png")} 
-              className={`w-full ${isTablet ? 'h-32' : 'h-24'}`}
-              resizeMode="contain" 
-            />
-          </View>
-          
-          <View className="w-12" />
-        </View>
-
-        {/* Conteúdo central */}
-        <View className="flex-1 justify-center items-center px-4">
-          
-
-          {/* Card com informações */}
-          <View className="bg-white rounded-2xl shadow-lg p-6 mx-4 mb-8 border border-gray-100">
-            <View className="items-center">
-              {/* Ícone de status */}
-              <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-orange-100">
-                <Text className="text-2xl text-orange-600">
-                  🔄
-                </Text>
-              </View>
-
-              {/* Título principal */}
-              <Text className={`font-bold text-center mb-3 ${
-                isTablet ? 'text-3xl' : 'text-2xl'
-              } text-gray-800 leading-tight`}>
-                Cadastro em Reanálise
-              </Text>
-
-              {/* Subtítulo */}
-              <Text className={`text-center text-gray-600 leading-relaxed ${
-                isTablet ? 'text-lg' : 'text-base'
-              }`}>
-                Seu cadastro está em processo de reanálise. Em breve, nossa equipe entrará em contato.
-              </Text>
-
-              {/* Badge de status */}
-              <View className="mt-4 px-4 py-2 rounded-full bg-orange-100">
-                <Text className="font-semibold text-sm text-orange-800">
-                  EM REANÁLISE
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-      </View>
-      
-      {/* DrawerMenu */}
-      <DrawerMenu 
-        isVisible={isDrawerVisible} 
-        onClose={handleCloseDrawer}
-        showOnlyLogout={true}
+    <SafeAreaView style={styles.container}>
+      <StatusBar />
+      <Image
+        source={require("@/assets/images/logo-verde.png")}
+        style={styles.logo}
       />
+      <View style={styles.card}>
+        <FontAwesome5 name="hourglass-half" size={50} color="#f7ab09" />
+        <Text style={styles.title}>Cadastro em Reanálise</Text>
+        <Text style={styles.subtitle}>
+          Seu cadastro está em processo de reanálise. Em breve, nossa equipe
+          entrará em contato.
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          logout();
+          router.replace("/login");
+        }}
+      >
+        <Text style={styles.buttonText}>Sair</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+  },
+  card: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderRadius: 10,
+    margin: 20,
+    elevation: 5,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    width: "100%",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.black,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "300",
+    color: Colors.gray.text,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderRadius: 12,
+    margin: 20,
+    borderWidth: 1,
+    borderColor: Colors.gray.primary,
+    width: "100%",
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.black,
+    textAlign: "center",
+  },
+});
+
+export default ReanaliseScreen;

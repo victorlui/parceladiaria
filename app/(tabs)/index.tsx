@@ -33,6 +33,7 @@ const HomeScreen: React.FC = () => {
         try {
           const response = await renewStatus();
           const responseClient = await api.get("/v1/client");
+          console.log("responseClient", responseClient.data.data.data);
           const sorted = responseClient.data.data.data.lastLoan.installments
             .filter((i: any) => i.paid === "Sim")
             .slice()
@@ -61,9 +62,9 @@ const HomeScreen: React.FC = () => {
   );
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
       <StatusBar />
-      <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.container}>
         <LinearGradient
           colors={["#fff9e6", "#fff0b3", "#ffecb3"]}
           start={[0, 1]}
@@ -83,8 +84,8 @@ const HomeScreen: React.FC = () => {
           loading={loading}
           loan={userData?.lastLoan}
         />
-      </SafeAreaView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -93,6 +94,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     gap: 20,
+    flexDirection: "column",
   },
   warning: {
     flexDirection: "row",
@@ -102,6 +104,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 5,
     borderColor: "#D97706",
     borderRadius: 12,
+    marginVertical: 10,
   },
   alertaTexto: {
     flex: 1, // Permite que o texto ocupe o espaço restante

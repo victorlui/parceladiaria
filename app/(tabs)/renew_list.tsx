@@ -2,7 +2,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { RenewListProps } from "@/interfaces/renew";
 import { renewList } from "@/services/renew";
 import { useFocusEffect, router } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,14 +13,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import ItemRenew from "@/components/renew/item-renew";
 import ModalConfirm from "@/components/renew/modal-confirm";
 import { useAuthStore } from "@/store/auth";
 import api from "@/services/api";
+import { LinearGradient } from "expo-linear-gradient";
+import { formatCurrency } from "@/utils/formats";
+import { convertData } from "@/utils";
+import * as Network from "expo-network";
+import { getFromGPS } from "@/services/fromIP";
+import { useAlerts } from "@/components/useAlert";
 
 const RenewList: React.FC = () => {
-  const { user, setUser } = useAuthStore((state) => state);
+  const { showSuccess, showError, AlertDisplay } = useAlerts();
+  const { user } = useAuthStore((state) => state);
   const [list, setList] = React.useState<RenewListProps[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
@@ -29,17 +36,31 @@ const RenewList: React.FC = () => {
     null
   );
   const [pixKey, setPixKey] = React.useState<string | null>(null);
+  const [step, setStep] = React.useState<"confirm" | "change">("confirm");
+  const [keyNew, setKeyNew] = React.useState<string>("");
+  // Evita refetch quando o modal for aberto/fechado
+  const preventRefetch = React.useRef<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  console.log("user", user);
+
+  const outstandingBalance = useMemo(() => {
+    return user?.lastLoan?.installments?.reduce((total, installment) => {
+      if (installment.paid === "Sim") return total;
+      return total + (parseFloat(String(installment.amount)) || 0);
+    }, 0);
+  }, [user?.lastLoan]);
 
   const fetchRenewList = async () => {
     try {
       setLoading(true);
       const response = await renewList();
       const responseClient = await api.get("/v1/client");
-
+      console.log("responseClient", response);
       setPixKey(responseClient.data?.data.data.pixKey || null);
+      // Preserva seleção ao recarregar
       const renewWithSelection = response.map((item) => ({
         ...item,
-        selected: false,
+        selected: item.id === selectedId,
       }));
       setList(renewWithSelection as RenewListProps[]);
     } catch (error: any) {
@@ -51,8 +72,13 @@ const RenewList: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
+      // Se o foco voltou por causa do modal, não refaz o fetch
+      if (preventRefetch.current) {
+        preventRefetch.current = false;
+        return;
+      }
       fetchRenewList();
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const handleSelect = (item: RenewListProps) => {
@@ -66,6 +92,39 @@ const RenewList: React.FC = () => {
     );
   };
 
+  const onConfirmRenew = async () => {
+    setIsLoading(true);
+    try {
+      const ip = await Network.getIpAddressAsync();
+
+      const fromIP = await getFromGPS();
+
+      const termsData = {
+        id: selectedId,
+        sign_info_date: convertData(),
+        sign_info_ip_address: ip,
+        sign_info_city: fromIP?.city ? user?.cidade || "São Paulo" : "",
+        sign_info_state: fromIP?.region
+          ? fromIP.region === "São Paulo"
+            ? "SP"
+            : fromIP.region
+          : user?.estado || "SP",
+        sign_info_country: "BR",
+      };
+      await api.post("/v1/renew", termsData);
+      showSuccess("Sucesso", `Renovação concluida com sucesso`, () => {
+        router.replace("/");
+      });
+    } catch (error: any) {
+      console.log("error", error.response);
+      showError("Error", error.response.data.error || "Erro ao renovar");
+    } finally {
+      setIsLoading(false);
+      setModalVisible(false);
+      router.replace("/");
+    }
+  };
+
   const renderItem = ({ item }: { item: RenewListProps }) => {
     return (
       <ItemRenew
@@ -76,20 +135,34 @@ const RenewList: React.FC = () => {
     );
   };
 
-  console.log("selectedItem", selectedItem);
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar />
 
       <ModalConfirm
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        selectedAmount={Number(selectedItem?.loan_value) || 0}
-        youReceive={Number(selectedItem?.to_receive) || 0}
+        onClose={() => {
+          setModalVisible(false);
+          setKeyNew("");
+          setStep("confirm");
+        }}
+        onConfirm={() => onConfirmRenew()}
+        onStepChange={(step) => {
+          setStep(step);
+        }}
+        step={step}
+        valueSelected={Number(selectedItem?.loan_value || 0)}
+        valueToReceive={Number(selectedItem?.to_receive || 0)}
         pixKey={pixKey || ""}
-        idLoan={selectedItem?.id || 0}
+        keyNew={keyNew}
+        onChangeKey={setKeyNew}
+        onSave={() => {
+          setKeyNew(keyNew);
+          setStep("confirm");
+        }}
+        isLoading={isLoading}
       />
+      <AlertDisplay />
 
       {/* Header com voltar e título */}
       <View style={styles.header}>
@@ -107,6 +180,19 @@ const RenewList: React.FC = () => {
 
         <Text style={styles.headerTitle}>Renovar Empréstimo</Text>
         <Text style={styles.headerSubtitle}>Escolha o valor da renovação</Text>
+
+        <LinearGradient
+          colors={["#fff9e6", "#fff0b3", "#ffecb3"]}
+          start={[0, 1]}
+          end={[1, 0]}
+          style={styles.warning}
+        >
+          <FontAwesome5 name="info-circle" size={18} color="#D97706" />
+          <Text style={styles.alertaTexto}>
+            A renovação quita automaticamente seu débito atual de (
+            {formatCurrency(outstandingBalance || 0)})
+          </Text>
+        </LinearGradient>
       </View>
 
       {/* Lista */}
@@ -132,6 +218,8 @@ const RenewList: React.FC = () => {
           style={styles.confirmButton}
           onPress={() => {
             if (!selectedId) return;
+            // Marca para não refazer o fetch ao recuperar foco
+            preventRefetch.current = true;
             setModalVisible(true);
           }}
           disabled={!selectedId}
@@ -207,6 +295,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.white,
+  },
+  warning: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 13,
+    backgroundColor: "#fff9e6",
+    borderLeftWidth: 5,
+    borderColor: "#D97706",
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  alertaTexto: {
+    flex: 1, // Permite que o texto ocupe o espaço restante
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    fontFamily: "System", // Use a fonte padrão ou uma fonte customizada do Expo
+    color: "#5d4037", // Cor do texto (marrom escuro)
+    fontSize: 13,
+    fontWeight: "bold",
   },
 });
 

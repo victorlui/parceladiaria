@@ -3,29 +3,70 @@ import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
-import { FontAwesome } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import { useAuthStore } from "@/store/auth";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CPFOTPScreen: React.FC = () => {
-  const { AlertDisplay, showWarning, showError } = useAlerts();
+  const { AlertDisplay, showError } = useAlerts();
+  const { register } = useAuthStore();
   const cpfRef = useRef<TextInput>(null);
-  const hasShownError = useRef(false);
+  const otpRef = useRef<TextInput>(null);
   const [cpf, setCpf] = useState("414.906.718-03");
-  // 414.906.718-03
-  // 40913814806
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [otp, setOtp] = useState("");
 
-  const onSubmit = async () => {
+  const [canResend, setCanResend] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const startResendTimer = () => {
+    setCanResend(false);
+    setRemainingSeconds(60);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    timerRef.current = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const onSubmit = async (method: string) => {
+    Keyboard.dismiss();
     if (!cpf) {
       showError("Atenção", "CPF obrigatório");
       return;
@@ -35,16 +76,49 @@ const CPFOTPScreen: React.FC = () => {
       showError("Atenção", "CPF inválido");
       return;
     }
-
+    setIsLoading(true);
     try {
-      const response = await api.post("/auth/otp", {
+      await api.post("/auth/otp", {
         cpf,
-        method: "meta",
+        method,
       });
-      console.log(response.data);
+
+      setIsSuccess(true);
+      startResendTimer();
     } catch (error) {
-      console.log(error.response);
       showError("Atenção", "Erro ao enviar código verifique o CPF");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const confirmOTP = async () => {
+    Keyboard.dismiss();
+    if (!otp) {
+      showError("Atenção", "Código OTP obrigatório");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await api.post("/auth/login-otp", {
+        cpf,
+        otp,
+      });
+
+      register(res.data.data.token, {
+        cpf: res.data.data.cpf,
+        nome: res.data.data.nome,
+        pixKey: "",
+      });
+      setIsSuccess(false);
+      setCpf("");
+      setOtp("");
+      setRemainingSeconds(0);
+      router.push("/(auth)/change-password-screen");
+    } catch (error) {
+      showError("Atenção", "Código OTP inválido ou expirado.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,32 +142,97 @@ const CPFOTPScreen: React.FC = () => {
           </View>
 
           <Text style={styles.title}>Parcela Diária</Text>
-          <Text style={styles.subtitle}>
-            Digite seu CPF para recuperar a senha
-          </Text>
+          {isSuccess && (
+            <Text style={styles.subtitle}>
+              Enviamos um código de verificação via WhatsApp. Insira-o abaixo.
+            </Text>
+          )}
+
+          {!isSuccess && (
+            <Text style={styles.subtitle}>
+              Digite seu CPF para recuperar a senha
+            </Text>
+          )}
 
           <View style={styles.formContainer}>
-            <InputComponent
-              ref={cpfRef}
-              placeholder="Seu CPF"
-              keyboardType="numeric"
-              maxLength={11}
-              value={cpf}
-              maskType="cpf"
-              icon={
-                <FontAwesome
-                  name="vcard"
-                  size={20}
-                  color={Colors.gray.primary}
-                />
-              }
-              onChangeText={setCpf}
-              returnKeyType="done"
-              onSubmitEditing={onSubmit}
-            />
+            {!isSuccess && (
+              <InputComponent
+                ref={cpfRef}
+                placeholder="Seu CPF"
+                keyboardType="numeric"
+                maxLength={11}
+                value={cpf}
+                maskType="cpf"
+                icon={
+                  <FontAwesome
+                    name="vcard"
+                    size={20}
+                    color={Colors.gray.primary}
+                  />
+                }
+                onChangeText={setCpf}
+                returnKeyType="done"
+                onSubmitEditing={() => onSubmit("whatsapp")}
+              />
+            )}
+
+            {isSuccess && (
+              <InputComponent
+                ref={otpRef}
+                placeholder="Código OTP"
+                keyboardType="numeric"
+                maxLength={6}
+                value={otp}
+                icon={
+                  <Ionicons
+                    name="key-sharp"
+                    size={20}
+                    color={Colors.gray.primary}
+                  />
+                }
+                onChangeText={setOtp}
+                returnKeyType="done"
+                onSubmitEditing={confirmOTP}
+              />
+            )}
           </View>
           <View style={styles.footerContainer}>
-            <ButtonComponent title="Enviar Código" onPress={onSubmit} />
+            {isLoading && (
+              <ActivityIndicator size={30} color={Colors.green.primary} />
+            )}
+
+            {!isLoading && (
+              <ButtonComponent
+                title={isSuccess ? "Confirmar código" : "Enviar Código"}
+                onPress={isSuccess ? confirmOTP : () => onSubmit("whatsapp")}
+              />
+            )}
+
+            {isSuccess && !canResend && (
+              <View style={styles.resendTimerContainer}>
+                <Ionicons
+                  name="time-outline"
+                  size={16}
+                  color={Colors.gray.primary}
+                />
+                <Text style={styles.resendTimerText}>
+                  Você poderá reenviar o código em{" "}
+                  {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+                  {String(remainingSeconds % 60).padStart(2, "0")}
+                </Text>
+              </View>
+            )}
+
+            {isSuccess && canResend && !isLoading && (
+              <TouchableOpacity
+                style={styles.sendCodeContainer}
+                onPress={() => onSubmit("whatsapp")}
+              >
+                <Text style={styles.sendCodeText}>
+                  Não recebeu? Reenviar código
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -154,6 +293,28 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     textAlign: "center",
     fontWeight: "bold",
+  },
+  sendCodeContainer: {
+    width: "100%",
+    alignItems: "flex-start",
+  },
+  sendCodeText: {
+    fontSize: 16,
+    color: Colors.green.primary,
+    textAlign: "center",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  resendTimerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+  },
+  resendTimerText: {
+    fontSize: 14,
+    color: Colors.gray.primary,
+    textAlign: "center",
   },
 });
 

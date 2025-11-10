@@ -69,14 +69,17 @@ export async function updateUserService({ request }: RequestProps): Promise<{
   etapa: Etapas;
 }> {
   try {
-    const token = useAuthStore.getState().token;
-    console.log("token update", token);
-    console.log("request", request);
+    const token = useAuthStore.getState().tokenRegister;
+    console.log("token", token);
     if (!token) {
       throw new Error("Token não encontrado");
     }
 
-    const { data } = await api.put("/v1/client/update", request);
+    const { data } = await api.put("/v1/client/update", request, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {

@@ -22,7 +22,7 @@ import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/Colors";
 import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import { router, useSegments } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LogoComponent from "@/components/ui/Logo";
 
@@ -41,6 +41,7 @@ export default function AddressScreen() {
   const estadoRef = useRef<TextInput>(null);
   const cidadeRef = useRef<TextInput>(null);
 
+  const segments = useSegments();
   // Função de busca de CEP
   const fetchAddressData = useCallback(
     async (cleanCep: string) => {
@@ -124,7 +125,9 @@ export default function AddressScreen() {
                 <View style={styles.header}>
                   <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => {
+                      router.back();
+                    }}
                   >
                     <MaterialIcons
                       name="arrow-back"
