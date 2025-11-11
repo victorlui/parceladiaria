@@ -26,8 +26,8 @@ import { router } from "expo-router";
 const Login: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
-  const [cpf, setCpf] = useState("414.906.718-03");
-  const [password, setPassword] = useState("Senha@123");
+  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
   const cpfRef = useRef<TextInput>(null);
   const senhaRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);

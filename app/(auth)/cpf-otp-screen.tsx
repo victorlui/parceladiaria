@@ -27,7 +27,7 @@ const CPFOTPScreen: React.FC = () => {
   const { register } = useAuthStore();
   const cpfRef = useRef<TextInput>(null);
   const otpRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("414.906.718-03");
+  const [cpf, setCpf] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [otp, setOtp] = useState("");

@@ -4,7 +4,7 @@
     "slug": "parceladiaria",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon_old.png",
+    "icon": "./assets/images/icon_new.png",
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -26,7 +26,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive_icon_new.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -54,7 +54,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon-light.png",
+          "image": "./assets/images/icon_new.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

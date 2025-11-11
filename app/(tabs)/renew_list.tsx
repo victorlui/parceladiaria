@@ -121,7 +121,6 @@ const RenewList: React.FC = () => {
     } finally {
       setIsLoading(false);
       setModalVisible(false);
-      router.replace("/");
     }
   };
 

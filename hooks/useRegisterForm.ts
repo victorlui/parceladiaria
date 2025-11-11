@@ -31,9 +31,6 @@ export const usePasswordsLoginForm = () => {
     resolver: zodResolver(passwordLoginSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
-    defaultValues: {
-      password: "Senha@123",
-    },
   });
 };
 
