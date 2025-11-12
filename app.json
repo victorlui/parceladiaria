@@ -4,7 +4,7 @@
     "slug": "parceladiaria",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon_new.png",
+    "icon": "./assets/images/adaptive-icon.png",
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -22,12 +22,13 @@
       "userInterfaceStyle": "light",
       "infoPlist": {
         "UIUserInterfaceStyle": "Light"
-      }
+      },
+      "bundleIdentifier": "br.com.parceladiaria"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive_icon_new.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#053E38"
       },
       "edgeToEdgeEnabled": true,
       "permissions": ["android.permission.RECORD_AUDIO"],
