@@ -1,7 +1,7 @@
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 
 import { Etapas } from "@/utils";
-import { Alert, Text,View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useState } from "react";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
@@ -14,11 +14,10 @@ import CircleIcon from "@/components/ui/CircleIcon";
 import { Colors } from "@/constants/Colors";
 
 export default function RecognitionFace() {
-  const { mutate } = useUpdateUserMutation();
-  const {  takePhoto } = useDocumentPicker(10);
+  const { mutate, isPending } = useUpdateUserMutation();
+  const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-
 
   const handleTakePhoto = async () => {
     const selected = await takePhoto("camera");
@@ -27,12 +26,14 @@ export default function RecognitionFace() {
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, faça um reconhecimento facial para continuar.");
+      Alert.alert(
+        "Atenção",
+        "Por favor, faça um reconhecimento facial para continuar."
+      );
       return;
     }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const finalUrl = await uploadFileToS3({
         file: file,
       });
@@ -54,31 +55,29 @@ export default function RecognitionFace() {
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}
     >
       <View className="flex-1 px-6">
-      <CircleIcon
+        <CircleIcon
           icon={<DocumentIcon />}
           color={Colors.primaryColor}
           size={100}
         />
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
-             Reconhecimento facial
+            Reconhecimento facial
           </Text>
           <Text className="text-base text-center">
-             Por favor, faça um reconhecimento facial para continuar.
+            Por favor, faça um reconhecimento facial para continuar.
           </Text>
         </View>
 
-      {renderFile(file)}
-
+        {renderFile(file)}
 
         <View className="flex-2  justify-end gap-5 mb-5">
-          
           <Button
             title="Tirar foto"
             variant="secondary"
@@ -87,5 +86,5 @@ export default function RecognitionFace() {
         </View>
       </View>
     </LayoutRegister>
-  )
+  );
 }

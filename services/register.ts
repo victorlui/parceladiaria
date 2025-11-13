@@ -23,6 +23,7 @@ export async function registerService(
       password,
       phone: phone,
     });
+    console.log("response", response.data);
     return response.data;
   } catch (error: any) {
     if (error.response) {

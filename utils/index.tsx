@@ -94,7 +94,7 @@ export enum Etapas {
 }
 
 const routeMap: Record<Etapas, string> = {
-  [Etapas.INICIO]: "/(register)/birthday_screen",
+  [Etapas.INICIO]: "/(register_new)/register-email",
   [Etapas.INICIO_BIRTH]: "/(register)/birthday_screen",
   [Etapas.REGISTRANDO_COMPROVANTE_ENDERECO]: "/(register)/address_document",
   [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/profile_selection",

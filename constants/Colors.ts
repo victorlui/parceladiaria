@@ -56,4 +56,8 @@ export const Colors = {
     light: "#D1FAE5", // verde claro (gradiente start)
     medium: "#A7F3D0", // verde médio (gradiente end)
   },
+  error: {
+    light: "#FEE2E2", // vermelho claro (gradiente start)
+    medium: "#F87171", // vermelho médio (gradiente end)
+  },
 };

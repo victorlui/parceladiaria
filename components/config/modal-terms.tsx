@@ -17,6 +17,7 @@ interface ModalTermsProps {
   onClose: () => void;
   title?: string;
   htmlContent?: string;
+  uri?: string;
 }
 
 const ModalTerms: React.FC<ModalTermsProps> = ({
@@ -24,8 +25,10 @@ const ModalTerms: React.FC<ModalTermsProps> = ({
   onClose,
   title = "Termos e Condições de Uso",
   htmlContent = "",
+  uri,
 }) => {
-  const isEmpty = !htmlContent || htmlContent.trim().length === 0;
+  const useUri = !!uri;
+  const isEmpty = !useUri && (!htmlContent || htmlContent.trim().length === 0);
 
   return (
     <Modal visible={visible} animationType="slide">
@@ -47,22 +50,44 @@ const ModalTerms: React.FC<ModalTermsProps> = ({
             </View>
           ) : (
             <View style={styles.webviewContainer}>
-              <WebView
-                originWhitelist={["*"]}
-                source={{ html: htmlContent }}
-                style={{ flex: 1 }}
-                showsVerticalScrollIndicator
-                showsHorizontalScrollIndicator={false}
-                scrollEnabled
-                nestedScrollEnabled
-                startInLoadingState
-                scalesPageToFit={false}
-                javaScriptEnabled={false}
-                domStorageEnabled={false}
-                allowsInlineMediaPlayback={false}
-                mediaPlaybackRequiresUserAction
-                bounces={false}
-              />
+              {useUri ? (
+                <WebView
+                  originWhitelist={["*"]}
+                  source={{
+                    uri: `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+                      String(uri)
+                    )}`,
+                  }}
+                  style={{ flex: 1 }}
+                  showsVerticalScrollIndicator
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled
+                  nestedScrollEnabled
+                  startInLoadingState
+                  scalesPageToFit
+                  javaScriptEnabled
+                  domStorageEnabled
+                  mediaPlaybackRequiresUserAction
+                  bounces={false}
+                />
+              ) : (
+                <WebView
+                  originWhitelist={["*"]}
+                  source={{ html: htmlContent }}
+                  style={{ flex: 1 }}
+                  showsVerticalScrollIndicator
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled
+                  nestedScrollEnabled
+                  startInLoadingState
+                  scalesPageToFit={false}
+                  javaScriptEnabled={false}
+                  domStorageEnabled={false}
+                  allowsInlineMediaPlayback={false}
+                  mediaPlaybackRequiresUserAction
+                  bounces={false}
+                />
+              )}
             </View>
           )}
         </View>

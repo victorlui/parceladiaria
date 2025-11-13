@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
@@ -12,7 +12,7 @@ import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { renderFile } from "@/components/RenderFile";
 
 export default function CnhVersoScreen() {
-  const { mutate } = useUpdateUserMutation();
+  const { mutate, isPending } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,12 +29,14 @@ export default function CnhVersoScreen() {
 
   const onSubmit = async () => {
     if (!file) {
-      Alert.alert("Atenção", "Por favor, tire uma foto do verso da CNH ou selecione.");
+      Alert.alert(
+        "Atenção",
+        "Por favor, tire uma foto do verso da CNH ou selecione."
+      );
       return;
     }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const finalUrl = await uploadFileToS3({
         file: file,
       });
@@ -42,7 +44,7 @@ export default function CnhVersoScreen() {
       if (!finalUrl) return;
 
       console.log("finalUrl", finalUrl);
-  // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
+      // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
       mutate({
         request: {
           etapa: Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL,
@@ -58,7 +60,7 @@ export default function CnhVersoScreen() {
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}
@@ -71,16 +73,15 @@ export default function CnhVersoScreen() {
         />
         <View className="flex flex-col gap-3 my-5">
           <Text className="text-2xl font-bold text-center text-[#33404F]">
-             Foto do verso da CNH
+            Foto do verso da CNH
           </Text>
           <Text className="text-base text-center">
-             Por favor, envie uma foto nítida do verso  da sua CNH. Somente CNH
+            Por favor, envie uma foto nítida do verso da sua CNH. Somente CNH
             será aceita como documento válido.
           </Text>
         </View>
 
-      {renderFile(file)}
-
+        {renderFile(file)}
 
         <View className="flex-2  justify-end gap-5 mb-5">
           <TouchableOpacity

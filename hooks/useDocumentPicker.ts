@@ -166,17 +166,21 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
         cameraType: ImagePicker.CameraType.back,
       });
 
+      console.log("result", result);
+
       if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
-        const isValidSize = await checkFileSize(asset.uri);
-        console.log("isValidSize", isValidSize);
-        if (!isValidSize) {
-          Alert.alert(
-            "Imagem muito grande",
-            `A imagem deve ter no máximo ${maxSizeMB}MB. Por favor, tire uma nova foto ou selecione uma imagem menor.`
-          );
-          return null;
-        }
+        // const isValidSize = await checkFileSize(asset.uri, maxSizeMB * 3);
+        // console.log("isValidSize", isValidSize);
+        // if (!isValidSize) {
+        //   Alert.alert(
+        //     "Imagem muito grande",
+        //     `A imagem deve ter no máximo ${maxSizeMB}MB. Por favor, tire uma nova foto ou selecione uma imagem menor.`
+        //   );
+        //   return null;
+        // }
+
+        // console.log("asset", asset);
 
         return {
           uri: asset.uri,

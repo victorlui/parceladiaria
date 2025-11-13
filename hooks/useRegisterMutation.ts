@@ -12,6 +12,7 @@ export function useRegisterMutation() {
     mutationFn: ({ phone, method }: { phone: string; method: string }) =>
       sendCode(phone, method),
     onSuccess: (data) => {
+      console.log("sucesso", data);
       return data;
     },
     onError: (error: any) => {
@@ -55,6 +56,7 @@ export function useRegisterDataMutation() {
     }) => registerService(cpf, phone, password),
 
     onSuccess: (data) => {
+      console.log("data", data);
       const authStore = useAuthStore.getState();
       const { login } = authStore;
       if (data?.success) {
@@ -64,6 +66,7 @@ export function useRegisterDataMutation() {
       return data;
     },
     onError: (error: any) => {
+      console.log("error", error);
       alert(error.message || "Erro ao verificar código");
     },
   });
@@ -111,7 +114,7 @@ export function useUpdateUserMutation() {
       setEtapa(data.etapa);
 
       if (data.etapa === Etapas.FINALIZADO) {
-         return data;
+        return data;
       } else {
         const rota = getRouteByEtapa(data.etapa as Etapas);
         if (rota) {
@@ -122,7 +125,8 @@ export function useUpdateUserMutation() {
       return data;
     },
     onError: (error: any) => {
-      Alert.alert("Atenção","Informações inválidas. Tente novamente.");
+      console.log("error update", error.message);
+      Alert.alert("Atenção", error.message || "Erro ao atualizar usuário");
     },
   });
 }

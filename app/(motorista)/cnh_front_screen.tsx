@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "@/components/Button";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
@@ -13,7 +13,7 @@ import DocumentIcon from "../../assets/icons/document.svg";
 import { renderFile } from "@/components/RenderFile";
 
 export default function CnhFrontScreen() {
-  const { mutate } = useUpdateUserMutation();
+  const { mutate, isPending } = useUpdateUserMutation();
   const { selectPDF, takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,17 +33,14 @@ export default function CnhFrontScreen() {
       Alert.alert("Atenção", "Por favor, selecione uma foto ou documento.");
       return;
     }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const finalUrl = await uploadFileToS3({
         file: file,
       });
 
       if (!finalUrl) return;
 
-      console.log("finalUrl", finalUrl);
-      // Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO
       mutate({
         request: {
           etapa:
@@ -63,7 +60,7 @@ export default function CnhFrontScreen() {
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}

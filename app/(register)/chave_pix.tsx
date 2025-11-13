@@ -38,6 +38,9 @@ export default function ChavePixScreen() {
   } = useRegisterAuthStore();
 
   const { userRegister } = useAuthStore();
+
+  console.log("userRegister", userRegister);
+
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const [email, setEmail] = useState<string>(
     userRegister?.email ?? emailRegister ?? ""
@@ -87,6 +90,8 @@ export default function ChavePixScreen() {
       pix:
         selectedProfile === "cpf"
           ? cpf
+            ? cpf
+            : userRegister?.cpf
           : selectedProfile === "email"
             ? email
             : `+55${phone}`,
@@ -247,7 +252,9 @@ export default function ChavePixScreen() {
                           {selectedProfile === "cpf" && isSelected && (
                             <Text style={styles.selectedPixKey}>
                               Chave PIX:{" "}
-                              <Text style={styles.selectedPixValue}>{cpf}</Text>
+                              <Text style={styles.selectedPixValue}>
+                                {cpf ? cpf : userRegister?.cpf}
+                              </Text>
                             </Text>
                           )}
 

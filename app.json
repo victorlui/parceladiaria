@@ -21,7 +21,8 @@
       "supportsTablet": true,
       "userInterfaceStyle": "light",
       "infoPlist": {
-        "UIUserInterfaceStyle": "Light"
+        "UIUserInterfaceStyle": "Light",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "br.com.parceladiaria"
     },
@@ -31,7 +32,11 @@
         "backgroundColor": "#053E38"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": ["android.permission.RECORD_AUDIO"],
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -40,7 +45,10 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "br.com.parceladiaria"

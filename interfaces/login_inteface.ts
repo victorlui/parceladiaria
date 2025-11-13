@@ -73,7 +73,7 @@ export interface ApiUserData {
       payment_date: string | null;
     }[];
   } | null;
-  pixKey: string | null;
+  pixKey?: string | null;
   isLoggedIn?: boolean;
 }
 

@@ -17,27 +17,21 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
     const isVideo = mimeType.startsWith("video/");
     const filename = file.name || (isVideo ? "video.mp4" : "arquivo.jpg");
 
-    // 1️⃣ Busca o arquivo via fetch
     const response = await fetch(file.uri);
     const blob = await response.blob();
 
-    // 2️⃣ Verifica tamanho
     const fileSize = blob.size;
     if (!isVideo && fileSize > 10 * 1024 * 1024) {
       Alert.alert("Arquivo muito grande (máx. 10MB)");
       return null;
     }
 
-    console.log("file", file);
-
-    // 3️⃣ Solicita link S3
     const { upload_url, final_url } = await solicitarLinkS3(
       filename,
       mimeType,
       tokenRegister
     );
 
-    // 4️⃣ Faz upload para o S3
     const uploadResult = await fetch(upload_url, {
       method: "PUT",
       headers: { "Content-Type": mimeType },
@@ -48,7 +42,6 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
       throw new Error(`Falha no upload. Status: ${uploadResult.status}`);
     }
 
-    // 5️⃣ Retorna URL final
     return final_url;
   } catch (error) {
     Alert.alert("Erro no upload", "Não foi possível enviar o arquivo.");

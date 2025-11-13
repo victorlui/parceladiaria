@@ -66,7 +66,8 @@ const Login: React.FC = () => {
   };
 
   const navigationRegister = () => {
-    router.push("/register");
+    router.push("/(register_new)/register-cpf");
+    //router.push("/(register_new)/register-phone");
   };
 
   return (

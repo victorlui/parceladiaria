@@ -79,6 +79,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ headerShown: false }} />
 
         <Stack.Screen name="(register)" options={{ headerShown: false }} />
+        <Stack.Screen name="(register_new)" options={{ headerShown: false }} />
 
         <Stack.Screen name="(comerciante)" options={{ headerShown: false }} />
         <Stack.Screen name="(motorista)" options={{ headerShown: false }} />

@@ -22,7 +22,7 @@ type InputProps = {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
-  maskType?: "cpf" | "cellphone";
+  maskType?: "cpf" | "cellphone" | "date" | "cep";
 } & Omit<TextInputProps, "style" | "onChangeText" | "value" | "placeholder">;
 
 const InputComponent = forwardRef<TextInput, InputProps>(
@@ -59,7 +59,11 @@ const InputComponent = forwardRef<TextInput, InputProps>(
         ? "999.999.999-99"
         : maskType === "cellphone"
           ? "(99) 99999-9999"
-          : undefined;
+          : maskType === "cep"
+            ? "99999-999"
+            : maskType === "date"
+              ? "99/99/9999"
+            : undefined;
 
     return (
       <View style={[styles.wrapper, containerStyle]}>
@@ -161,7 +165,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.green.primary,
   },
   inputContainerError: {
-    borderColor: Colors.orange.primary,
+    borderColor: Colors.error.medium,
   },
   inputContainerDisabled: {
     opacity: 0.6,
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
   error: {
     marginTop: 6,
     fontSize: 12,
-    color: Colors.orange.primary,
+    color: Colors.error.medium,
   },
 });
 
