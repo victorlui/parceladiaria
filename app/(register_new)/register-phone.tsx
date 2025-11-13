@@ -46,8 +46,13 @@ const RegisterPhone: React.FC = () => {
       });
       setIsSuccess(true);
       console.log("response", response.data);
-    } catch (error) {
-      console.log("error", error);
+    } catch (error: any) {
+      console.log("error", error.response);
+      showWarning(
+        "Erro ao enviar código",
+        error.response?.data?.data || "Erro ao enviar código"
+      );
+      console.log("error", error.response);
     } finally {
       setIsLoading(false);
     }
