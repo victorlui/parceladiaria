@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
@@ -11,6 +11,7 @@ import CarIcon from "../../assets/icons/user-circle-add.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { renderFile } from "@/components/RenderFile";
 import { Button } from "@/components/Button";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DocumentFrontScreen() {
   useDisableBackHandler();

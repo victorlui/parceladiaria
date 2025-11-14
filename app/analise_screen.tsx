@@ -2,6 +2,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,6 +28,7 @@ const AnaliseScreen: React.FC = () => {
         style={styles.button}
         onPress={() => {
           logout();
+          router.replace("/login");
         }}
       >
         <Text style={styles.buttonText}>Sair</Text>

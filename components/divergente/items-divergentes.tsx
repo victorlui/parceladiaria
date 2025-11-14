@@ -4,7 +4,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const documentDisplayNames: Record<string, string> = {
+export const documentDisplayNames: Record<string, string> = {
   comprovante_endereco: "Comprovante de endereço",
   foto_perfil_app: "Perfil Completo no Aplicativo de Corridas",
   foto_perfil_app2: "Perfil Completo em Outro Aplicativo de Corridas",
@@ -26,7 +26,10 @@ interface Props {
 }
 
 const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
-  const { takePhoto } = useDocumentPicker(100);
+  const { takePhoto, takeVideo } = useDocumentPicker(100);
+
+  const isVideoType = (documentType: string) =>
+    documentType === "video_comercio" || documentType === "ganhos_app";
 
   const buildFileName = (
     documentType: string,
@@ -41,26 +44,32 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
     return ext ? `${baseName}.${ext}` : baseName;
   };
 
-  const pickImage = async (documentType: string) => {
-    const result = await takePhoto("library");
+  const pickMedia = async (documentType: string) => {
+    const pickerResult = isVideoType(documentType)
+      ? await takeVideo("library")
+      : await takePhoto("library");
 
-    if (result && result.uri) {
-      const newName = buildFileName(documentType, result.name, result.uri);
-      onSelect(documentType, result.uri, newName);
+    if (pickerResult && pickerResult.uri) {
+      const newName = buildFileName(
+        documentType,
+        pickerResult.name,
+        pickerResult.uri
+      );
+      onSelect(documentType, pickerResult.uri, newName);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{documentDisplayNames[item] || item}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => pickImage(item)}>
+      <TouchableOpacity style={styles.button} onPress={() => pickMedia(item)}>
         <FontAwesome6 name="upload" size={24} color={Colors.green.button} />
         {selectedUri ? (
           <Text style={styles.textButton}>{selectedUri}</Text>
         ) : (
           <Text style={styles.textButton}>Clique para enviar</Text>
         )}
-        <Text style={styles.textButton2}>PNG, JPG ou PDF</Text>
+        <Text style={styles.textButton2}>{isVideoType(item) ? "MP4" : "PNG, JPG ou PDF"}</Text>
       </TouchableOpacity>
     </View>
   );

@@ -175,7 +175,6 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={ruaRef}
           placeholder="Informe sua Rua"
-          keyboardType="number-pad"
           icon={
             <MaterialCommunityIcons
               name="map-marker"
@@ -195,7 +194,6 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={numeroRef}
           placeholder="Informe seu Número"
-          keyboardType="number-pad"
           icon={
             <MaterialCommunityIcons
               name="map-marker"
@@ -215,7 +213,6 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={bairroRef}
           placeholder="Informe seu Bairro"
-          keyboardType="number-pad"
           icon={
             <MaterialCommunityIcons
               name="map-marker"
@@ -230,11 +227,11 @@ const AddressScreen: React.FC = () => {
           }}
           returnKeyType="next"
           error={bairroError}
+          onSubmitEditing={() => estadoRef.current?.focus()}
         />
         <InputComponent
           ref={estadoRef}
           placeholder="Informe seu Estado"
-          keyboardType="number-pad"
           icon={
             <MaterialCommunityIcons
               name="map-marker"
@@ -254,7 +251,6 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={cidadeRef}
           placeholder="Informe sua Cidade"
-          keyboardType="number-pad"
           icon={
             <MaterialCommunityIcons
               name="map-marker"

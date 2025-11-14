@@ -1,6 +1,7 @@
 import { Alert } from "react-native";
 import { solicitarLinkS3 } from "@/services/upload-files";
 import { useAuthStore } from "@/store/auth";
+import * as FileSystem from "expo-file-system/legacy";
 
 type UploadFileParams = {
   file: {
@@ -12,12 +13,26 @@ type UploadFileParams = {
 
 export async function uploadFileToS3({ file }: UploadFileParams) {
   const tokenRegister = useAuthStore.getState().tokenRegister;
+
   try {
     const mimeType = file.mimeType || "image/jpeg";
     const isVideo = mimeType.startsWith("video/");
-    const filename = file.name || (isVideo ? "video.mp4" : "arquivo.jpg");
+    const extFromMime = mimeType.split("/")[1] || (isVideo ? "mp4" : "jpg");
+    const filename =
+      file.name ||
+      (isVideo ? `video.${extFromMime}` : `arquivo.${extFromMime}`);
 
-    const response = await fetch(file.uri);
+    let fileUri = file.uri;
+    if (typeof fileUri === "string" && fileUri.startsWith("data:")) {
+      const base64 = fileUri.split(",")[1] || "";
+      const tempPath = `${FileSystem.cacheDirectory}upload_${Date.now()}.${extFromMime}`;
+      await FileSystem.writeAsStringAsync(tempPath, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      fileUri = tempPath;
+    }
+
+    const response = await fetch(fileUri);
     const blob = await response.blob();
 
     const fileSize = blob.size;

@@ -38,8 +38,6 @@ export const useLoginMutation = () => {
       const { etapa, status, type } = data.data;
       const { token } = data;
 
-      console.log("login:", data);
-
       if (type === "lead") {
         useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { Colors } from "@/constants/Colors";
@@ -10,10 +10,17 @@ import { Etapas } from "@/utils";
 import CarIcon from "../../assets/icons/user-circle-add.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { renderFile } from "@/components/RenderFile";
+import { useAlerts } from "@/components/useAlert";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
+import { router } from "expo-router";
 
 export default function AdditionalPrintScreen() {
   useDisableBackHandler();
-  const { mutate,isPending } = useUpdateUserMutation();
+  const { showSuccess, AlertDisplay } = useAlerts();
+
+  const { mutate, isPending, isSuccess } = useUpdateUserMutation();
+  const { isPending: isLoadingLogin } = useLoginMutation();
+
   const { takePhoto } = useDocumentPicker(10);
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,10 +30,22 @@ export default function AdditionalPrintScreen() {
     if (selected) setFile(selected);
   };
 
+  useEffect(() => {
+    if (isSuccess) {
+      showSuccess(
+        "Sucesso",
+        "Cadastro realizado com sucesso!. Faça login para continuar.",
+        () => {
+          router.replace("/analise_screen");
+        }
+      );
+    }
+  }, [isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onSubmit = async () => {
     if (file) {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
         const finalUrl = await uploadFileToS3({
           file: file,
         });
@@ -35,8 +54,8 @@ export default function AdditionalPrintScreen() {
 
         mutate({
           request: {
-            etapa: Etapas.ASSISTINDO_VIDEO,
-            foto_perfil_app2: finalUrl
+            etapa: Etapas.FINALIZADO,
+            foto_perfil_app2: finalUrl,
           },
         });
       } catch (error) {
@@ -47,7 +66,7 @@ export default function AdditionalPrintScreen() {
     } else {
       mutate({
         request: {
-          etapa: Etapas.ASSISTINDO_VIDEO,
+          etapa: Etapas.FINALIZADO,
         },
       });
     }
@@ -55,11 +74,12 @@ export default function AdditionalPrintScreen() {
 
   return (
     <LayoutRegister
-      loading={isLoading || isPending}
+      loading={isLoading || isPending || isLoadingLogin}
       isBack
       onContinue={onSubmit}
       isLogo={false}
     >
+      <AlertDisplay />
       <View className="flex-1 px-6">
         <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
         <View className="flex flex-col gap-3 my-5">

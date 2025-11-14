@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
@@ -10,6 +10,7 @@ interface SelectedFile {
   name: string;
   mimeType: string;
   type: FileType;
+  base64?: string;
 }
 
 export function useDocumentPicker(maxSizeMB: number = 10) {
@@ -120,9 +121,9 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
 
       if (!result.canceled && result.assets.length > 0) {
         const file = result.assets[0];
-        const isValidSize = await checkFileSize(file.uri);
+        const { valid, fixedUri } = await checkFileSize(file.uri);
 
-        if (!isValidSize) {
+        if (!valid) {
           Alert.alert(
             "Arquivo muito grande",
             `O arquivo PDF deve ter no máximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`
@@ -130,11 +131,20 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
           return null;
         }
 
+        const src = fixedUri ?? file.uri;
+        const newPath = (FileSystem as any).cacheDirectory + file.name;
+
+        await (FileSystem as any).copyAsync({ from: src, to: newPath });
+        const base64 = await FileSystem.readAsStringAsync(newPath, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
         return {
-          uri: file.uri,
+          uri: newPath,
           name: customName || file.name,
           mimeType: file.mimeType || "application/pdf",
           type: "pdf",
+          base64,
         };
       }
     } catch (error) {

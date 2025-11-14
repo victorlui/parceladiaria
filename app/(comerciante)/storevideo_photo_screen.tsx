@@ -7,32 +7,43 @@ import DocumentIcon from "../../assets/icons/document.svg";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import { useVideoPlayer, VideoPlayer, VideoView } from "expo-video";
 import { Feather } from "@expo/vector-icons";
+import { useAlerts } from "@/components/useAlert";
+import { router } from "expo-router";
 
 export default function StoreVideoScreen() {
   useDisableBackHandler();
-  const { mutate } = useUpdateUserMutation();
+  const { showSuccess, AlertDisplay } = useAlerts();
+  const { mutate, isSuccess, isPending } = useUpdateUserMutation();
   const { takeVideo } = useDocumentPicker(10);
 
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const videoPlayer = useVideoPlayer(file?.uri ?? "", (player) => {
-  player.loop = false;
-  player.play();
-});
+    player.loop = false;
+    player.play();
+  });
 
-// Usa o resultado baseado no tipo do arquivo
-const player = useMemo(() => {
-  if (file?.type === "video") {
-    return videoPlayer;
-  }
-  return null;
-}, [file, videoPlayer]);
+  // Usa o resultado baseado no tipo do arquivo
+  const player = useMemo(() => {
+    if (file?.type === "video") {
+      return videoPlayer;
+    }
+    return null;
+  }, [file, videoPlayer]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      showSuccess("Sucesso", "Cadastro realizado com sucesso!.", () => {
+        router.replace("/analise_screen");
+      });
+    }
+  }, [isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTakePhoto = async () => {
     const selected = await takeVideo("camera");
@@ -50,9 +61,8 @@ const player = useMemo(() => {
       Alert.alert("Atenção", "Por favor, selecione um vídeo.");
       return;
     }
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const finalUrl = await uploadFileToS3({
         file: file,
       });
@@ -61,7 +71,7 @@ const player = useMemo(() => {
 
       mutate({
         request: {
-          etapa: Etapas.ASSISTINDO_VIDEO,
+          etapa: Etapas.FINALIZADO,
           video_comercio: finalUrl,
         },
       });
@@ -74,11 +84,12 @@ const player = useMemo(() => {
 
   return (
     <LayoutRegister
-      loading={isLoading}
+      loading={isLoading || isPending}
       isBack
       onContinue={onSubmit}
       isLogo={false}
     >
+      <AlertDisplay />
       <View className="flex-1 px-6">
         <CircleIcon
           icon={<DocumentIcon />}
@@ -101,14 +112,14 @@ const player = useMemo(() => {
 
         <View className="flex-1 mb-3">
           {!file && (
-             <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
-          <Feather name="video" size={50} color="#9CA3AF" />
-        </View>
+            <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
+              <Feather name="video" size={50} color="#9CA3AF" />
+            </View>
           )}
           {file && file.type === "video" && (
             <VideoView
               style={{
-                width: '100%',
+                width: "100%",
                 height: 200,
                 borderRadius: 12,
                 backgroundColor: "#000",

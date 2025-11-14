@@ -27,6 +27,7 @@ const RecusadoScreen: React.FC = () => {
         style={styles.button}
         onPress={() => {
           logout();
+          router.replace("/login");
         }}
       >
         <Text style={styles.buttonText}>Voltar para login</Text>

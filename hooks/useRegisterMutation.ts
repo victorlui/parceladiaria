@@ -61,7 +61,7 @@ export function useRegisterDataMutation() {
       const { login } = authStore;
       if (data?.success) {
         login(data.data.token, null);
-        router.push("/(register)/birthday_screen");
+        // router.push("/(regne");
       }
       return data;
     },
@@ -108,6 +108,8 @@ export function useUpdateUserMutation() {
       if (!data.success) {
         return data;
       }
+
+      console.log("data update user", data);
 
       const registerStore = useRegisterAuthStore.getState();
       const { setEtapa } = registerStore;

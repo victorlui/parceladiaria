@@ -1,4 +1,6 @@
-import ItemsDivergentes from "@/components/divergente/items-divergentes";
+import ItemsDivergentes, {
+  documentDisplayNames,
+} from "@/components/divergente/items-divergentes";
 import LoadingDots from "@/components/ui/LoadingDots";
 import StatusBar from "@/components/ui/StatusBar";
 import { useAlerts } from "@/components/useAlert";
@@ -22,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
   const { userRegister, logout } = useAuthStore();
-  const { AlertDisplay, showWarning } = useAlerts();
+  const { AlertDisplay, showWarning, showSuccess } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { uri: string; nameImage: string }>
   >({});
@@ -41,19 +43,44 @@ const DivergenciaScreen: React.FC = () => {
 
   const divergenciasArray = safeParseArray(userRegister?.divergencias);
 
+  const observacoesPorDocumento: Record<string, string> = {
+    comprovante_endereco:
+      "Envie um comprovante recente de endereço com seu nome.",
+    foto_perfil_app:
+      "Perfil completo no app de corridas com: quantidade de corridas, tempo de uso e foto de perfil atualizada e visível.",
+    foto_perfil_app2:
+      "Perfil completo em outro app de corridas com: quantidade de corridas, tempo de uso e foto de perfil atualizada e visível.",
+    foto_docveiculo:
+      "Envie foto ou PDF do CRLV atualizado (exercício 2024/2025).",
+    foto_veiculo:
+      "Selfie ao lado do veículo mostrando claramente a placa e seu rosto.",
+    video_comercio: "Envie um vídeo curto mostrando o comércio.",
+    ganhos_app: "Envie vídeo do relatório de ganhos no app de corridas.",
+    foto_frente_doc: "Foto da frente do documento legível.",
+    foto_verso_doc: "Foto do verso do documento legível.",
+    fachada: "Foto da fachada do comércio.",
+    mei: "Certificado de MEI.",
+    face: "Reconhecimento facial.",
+  };
+
+  const getObservacaoText = (key: string) =>
+    observacoesPorDocumento[key] ||
+    `Envie o arquivo solicitado: ${documentDisplayNames[key] || key}.`;
+
+  console.log("divergenciasArray", divergenciasArray);
+
   const onSubmit = async () => {
-    // if (Object.keys(selectedFiles).length !== divergenciasArray.length) {
-    //   showWarning(
-    //     "Atenção",
-    //     "Por favor, envie todos os documentos solicitados."
-    //   );
-    //   return;
-    // }
+    if (Object.keys(selectedFiles).length !== divergenciasArray.length) {
+      showWarning(
+        "Atenção",
+        "Por favor, envie todos os documentos solicitados."
+      );
+      return;
+    }
 
-    console.log("selectedFiles", selectedFiles);
-
+    console.log("selectedFiles", Object.entries(selectedFiles));
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const uploadedFiles: Record<string, string> = {};
       for (const [key, item] of Object.entries(selectedFiles)) {
         // Gera nome único baseado no tipo de documento e timestamp
@@ -70,17 +97,25 @@ const DivergenciaScreen: React.FC = () => {
         etapa: Etapas.FINALIZADO,
         ...uploadedFiles,
       };
+
+      await updateUserService({ request: requestData });
       Alert.alert(
         "Sucesso",
         `${
           Object.keys(selectedFiles).length === 1
             ? "O documento foi enviado com sucesso para reanalise"
             : "Os documentos foram enviados com sucesso para reanalise"
-        }`
+        }`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              logout();
+              router.replace("/login");
+            },
+          },
+        ]
       );
-      await updateUserService({ request: requestData });
-      logout();
-      router.replace("/login");
     } catch (error) {
       console.log("error", error);
     } finally {
@@ -125,28 +160,43 @@ const DivergenciaScreen: React.FC = () => {
           <Text style={styles.title}>Documentos Divergentes</Text>
           <View style={styles.observacoes}>
             <Text style={[styles.title, { fontSize: 16 }]}>Observações:</Text>
-
             <View style={{ marginTop: 8 }}>
-              <Text style={{ fontSize: 14, color: "#000" }}>
-                {"\u2022"} Perfil Completo{"\n"}O perfil deve conter as
-                seguintes informações:{"\n"}
-                {"  "}° Quantidade de corridas realizadas{"\n"}
-                {"  "}° Tempo de uso no aplicativo{"\n"}
-                {"  "}° Foto de perfil atualizada e visível{"\n"}
-                {"\n"}
-                {"\u2022"} Selfie ao Lado do Veículo{"\n"}
-                Tire uma selfie sua ao lado do veículo, mostrando de forma clara
-                e legível a placa e o seu rosto.{"\n"}
-                {"\n"}
-                {"\u2022"} CRLV Atualizado{"\n"}
-                Envie uma foto ou PDF do CRLV atualizado (exercício 2024/2025).
-                {"\n"}
-                {"\n"}
-                {"\u2022"} CNH Atualizada{"\n"}
-                Envie foto ou PDF (frente e verso) da CNH atualizada, com todos
-                os dados legíveis.{"\n"}
-                Retire a CNH do plástico para a foto.
-              </Text>
+              {divergenciasArray.length > 0 ? (
+                <View>
+                  {divergenciasArray.map((key: string, idx: number) => (
+                    <View key={idx} style={{ marginBottom: 10 }}>
+                      <Text style={{ fontSize: 14, color: "#000" }}>
+                        {"\u2022"} {documentDisplayNames[key] || key}
+                      </Text>
+                      <Text style={{ fontSize: 14, color: "#000" }}>
+                        {getObservacaoText(key)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={{ fontSize: 14, color: "#000" }}>
+                  {"\u2022"} Perfil Completo{"\n"}O perfil deve conter as
+                  seguintes informações:{"\n"}
+                  {"  "}° Quantidade de corridas realizadas{"\n"}
+                  {"  "}° Tempo de uso no aplicativo{"\n"}
+                  {"  "}° Foto de perfil atualizada e visível{"\n"}
+                  {"\n"}
+                  {"\u2022"} Selfie ao Lado do Veículo{"\n"}
+                  Tire uma selfie sua ao lado do veículo, mostrando de forma
+                  clara e legível a placa e o seu rosto.{"\n"}
+                  {"\n"}
+                  {"\u2022"} CRLV Atualizado{"\n"}
+                  Envie uma foto ou PDF do CRLV atualizado (exercício
+                  2024/2025).
+                  {"\n"}
+                  {"\n"}
+                  {"\u2022"} CNH Atualizada{"\n"}
+                  Envie foto ou PDF (frente e verso) da CNH atualizada, com
+                  todos os dados legíveis.{"\n"}
+                  Retire a CNH do plástico para a foto.
+                </Text>
+              )}
             </View>
           </View>
         </View>
