@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import React, { useEffect, useRef, useState } from "react";
+
 import {
   Image,
   Keyboard,
@@ -22,6 +23,8 @@ import { useAlerts } from "@/components/useAlert";
 import { validateCPF } from "@/utils/validation";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
+import * as Updates from "expo-updates";
+import * as Application from "expo-application";
 
 const Login: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
@@ -31,6 +34,24 @@ const Login: React.FC = () => {
   const cpfRef = useRef<TextInput>(null);
   const senhaRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
+
+  useEffect(() => {
+    async function onFetchUpdateAsync() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (error) {
+        console.log("Error fetching latest Expo update:", error);
+        // You can also add an alert() to see the error message in case of an error when fetching updates.
+        alert(`Error fetching latest Expo update: ${error}`);
+      }
+    }
+    onFetchUpdateAsync();
+  }, []);
 
   useEffect(() => {
     if (isError && !hasShownError.current) {
@@ -146,7 +167,7 @@ const Login: React.FC = () => {
                 style={styles.forgotPasswordContainer}
               >
                 <Text style={styles.forgotPasswordText}>
-                  Esqueceu sua senha?
+                  Esqueceu sua senhaa?
                 </Text>
               </TouchableOpacity>
               <View

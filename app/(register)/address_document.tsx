@@ -3,32 +3,87 @@ import CircleIcon from "@/components/ui/CircleIcon";
 import LayoutRegister from "@/components/ui/LayoutRegister";
 import { useAlerts } from "@/components/useAlert";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import React, { useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import DocumentIcon from "../../assets/icons/document.svg";
 import { Colors } from "@/constants/Colors";
-import { Feather } from "@expo/vector-icons";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
+import { renderFile } from "@/components/RenderFile";
 
 const AddressDocument: React.FC = () => {
   const { showWarning, AlertDisplay } = useAlerts();
   const [file, setFile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // const [loadingValidation, setLoadingValidation] = useState(false);
   const { mutate } = useUpdateUserMutation();
   const { takePhoto, selectPDF } = useDocumentPicker(10);
+
+  //   const validateDocument = async (nextFile: any) => {
+  //     if (!nextFile) return;
+  //     const formData = new FormData();
+  //     const fileToUpload = {
+  //       uri: nextFile.uri,
+  //       name: nextFile.name,
+  //       type: nextFile.mimeType || "application/octet-stream",
+  //     };
+  //     console.log("fileToUpload", fileToUpload);
+  //     formData.append("file", fileToUpload as any);
+
+  //     try {
+  //       const endpoint = process.env.EXPO_PUBLIC_API_VALIDATION || "";
+  //       const apiKey = process.env.EXPO_PUBLIC_KEY_VALIDATION || "";
+  //       const response = await fetch(endpoint, {
+  //         method: "POST",
+  //         body: formData,
+  //         headers: {
+  //           Authorization: `ApiKey ${apiKey}`,
+  //         },
+  //       });
+  //       const data = await response.json();
+  //       const item = Array.isArray(data) ? data[0] : undefined;
+  //       const type = item?.classification?.type;
+  //       const rawConfidence = item?.classification?.sides?.[0]?.confidence;
+  //       const confidence =
+  //         typeof rawConfidence === "number"
+  //           ? rawConfidence
+  //           : Number(rawConfidence);
+  //       if (type !== "ProofOfResidence") {
+  //         showWarning(
+  //           "Documento inválido",
+  //           "O arquivo não corresponde a um comprovante de endereço."
+  //         );
+  //       } else if (!Number.isNaN(confidence) && confidence < 0.9) {
+  //         showWarning(
+  //           "Documento inválido",
+  //           "Por favor envie um documento válido"
+  //         );
+  //       }
+  //       console.log("data validation", data);
+  //     } catch (error) {
+  //       console.log("error", error);
+  //     } finally {
+  //       setLoadingValidation(false);
+  //     }
+  //   };
 
   const handleTakePhoto = async () => {
     const result = await takePhoto("camera");
     if (result) {
       setFile(result);
+      //   setLoadingValidation(true);
+      //   await validateDocument(result);
     }
   };
 
   const handleSelectPDF = async () => {
     const selected = await selectPDF();
-    if (selected) setFile(selected);
+    if (selected) {
+      setFile(selected);
+      //   setLoadingValidation(true);
+      //   await validateDocument(selected);
+    }
   };
 
   const onSubmit = async () => {
@@ -82,28 +137,7 @@ const AddressDocument: React.FC = () => {
             critérios estabelecidos.
           </Text>
 
-          {!file && (
-            <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1">
-              <Feather name="file" size={50} color="#9CA3AF" />
-            </View>
-          )}
-
-          {file && (
-            <View className="mb-4 rounded-lg flex-1 overflow-hidden">
-              <Image
-                source={{ uri: file.uri }}
-                style={{ width: "100%", height: 200 }}
-                resizeMode="contain"
-              />
-            </View>
-          )}
-
-          {file?.type === "pdf" && (
-            <View className="border border-dashed mb-4 flex-row rounded-lg items-center justify-center flex-1 p-4">
-              <Feather name="file-text" size={30} color="#9CA3AF" />
-              <Text className="ml-2 text-gray-500">{file.name}</Text>
-            </View>
-          )}
+          {renderFile(file)}
 
           <TouchableOpacity
             onPress={handleSelectPDF}

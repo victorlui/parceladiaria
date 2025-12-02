@@ -72,6 +72,13 @@ export enum Etapas {
   REGISTRANDO_ENDERECO = "registrando_endereco",
   REGISTRANDO_PIX = "registrando_pix",
   INFORMANDO_PIX = "Informando PIX",
+
+  // motorista carro ou moto
+  MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
+  MOTORISTA_REGISTRANDO_VERSO_CNH = "Enviando verso CNH",
+  MOTORISTA_REGISTRANDO_VIDEO_PERFIL = "Enviando video perfil",
+  MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial",
+
   REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO = "registrando_frente_documento_comercio",
   REGISTRANDO_VERSO_DOCUMENTO_COMERCIO = "registrando_verso_documento_comercio",
   COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL = "comerciante_registrando_reconhecimento_facial",
@@ -82,15 +89,6 @@ export enum Etapas {
   REGISTRANDO_FRENTE_COMERCIO = "registrando_frente_comercio",
   REGISTRANDO_INTERIOR_COMERCIO = "registrando_interior_comercio",
   REGISTRANDO_VIDEO_COMERCIO = "registrando_video_comercio",
-  MOTORISTA_REGISTRANDO_FRENTE_CNH = "registrando_frente_cnh",
-  MOTORISTA_REGISTRANDO_VERSO_CNH = "registrando_verso_cnh",
-  MOTORISTA_REGISTRANDO_PLACA_VEICULO = "registrando_placa_veiculo",
-  MOTORISTA_REGISTRANDO_DOCUMENTO_VEICULO = "registrando_documento_veiculo",
-  MOTORISTA_REGISTRANDO_FOTO_VEICULO = "registrando_foto_veiculo",
-  MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO = "registrando_documento_proprietario",
-  MOTORISTA_REGISTRANDO_PRINT_ADICIONAL = "registrando_print_adicional",
-  MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS = "registrando_comprovante_ganhos",
-  MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL = "motorista_registrando_reconhecimento_facial",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -102,6 +100,13 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_ENDERECO]: "/(register)/address_screen",
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
+
+  // motorista carro ou moto
+  [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
+  [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista_new)/cnh_verso",
+  [Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL]: "/(motorista_new)/video_perfil",
+  [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]: "/(register_new)/timeless_face",
+
   [Etapas.REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO]:
     "/(comerciante)/document_photo_front_screen",
   [Etapas.REGISTRANDO_VERSO_DOCUMENTO_COMERCIO]:
@@ -118,24 +123,9 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_INTERIOR_COMERCIO]:
     "/(comerciante)/storeinterior_photo_screen",
   [Etapas.REGISTRANDO_VIDEO_COMERCIO]: "/(comerciante)/storevideo_photo_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista)/cnh_front_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista)/cnh_verso_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_PLACA_VEICULO]:
-    "/(motorista)/placa_veiculo_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_VEICULO]:
-    "/(motorista)/document_veiculo_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_FOTO_VEICULO]:
-    "/(motorista)/vehicle_photo_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_DOCUMENTO_PROPRIETARIO]:
-    "/(motorista)/profile_photo_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_COMPROVANTE_GANHOS]:
-    "/(motorista)/comprovante_ganhos_screen",
-  [Etapas.MOTORISTA_REGISTRANDO_PRINT_ADICIONAL]:
-    "/(motorista)/additional_print_screen",
+
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
-  [Etapas.MOTORISTA_REGISTRANDO_RECONHECIMENTO_FACIAL]:
-    "/(motorista)/recognition_face",
 
   [Etapas.FINALIZADO]: "/login",
 };

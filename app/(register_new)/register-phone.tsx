@@ -42,7 +42,7 @@ const RegisterPhone: React.FC = () => {
       const response: any = await api.post("/auth/otp/generate", {
         phone,
         cpf: data?.cpf,
-        method: "whatsapp",
+        method: "sms",
       });
       setIsSuccess(true);
       console.log("response", response.data);
@@ -103,7 +103,7 @@ const RegisterPhone: React.FC = () => {
 
   return (
     <LayoutRegister
-      title="Seu WhatsApp"
+      title="Seu número de telefone"
       subtitle="Para começar, informe seu número."
     >
       <AlertDisplay />
@@ -112,7 +112,7 @@ const RegisterPhone: React.FC = () => {
         keyboardType="phone-pad"
         maskType="cellphone"
         icon={
-          <FontAwesome5 name="whatsapp" size={20} color={Colors.gray.primary} />
+          <Ionicons name="call-sharp" size={20} color={Colors.gray.primary} />
         }
         ref={phoneRef}
         value={phone}

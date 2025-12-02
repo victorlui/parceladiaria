@@ -172,7 +172,7 @@ const CPFOTPScreen: React.FC = () => {
                 }
                 onChangeText={setCpf}
                 returnKeyType="done"
-                onSubmitEditing={() => onSubmit("whatsapp")}
+                onSubmitEditing={() => onSubmit("sms")}
               />
             )}
 
@@ -204,7 +204,7 @@ const CPFOTPScreen: React.FC = () => {
             {!isLoading && (
               <ButtonComponent
                 title={isSuccess ? "Confirmar código" : "Enviar Código"}
-                onPress={isSuccess ? confirmOTP : () => onSubmit("whatsapp")}
+                onPress={isSuccess ? confirmOTP : () => onSubmit("sms")}
               />
             )}
 
@@ -226,7 +226,7 @@ const CPFOTPScreen: React.FC = () => {
             {isSuccess && canResend && !isLoading && (
               <TouchableOpacity
                 style={styles.sendCodeContainer}
-                onPress={() => onSubmit("whatsapp")}
+                onPress={() => onSubmit("sms")}
               >
                 <Text style={styles.sendCodeText}>
                   Não recebeu? Reenviar código

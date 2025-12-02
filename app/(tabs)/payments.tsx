@@ -52,10 +52,20 @@ const PaymentsTab: React.FC = () => {
     try {
       const responseClient = await api.get("/v1/client");
 
-      const sorted = responseClient.data.data.data.lastLoan.installments
-        .filter((i: any) => i.paid === "Não")
-        .slice()
-        .sort((a: any, b: any) => b.id - a.id);
+      const unpaid = responseClient.data.data.data.lastLoan.installments.filter(
+        (i: any) => i.paid === "Não"
+      );
+
+      // Ordena por due_date (crescente) e depois por id (decrescente)
+      const sorted = unpaid.slice().sort((a: any, b: any) => {
+        const dateA = new Date(a.due_date);
+        const dateB = new Date(b.due_date);
+        if (dateA < dateB) return -1;
+        if (dateA > dateB) return 1;
+        return b.id - a.id; // mesma data → id maior primeiro
+      });
+
+      console.log("sorted", sorted);
       setInstallments(sorted);
       setUserData({
         ...user,

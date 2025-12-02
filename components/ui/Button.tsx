@@ -8,8 +8,10 @@ interface Props {
   title: string;
   onPress: () => void;
   loading?: boolean;
-  iconRight?: keyof typeof Ionicons.glyphMap;
+  iconRight?: keyof typeof Ionicons.glyphMap | null;
+  iconLeft?: keyof typeof Ionicons.glyphMap | null;
   disabled?: boolean;
+  outline?: boolean;
 }
 
 const ButtonComponent: React.FC<Props> = ({
@@ -17,22 +19,42 @@ const ButtonComponent: React.FC<Props> = ({
   onPress,
   loading,
   iconRight = "arrow-forward",
+  iconLeft = "arrow-back",
   disabled = false,
+  outline = false,
 }) => {
   return (
     <TouchableOpacity
-      style={[styles.button, disabled && styles.buttonDisabled]}
+      style={[
+        styles.button,
+        disabled && styles.buttonDisabled,
+        outline && styles.buttonOutline,
+      ]}
       onPress={onPress}
       disabled={loading || disabled}
     >
       <View style={styles.content}>
+        {!loading && iconLeft && (
+          <Ionicons
+            name={iconLeft}
+            size={18}
+            color={outline ? Colors.green.button : Colors.white}
+            style={styles.iconLeft}
+          />
+        )}
         {loading && <LoadingDots text="Aguarde..." />}
-        {!loading && <Text style={styles.buttonText}>{title}</Text>}
+        {!loading && (
+          <Text
+            style={[styles.buttonText, outline && styles.buttonTextOutline]}
+          >
+            {title}
+          </Text>
+        )}
         {!loading && iconRight && (
           <Ionicons
             name={iconRight}
             size={18}
-            color={Colors.white}
+            color={outline ? Colors.green.button : Colors.white}
             style={styles.iconRight}
           />
         )}
@@ -54,6 +76,11 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     backgroundColor: Colors.gray.primary,
   },
+  buttonOutline: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.green.button,
+  },
   content: {
     flexDirection: "row",
     alignItems: "center",
@@ -64,8 +91,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  buttonTextOutline: {
+    color: Colors.green.button,
+  },
   iconRight: {
     marginLeft: 8,
+  },
+  iconLeft: {
+    marginRight: 8,
   },
 });
 

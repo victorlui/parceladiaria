@@ -19,7 +19,7 @@ const RegisterEmail: React.FC = () => {
   const onSubmit = () => {
     const request = {
       email: email,
-      etapa: Etapas.REGISTRANDO_ENDERECO,
+      etapa: Etapas.REGISTRANDO_PIX,
     };
     setEmailAuth(email!);
     mutate({ request: request });

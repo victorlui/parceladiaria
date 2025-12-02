@@ -66,7 +66,7 @@ const LayoutRegister: React.FC<Props> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
   scrollContainer: {
     flexGrow: 1,

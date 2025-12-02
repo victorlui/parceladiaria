@@ -120,7 +120,7 @@ const AddressScreen: React.FC = () => {
       cidade,
       estado,
       complemento: "",
-      etapa: Etapas.REGISTRANDO_COMPROVANTE_ENDERECO,
+      etapa: Etapas.REGISTRANDO_PROFISSAO,
     };
 
     setAddress({

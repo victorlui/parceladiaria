@@ -176,8 +176,6 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
         cameraType: ImagePicker.CameraType.back,
       });
 
-      console.log("result", result);
-
       if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
         // const isValidSize = await checkFileSize(asset.uri, maxSizeMB * 3);
