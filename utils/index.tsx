@@ -73,22 +73,20 @@ export enum Etapas {
   REGISTRANDO_PIX = "registrando_pix",
   INFORMANDO_PIX = "Informando PIX",
 
+  REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial",
+
   // motorista carro ou moto
   MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
   MOTORISTA_REGISTRANDO_VERSO_CNH = "Enviando verso CNH",
   MOTORISTA_REGISTRANDO_VIDEO_PERFIL = "Enviando video perfil",
-  MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial",
 
-  REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO = "registrando_frente_documento_comercio",
-  REGISTRANDO_VERSO_DOCUMENTO_COMERCIO = "registrando_verso_documento_comercio",
-  COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL = "comerciante_registrando_reconhecimento_facial",
-  REGISTRANDO_TIPO_COMERCIO = "registrando_tipo_comercio",
-  REGISTRANDO_EMPRESA_ABERTA = "registrando_empresa_aberta",
-  REGISTRANDO_TEM_COMERCIO = "registrando_tem_comercio",
-  REGISTRANDO_CONTRATO_SOCIAL = "registrando_contrato_social",
-  REGISTRANDO_FRENTE_COMERCIO = "registrando_frente_comercio",
-  REGISTRANDO_INTERIOR_COMERCIO = "registrando_interior_comercio",
-  REGISTRANDO_VIDEO_COMERCIO = "registrando_video_comercio",
+  //comerciante
+  COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA = "Informando se possui empresa",
+  COMERCIANTE_ENVIANDO_TIPO_COMERCIO = "Enviando tipo de comercio",
+  COMERCIANTE_ENVIANDO_VIDEO_FACHADA = "Enviando video fachada",
+  COMERCIANTE_ENVIANDO_VIDEO_INTERIOR = "Enviando video interior",
+  COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL = "Enviando frente documento pessoal",
+  COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL = "Enviando verso documento pessoal",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -101,28 +99,26 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
 
+  [Etapas.REGISTRANDO_TIMELESS_FACE]: "/(register_new)/timeless_face",
+
   // motorista carro ou moto
   [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
   [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista_new)/cnh_verso",
   [Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL]: "/(motorista_new)/video_perfil",
-  [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]: "/(register_new)/timeless_face",
 
-  [Etapas.REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO]:
+  //comerciante
+  [Etapas.COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA]:
+    "/(comerciante)/has_company_screen",
+  [Etapas.COMERCIANTE_ENVIANDO_TIPO_COMERCIO]:
+    "/(comerciante)/bussines_type_screen",
+  [Etapas.COMERCIANTE_ENVIANDO_VIDEO_FACHADA]:
+    "/(comerciante)/storefront_video_screen",
+  [Etapas.COMERCIANTE_ENVIANDO_VIDEO_INTERIOR]:
+    "/(comerciante)/storeinterior_video_screen",
+  [Etapas.COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL]:
     "/(comerciante)/document_photo_front_screen",
-  [Etapas.REGISTRANDO_VERSO_DOCUMENTO_COMERCIO]:
+  [Etapas.COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL]:
     "/(comerciante)/document_photo_back_screen",
-  [Etapas.COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL]:
-    "/(comerciante)/recognition_face",
-  [Etapas.REGISTRANDO_TIPO_COMERCIO]: "/(comerciante)/bussines_type_screen",
-  [Etapas.REGISTRANDO_EMPRESA_ABERTA]:
-    "/(comerciante)/bussines_description_screen",
-  [Etapas.REGISTRANDO_TEM_COMERCIO]: "/(comerciante)/has_company_screen",
-  [Etapas.REGISTRANDO_CONTRATO_SOCIAL]: "/(comerciante)/contract_social_screen",
-  [Etapas.REGISTRANDO_FRENTE_COMERCIO]:
-    "/(comerciante)/storefront_photo_screen",
-  [Etapas.REGISTRANDO_INTERIOR_COMERCIO]:
-    "/(comerciante)/storeinterior_photo_screen",
-  [Etapas.REGISTRANDO_VIDEO_COMERCIO]: "/(comerciante)/storevideo_photo_screen",
 
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",

@@ -1,12 +1,24 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  Linking,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { Colors } from "@/constants/Colors";
-import LayoutRegister from "@/components/ui/LayoutRegister";
-import CircleIcon from "@/components/ui/CircleIcon";
-import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { Camera } from "react-native-vision-camera";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
+import FaceDetector from "@/components/FaceDetector";
+import { router } from "expo-router";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -26,52 +38,155 @@ const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
 );
 
 const TimelessFace: React.FC = () => {
+  const { mutate } = useUpdateUserMutation();
+  const [showFaceDetector, setShowFaceDetector] = React.useState(false);
+  const [capturedPhoto, setCapturedPhoto] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
+
+  const requestPermission = async () => {
+    const status = await Camera.requestCameraPermission();
+    if (status === "denied") {
+      Alert.alert(
+        "Permissão necessária",
+        "Você negou o acesso à câmera. Para usar esta função, ative a câmera nas Configurações.",
+        [{ text: "OK", style: "cancel" }]
+      );
+    }
+
+    setShowFaceDetector(true);
+  };
+
+  const completeRegistration = async () => {
+    router.replace("/login");
+  };
+
+  const sendPhoto = async (photo: string) => {
+    setIsLoading(true);
+
+    try {
+      const finalUrl = await uploadFileToS3({
+        file: {
+          uri: `file://${photo}`,
+          name: `selfie-${Date.now()}.jpg`,
+          mimeType: "image/jpeg",
+        },
+      });
+      console.log("finalUrl", finalUrl);
+      mutate({
+        request: {
+          etapa: Etapas.FINALIZADO,
+          face: finalUrl,
+        },
+      });
+      setIsLoading(false);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error("Erro ao enviar foto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatarOuter}>
-          <LinearGradient
-            style={styles.avatarInner}
-            colors={[Colors.green.primary, "#28a999"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Ionicons name="person" size={32} color="#fff" />
-          </LinearGradient>
+      {!isLoading && !isSuccess && (
+        <>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarOuter}>
+              <LinearGradient
+                style={styles.avatarInner}
+                colors={[Colors.green.primary, "#28a999"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons name="person" size={32} color="#fff" />
+              </LinearGradient>
+            </View>
+          </View>
+          <View>
+            <Text style={styles.title}>Vamos tirar sua foto</Text>
+            <Text style={styles.subtitle}>
+              Siga as instruções para garantir uma foto perfeita
+            </Text>
+          </View>
+          <View style={styles.card}>
+            <TipItem
+              icon={<Ionicons name="bulb-outline" size={20} color="#fff" />}
+              label="Ambiente bem iluminado"
+            />
+            <TipItem
+              icon={<FontAwesome5 name="glasses" size={18} color="#fff" />}
+              label="Retire óculos e acessórios"
+            />
+            <TipItem
+              icon={<Ionicons name="happy-outline" size={20} color="#fff" />}
+              label="Expressão neutra"
+            />
+            <TipItem
+              icon={
+                <Ionicons
+                  name="phone-portrait-outline"
+                  size={20}
+                  color="#fff"
+                />
+              }
+              label="Celular firme e estável"
+            />
+          </View>
+          <ButtonComponent
+            title="Fazer Reconhecimento Facial"
+            iconLeft="camera"
+            iconRight={null}
+            onPress={requestPermission}
+          />
+          {showFaceDetector && <FaceDetector takePhoto={sendPhoto} />}
+        </>
+      )}
+
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <View style={styles.spinnerWrapper}>
+            <ActivityIndicator size={140} color={Colors.green.primary} />
+            <Image
+              source={require("@/assets/images/logo.png")}
+              style={styles.spinnerLogo}
+              resizeMode="contain"
+            />
+          </View>
+
+          <Text style={styles.loadingText}>
+            Enviando imagem, favor aguarde...
+          </Text>
         </View>
-      </View>
-      <View>
-        <Text style={styles.title}>Vamos tirar sua foto</Text>
-        <Text style={styles.subtitle}>
-          Siga as instruções para garantir uma foto perfeita
-        </Text>
-      </View>
-      <View style={styles.card}>
-        <TipItem
-          icon={<Ionicons name="bulb-outline" size={20} color="#fff" />}
-          label="Ambiente bem iluminado"
-        />
-        <TipItem
-          icon={<FontAwesome5 name="glasses" size={18} color="#fff" />}
-          label="Retire óculos e acessórios"
-        />
-        <TipItem
-          icon={<Ionicons name="happy-outline" size={20} color="#fff" />}
-          label="Expressão neutra"
-        />
-        <TipItem
-          icon={
-            <Ionicons name="phone-portrait-outline" size={20} color="#fff" />
-          }
-          label="Celular firme e estável"
-        />
-      </View>
-      <ButtonComponent
-        title="Fazer Reconhecimento Facial"
-        iconLeft="camera"
-        iconRight={null}
-        onPress={() => {}}
-      />
+      )}
+
+      {!isLoading && isSuccess && (
+        <>
+          <View style={styles.successContainer}>
+            <FontAwesome
+              name="check-circle"
+              size={100}
+              color={Colors.green.secondary}
+            />
+            <Text style={styles.successTitle}>Cadastro Concluído</Text>
+            <Text style={styles.successText}>
+              Seu cadastro foi enviado com sucesso. Em breve entraremos em
+              contato
+            </Text>
+          </View>
+          <View style={{ marginTop: -180, width: "100%" }}>
+            <ButtonComponent
+              title="Login"
+              iconLeft="home"
+              iconRight={null}
+              onPress={completeRegistration}
+            />
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 };
@@ -84,6 +199,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
     justifyContent: "space-evenly",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  spinnerWrapper: {
+    width: 250,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  spinnerLogo: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "bold",
   },
   avatarContainer: {
     alignItems: "center",
@@ -141,6 +277,22 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
+  },
+  successContainer: {
+    alignItems: "center",
+    gap: 12,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.black,
+    textAlign: "center",
+  },
+  successText: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: Colors.gray.primary,
+    textAlign: "center",
   },
 });
 

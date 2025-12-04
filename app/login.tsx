@@ -2,6 +2,7 @@ import { Colors } from "@/constants/Colors";
 import React, { useEffect, useRef, useState } from "react";
 
 import {
+  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -24,7 +25,6 @@ import { validateCPF } from "@/utils/validation";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
 import * as Updates from "expo-updates";
-import * as Application from "expo-application";
 
 const Login: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
@@ -36,21 +36,28 @@ const Login: React.FC = () => {
   const hasShownError = useRef(false);
 
   useEffect(() => {
-    async function onFetchUpdateAsync() {
+    async function checkUpdate() {
       try {
         const update = await Updates.checkForUpdateAsync();
-
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
+          Alert.alert(
+            "Atualização disponível",
+            "O app será reiniciado para aplicar as novas alterações.",
+            [
+              {
+                text: "OK",
+                onPress: () => Updates.reloadAsync(),
+              },
+            ]
+          );
         }
-      } catch (error) {
-        console.log("Error fetching latest Expo update:", error);
-        // You can also add an alert() to see the error message in case of an error when fetching updates.
-        alert(`Error fetching latest Expo update: ${error}`);
+      } catch (e) {
+        console.log("Erro ao buscar update", e);
       }
     }
-    onFetchUpdateAsync();
+
+    checkUpdate();
   }, []);
 
   useEffect(() => {
@@ -161,13 +168,14 @@ const Login: React.FC = () => {
                 title="Acessar"
                 onPress={onSubmit}
                 loading={isPending}
+                iconLeft={null}
               />
               <TouchableOpacity
                 onPress={navigationForgotPassword}
                 style={styles.forgotPasswordContainer}
               >
                 <Text style={styles.forgotPasswordText}>
-                  Esqueceu sua senhaa?
+                  Esqueceu sua senha?
                 </Text>
               </TouchableOpacity>
               <View

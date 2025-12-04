@@ -40,7 +40,6 @@ export const useQRCodeStore = create<QRCodeStore>((set) => ({
     set({ isLoading: true });
     try {
       const response = await gerarQRCode(data);
-      console.log("gerando o qr code", response);
       set({ qrCodeData: response });
     } catch (error: unknown) {
       console.error("Erro ao gerar QR Code:", error);

@@ -101,7 +101,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: Colors.gray.text,
     textAlign: "center",
-
     lineHeight: 23,
   },
 });

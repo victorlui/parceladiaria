@@ -1,102 +1,83 @@
-import { useState } from "react";
-import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
-import CircleIcon from "@/components/ui/CircleIcon";
-import LayoutRegister from "@/components/ui/LayoutRegister";
-import { Colors } from "@/constants/Colors";
-import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { StyleSheet, Text, View } from "react-native";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
-import CarIcon from "../../assets/icons/user-circle-add.svg";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { renderFile } from "@/components/RenderFile";
-import { Button } from "@/components/Button";
+import SendFilesButtons from "@/components/register/buttons-file";
+import Spinner from "@/components/Spinner";
+import LayoutRegister from "@/layouts/layout-register";
+import React from "react";
 
 export default function DocumentBackScreen() {
-  useDisableBackHandler();
   const { mutate, isPending } = useUpdateUserMutation();
-  const { takePhoto, selectPDF } = useDocumentPicker(10);
-  const [file, setFile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSelectPDF = async () => {
-    const selected = await selectPDF();
-    if (selected) setFile(selected);
-  };
-
-  const handleTakePhoto = async () => {
-    const selected = await takePhoto("camera");
-    if (selected) setFile(selected);
-  };
-
-  const onSubmit = async () => {
-    if (!file) {
-      Alert.alert(
-        "Atenção",
-        "Por favor, tire uma foto do verso da CNH ou selecione."
-      );
-      return;
-    }
-
+  const [loading, setLoading] = React.useState(false);
+  const sendFileFront = async (file: File) => {
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      setIsLoading(true);
       const finalUrl = await uploadFileToS3({
-        file: file,
+        file: {
+          uri: (file as any).uri || (file as any).path,
+          name: file.name,
+          mimeType: file.type,
+        },
       });
 
       if (!finalUrl) return;
-    // Etapas.REGISTRANDO_TIPO_COMERCIO
-      const request = {
-        etapa: Etapas.COMERCIANTE_REGISTRANDO_RECONHECIMENTO_FACIAL,
-        foto_verso_doc: finalUrl,
-      };
-      mutate({ request: request });
+
+      mutate({
+        request: {
+          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
+          foto_verso_doc: finalUrl,
+        },
+      });
     } catch (error) {
       console.log("error", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <LayoutRegister
-      loading={isLoading || isPending}
-      isBack
-      onContinue={onSubmit}
-      isLogo={false}
+      title="Documento (Verso)"
+      subtitle="Agora, uma foto do VERSO do documento."
     >
-      <View className="flex-1 px-6">
-        <CircleIcon icon={<CarIcon />} color={Colors.primaryColor} size={100} />
-        <View className="flex flex-col gap-3 my-5">
-          <Text className="font-semibold text-center text-2xl mb-2">
-            Envio de Documento
-          </Text>
-          <Text className="mb-4 text-base text-center">
-            Envie uma foto da parte do verso do documento (RG ou CNH) emitido
-            em no máximo 10 anos.
+      {loading || (isPending && <Spinner text="Enviando arquivo" />)}
+      <View>
+        <View style={style.infoContainer}>
+          <Text style={style.infoIcon}>✓</Text>
+          <Text style={style.infoText}>
+            O QR Code precisa estar nítido e legível.
           </Text>
         </View>
-
-        {renderFile(file)}
-
-        <View className="flex-2  justify-end gap-5 mb-5">
-          <TouchableOpacity
-            onPress={handleSelectPDF}
-            className="bg-gray-200 p-4 rounded-lg items-center justify-center"
-          >
-            <Text className="text-base">Selecionar documento PDF</Text>
-          </TouchableOpacity>
-          <Button
-            title="Tirar foto"
-            variant="secondary"
-            onPress={handleTakePhoto}
-          />
-        </View>
-
-        <Text className="text-base mb-3">
-          OBS: Documentos emitidos à mais de 10 anos serão rejeitados.
-        </Text>
+        <SendFilesButtons sendFile={sendFileFront} />
       </View>
     </LayoutRegister>
   );
 }
+
+const style = StyleSheet.create({
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#EBFAF2",
+    borderColor: "#C9EBD9",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 20,
+    width: "100%",
+  },
+  infoIcon: {
+    color: "#2E7D32",
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  infoText: {
+    color: "#1F3D2B",
+    fontSize: 14,
+    lineHeight: 20,
+    flex: 1,
+  },
+});

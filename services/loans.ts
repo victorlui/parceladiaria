@@ -62,18 +62,18 @@ export async function getLoansOpen(id: number | null) {
   }
 }
 
-
 export async function getLoans(): Promise<Loan[]> {
   try {
-    const response = await api.get('/v1/loan')
-    console.log('response',response)
-    return response.data.data.data
+    const response = await api.get("/v1/loan");
+    return response.data.data.data;
   } catch (error: unknown) {
     throw error;
   }
 }
 
-export async function getLoanInstallments(loanId: number): Promise<Installment[]> {
+export async function getLoanInstallments(
+  loanId: number
+): Promise<Installment[]> {
   try {
     const response = await api.get(`/v1/loan/${loanId}`);
     return response.data.data?.data || [];
@@ -81,7 +81,6 @@ export async function getLoanInstallments(loanId: number): Promise<Installment[]
     throw error;
   }
 }
-
 
 export type PropsDataUser = {
   address: string;
@@ -94,7 +93,7 @@ export type PropsDataUser = {
   phone: string;
   uf: string;
   zip_code: string;
-}
+};
 
 // buscar informações do usuario
 export async function getClientInfo(): Promise<PropsDataUser> {
@@ -106,15 +105,14 @@ export async function getClientInfo(): Promise<PropsDataUser> {
   }
 }
 
- // trocar a senha
+// trocar a senha
 export async function changePassword(password: string) {
   try {
-    await api.post('/v1/client/change-password', {
+    await api.post("/v1/client/change-password", {
       password: password,
-      
     });
-    Alert.alert('Sucesso', 'Senha alterada com sucesso.');
-    router.back()
+    Alert.alert("Sucesso", "Senha alterada com sucesso.");
+    router.back();
   } catch (error: unknown) {
     throw error;
   }
@@ -126,29 +124,26 @@ export type PropsQRCode = {
   qty: number;
   total_with_tax: number;
   totalamount: number;
-}
+};
 
-export async function gerarQRCode(id:number[]):Promise<PropsQRCode | undefined> {
+export async function gerarQRCode(
+  id: number[]
+): Promise<PropsQRCode | undefined> {
   try {
-    const response = await api.post('/v1/payment', {
-      id: id
-    })
-    return response.data.data
+    const response = await api.post("/v1/payment", {
+      id: id,
+    });
+    return response.data.data;
   } catch (error) {
     throw error;
-
   }
 }
 
 export async function getPaymentStatus(id: number) {
   try {
     const response = await api.get(`/v1/payment/${id}`);
-    console.log('response',response)
-
     return response.data.data;
   } catch (error: unknown) {
     throw error;
   }
 }
-
-

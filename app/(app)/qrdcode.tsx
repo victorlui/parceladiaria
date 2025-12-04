@@ -1,6 +1,6 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { useQRCodeStore } from "@/store/qrcode";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,6 +19,7 @@ import { router } from "expo-router";
 import { formatCurrency } from "@/utils/formats";
 import QRCode from "react-native-qrcode-svg";
 import * as Clipboard from "expo-clipboard";
+import { getPaymentStatus } from "@/services/loans";
 
 const COLORS = {
   GRADIENT_START: "#209c91",
@@ -35,8 +36,6 @@ const COLORS = {
 const QrCodePayment: React.FC = () => {
   const { isLoading, qrCodeData } = useQRCodeStore();
 
-  console.log("qrCodeData", isLoading);
-
   const copyQRCode = async () => {
     if (qrCodeData?.payment?.qrCode) {
       try {
@@ -48,6 +47,49 @@ const QrCodePayment: React.FC = () => {
       }
     }
   };
+
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const idsArr: any = (qrCodeData as any)?.ids;
+    const idSource = Array.isArray(idsArr)
+      ? idsArr[0]
+      : qrCodeData?.payment?.transactionId || qrCodeData?.payment?.txId;
+    if (!idSource) return;
+    const idNum =
+      typeof idSource === "string" ? Number(idSource) : Number(idSource);
+    if (!idNum || Number.isNaN(idNum)) return;
+
+    const check = async () => {
+      try {
+        const res: any = await getPaymentStatus(idNum);
+        const statusText = String(
+          res?.status || res?.message || ""
+        ).toLowerCase();
+        const paid =
+          res?.status_code === 200 ||
+          statusText.includes("paid") ||
+          statusText.includes("concluido") ||
+          res?.paid === "Sim";
+        if (paid) {
+          Alert.alert("Pagamento concluído", "Seu pagamento foi confirmado.", [
+            {
+              text: "OK",
+              onPress: () => router.replace("/(tabs)"),
+            },
+          ]);
+          if (pollingRef.current) clearInterval(pollingRef.current);
+        }
+      } catch (e) {}
+    };
+
+    pollingRef.current = setInterval(check, 5000);
+    check();
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [qrCodeData?.payment?.transactionId, qrCodeData?.payment?.txId]);
 
   return (
     <SafeAreaView className="flex-1 ">

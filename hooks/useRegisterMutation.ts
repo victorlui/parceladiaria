@@ -100,6 +100,9 @@ export function useLoginDataMutation() {
 }
 
 export function useUpdateUserMutation() {
+  const authStore = useAuthStore.getState();
+  const { logout } = authStore;
+
   return useMutation({
     mutationFn: (request: any) => {
       return updateUserService({ request: request.request });
@@ -127,8 +130,23 @@ export function useUpdateUserMutation() {
       return data;
     },
     onError: (error: any) => {
-      console.log("error update", error.message);
-      Alert.alert("Atenção", error.message || "Erro ao atualizar usuário");
+      if (error.status === 401) {
+        Alert.alert(
+          "Sessão expirada",
+          "Sua sessão expirou. Por favor, faça login novamente.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                logout();
+                router.replace("/login");
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Atenção", error.message || "Erro ao atualizar usuário");
+      }
     },
   });
 }
