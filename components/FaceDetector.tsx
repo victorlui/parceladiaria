@@ -195,26 +195,23 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
   const frameProcessor = useFrameProcessor(
     (frame) => {
       "worklet";
+
       // Se a foto já foi capturada, não processar mais validações
-      //   if (photoTaken) {
-      //     return;
-      //   }
+      if (photoTaken) {
+        return;
+      }
 
-      //   runAsync(frame, () => {
-      //     "worklet";
-      //     const faces = detectFaces(frame);
+      // Rodar direto no worklet — sem runAsync()
+      const faces = detectFaces(frame);
 
-      //     if (faces.length > 0) {
-      //       const validation = validateFaceQuality(faces[0]);
-      //       handleValidationUpdate(true, validation);
-      //     } else {
-      //       handleValidationUpdate(false, null);
-      //     }
-      //   });
-      // no-op - só para testar estabilidade
+      if (faces && faces.length > 0) {
+        const validation = validateFaceQuality(faces[0]);
+        handleValidationUpdate(true, validation);
+      } else {
+        handleValidationUpdate(false, null);
+      }
     },
-    // [photoTaken, screenWidth, screenHeight]
-    []
+    [photoTaken, screenWidth, screenHeight]
   );
 
   const getStatusColor = () => {

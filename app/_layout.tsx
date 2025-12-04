@@ -4,13 +4,39 @@ import { useEffect, useMemo } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import "../global.css";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import { StatusCadastro } from "@/utils";
 import { useAlerts } from "@/components/useAlert";
+import * as Updates from "expo-updates";
 
 export default function RootLayout() {
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
+
+  useEffect(() => {
+    async function checkUpdate() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          Alert.alert(
+            "Atualização disponível",
+            "O app será reiniciado para aplicar as novas alterações.",
+            [
+              {
+                text: "OK",
+                onPress: () => Updates.reloadAsync(),
+              },
+            ]
+          );
+        }
+      } catch (e) {
+        console.log("Erro ao buscar update", e);
+      }
+    }
+
+    checkUpdate();
+  }, []);
 
   useEffect(() => {
     const restore = async () => {

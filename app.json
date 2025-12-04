@@ -7,7 +7,7 @@
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "jsEngine": "hermes",
     "androidStatusBar": {
       "barStyle": "light-content",

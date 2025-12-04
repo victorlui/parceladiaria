@@ -24,7 +24,6 @@ import { useAlerts } from "@/components/useAlert";
 import { validateCPF } from "@/utils/validation";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
-import * as Updates from "expo-updates";
 
 const Login: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
@@ -34,31 +33,6 @@ const Login: React.FC = () => {
   const cpfRef = useRef<TextInput>(null);
   const senhaRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
-
-  useEffect(() => {
-    async function checkUpdate() {
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          Alert.alert(
-            "Atualização disponível",
-            "O app será reiniciado para aplicar as novas alterações.",
-            [
-              {
-                text: "OK",
-                onPress: () => Updates.reloadAsync(),
-              },
-            ]
-          );
-        }
-      } catch (e) {
-        console.log("Erro ao buscar update", e);
-      }
-    }
-
-    checkUpdate();
-  }, []);
 
   useEffect(() => {
     if (isError && !hasShownError.current) {
