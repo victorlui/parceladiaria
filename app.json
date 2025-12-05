@@ -29,6 +29,7 @@
       "icon": "./assets/images/ios-icon.png"
     },
     "android": {
+      "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
