@@ -10,7 +10,7 @@ import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, Entypo, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -47,67 +47,58 @@ const DivergenciaScreen: React.FC = () => {
 
   const divergenciasArray = safeParseArray(userRegister?.divergencias);
 
-  const observacoesPorDocumento: Record<string, string> = {
-    comprovante_endereco:
-      "Envie um comprovante recente de endereço com seu nome.",
-    foto_perfil_app:
-      "Perfil completo no app de corridas com: quantidade de corridas, tempo de uso e foto de perfil atualizada e visível.",
-    foto_perfil_app2:
-      "Perfil completo em outro app de corridas com: quantidade de corridas, tempo de uso e foto de perfil atualizada e visível.",
-    foto_docveiculo:
-      "Envie foto ou PDF do CRLV atualizado (exercício 2024/2025).",
-    foto_veiculo:
-      "Selfie ao lado do veículo mostrando claramente a placa e seu rosto.",
-    video_comercio: "Envie um vídeo curto mostrando o comércio.",
-    video_perfil_app: "Envie Vídeo do seu perfil no app de corridas.",
-    foto_frente_doc: "Foto da frente do documento legível.",
-    foto_verso_doc: "Foto do verso do documento legível.",
-    video_fachada: "Vídeo da fachada do comércio.",
-    video_interior: "Vídeo do interior do comércio.",
-    mei: "Certificado de MEI.",
-    face: "Reenvie o Reconhecimento facial.",
-  };
+  const isAllSelected =
+    Object.keys(selectedFiles).length === divergenciasArray.length;
 
-  const getObservacaoText = (key: string) => {
-    console.log("key", observacoesPorDocumento[key]);
-    return (
-      observacoesPorDocumento[key] ||
-      `Envie o arquivo solicitado: ${documentDisplayNames[key] || key}.`
-    );
+  const handleBack = () => {
+    Alert.alert("Sair", "Deseja sair do aplicativo?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Sair",
+        onPress: () => {
+          logout();
+          router.replace("/login");
+        },
+      },
+    ]);
   };
-
-  console.log("divergenciasArray", divergenciasArray);
 
   const onSubmit = async () => {
-    if (Object.keys(selectedFiles).length !== divergenciasArray.length) {
-      showWarning(
-        "Atenção",
-        "Por favor, envie todos os documentos solicitados."
-      );
+    if (!isAllSelected) {
       return;
     }
 
     console.log("selectedFiles", Object.entries(selectedFiles));
     setIsLoading(true);
     try {
-      const uploadedFiles: Record<string, string> = {};
+      // Atualiza etapa para FINALIZADO antes de começar os uploads
+
+      // Para cada arquivo, faz upload e já envia a URL individualmente
       for (const [key, item] of Object.entries(selectedFiles)) {
+        // Detecta se é vídeo (.mp4) ou imagem
+        const isVideo = item.uri.toLowerCase().endsWith(".mp4");
+        const mimeType = isVideo ? "video/mp4" : "image/jpeg";
+        const extension = isVideo ? "mp4" : "jpg";
+
         // Gera nome único baseado no tipo de documento e timestamp
         const timestamp = Date.now();
-        const fileName = `${key}_${timestamp}.jpg`;
+        const fileName = `${key}_${timestamp}.${extension}`;
 
         const uploadedUrl = await uploadFileToS3({
-          file: { uri: item.uri, name: fileName, mimeType: "image/jpeg" },
+          file: { uri: item.uri, name: fileName, mimeType },
         });
-        uploadedFiles[key] = uploadedUrl; // salva a URL retornada do S3
+
+        // Substitui "ganhos_app" por "videos_perfil"
+        const mappedKey = key === "ganhos_app" ? "video_perfil_app" : key;
+
+        // Envia a URL do arquivo imediatamente após o upload
+        const response = await updateUserService({
+          request: { [mappedKey]: uploadedUrl },
+        });
+
+        console.log("response", response);
       }
-
-      const requestData = {
-        etapa: Etapas.FINALIZADO,
-        ...uploadedFiles,
-      };
-
-      await updateUserService({ request: requestData });
+      await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
       Alert.alert(
         "Sucesso",
         `${
@@ -125,8 +116,18 @@ const DivergenciaScreen: React.FC = () => {
           },
         ]
       );
-    } catch (error) {
-      console.log("error", error);
+    } catch (error: any) {
+      console.log("error aqui", error);
+      if (
+        error.data?.message &&
+        error.data?.message ===
+          "Não foi possivel identificar um documento valido."
+      ) {
+        showWarning("Atenção", "Por favor, envie um documento válido.");
+        return;
+      }
+
+      showWarning("Erro", error.data?.message || "Ocorreu um erro.");
     } finally {
       setIsLoading(false);
     }
@@ -168,82 +169,64 @@ const DivergenciaScreen: React.FC = () => {
         />
       </View>
 
-      <Text style={styles.loadingText}>Enviando imagem, favor aguarde...</Text>
+      <Text style={styles.loadingText}>
+        Enviando documentos, favor aguarde...
+      </Text>
     </View>
   );
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
-      <StatusBar />
+    <SafeAreaView style={styles.container}>
       <AlertDisplay />
+
       {isLoading && <LoadingScreen />}
+
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 20,
-          backgroundColor: Colors.white,
-        }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
-          <Entypo name="warning" size={50} color="#EA580C" />
-          <Text style={styles.title}>Documentos Divergentes</Text>
-          <View style={styles.observacoes}>
-            <Text style={[styles.title, { fontSize: 16 }]}>Observações:</Text>
-            <View style={{ marginTop: 8 }}>
-              {divergenciasArray.length > 0 && (
-                <View>
-                  {divergenciasArray.map((key: string, idx: number) => (
-                    <View key={idx} style={{ marginBottom: 10 }}>
-                      {/* <Text style={{ fontSize: 14, color: "#000" }}>
-                        {"\u2022"} {documentDisplayNames[key] || key}
-                      </Text> */}
-                      <Text style={{ fontSize: 14, color: "#000" }}>
-                        {getObservacaoText(key)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
+        <Text style={styles.title}>Documentos Divergentes</Text>
+        <Text style={styles.subtitle}>
+          Alguns documentos precisam ser reenviados para concluir a validação.
+          Verifique os itens abaixo e envie novamente.
+        </Text>
 
-        <View style={styles.sendDocuments}>
-          <Text style={styles.textDocuments}>
-            Por favor, envie os documentos solicitados abaixo para uma nova
-            análise.
-          </Text>
-
-          <View style={styles.itemsContainer}>
-            {renderDocumentRequests()}
-
-            <TouchableOpacity
-              disabled={isLoading}
-              style={styles.button}
-              onPress={() => onSubmit()}
-            >
-              {isLoading ? (
-                <LoadingDots text="Enviando" />
-              ) : (
-                <>
-                  <FontAwesome name="send" size={20} color="white" />
-                  <Text style={styles.textButton}>Enviar para Reanálise</Text>
-                </>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonSair}
-              disabled={isLoading}
-              onPress={() => {
-                logout();
-                router.replace("/login");
-              }}
-            >
-              <Text style={styles.textButtonSair}>Sair</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <View style={styles.itemsContainer}>{renderDocumentRequests()}</View>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          disabled={isLoading || !isAllSelected}
+          style={[
+            styles.submitButton,
+            !isAllSelected && styles.submitButtonDisabled,
+          ]}
+          onPress={() => onSubmit()}
+        >
+          {isLoading ? (
+            <LoadingDots text="Enviando" />
+          ) : (
+            <>
+              {!isAllSelected && (
+                <Ionicons
+                  name="lock-closed"
+                  size={18}
+                  color={Colors.gray.text}
+                  style={{ marginRight: 8 }}
+                />
+              )}
+              <Text
+                style={[
+                  styles.textButton,
+                  !isAllSelected && styles.textButtonDisabled,
+                ]}
+              >
+                Enviar tudo e continuar
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -251,95 +234,90 @@ const DivergenciaScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F9FAFB",
   },
-  content: {
-    padding: 20,
-  },
-  card: {
-    backgroundColor: "#FFF",
-    padding: 20,
-    borderRadius: 10,
+  header: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#11181C",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#000",
+    color: "#11181C",
+    marginBottom: 8,
   },
-  observacoes: {
-    width: "100%",
-  },
-  sendDocuments: {
-    gap: 20,
-    marginVertical: 20,
+  subtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+    marginBottom: 24,
   },
   itemsContainer: {
-    gap: 20,
+    gap: 12,
   },
-  textDocuments: {
-    color: Colors.gray.text,
-    textAlign: "center",
-    fontSize: 16,
-    lineHeight: 23,
-  },
-  button: {
+  footer: {},
+  submitButton: {
     backgroundColor: Colors.green.button,
-    padding: 15,
+    padding: 16,
     borderRadius: 12,
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#E5E7EB",
   },
   textButton: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },
-  buttonSair: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.gray.primary,
-    padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textButtonSair: {
-    color: Colors.black,
-    fontSize: 16,
-    fontWeight: "bold",
+  textButtonDisabled: {
+    color: "#9CA3AF",
   },
   loadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 50,
+    backgroundColor: "rgba(255,255,255,0.9)",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
   },
   spinnerWrapper: {
-    width: 250,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
   },
   spinnerLogo: {
     position: "absolute",
-    width: 160,
-    height: 160,
+    width: 80,
+    height: 80,
   },
   loadingText: {
     marginTop: 20,
     fontSize: 16,
-    textAlign: "center",
-    fontWeight: "bold",
+    fontWeight: "600",
+    color: Colors.green.primary,
   },
 });
 

@@ -2,24 +2,26 @@ import ButtonComponent from "../ui/Button";
 import React from "react";
 import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome6, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Camera } from "react-native-vision-camera";
 import FaceDetector from "../FaceDetector";
 
 export const documentDisplayNames: Record<string, string> = {
   comprovante_endereco: "Comprovante de endereço",
-  foto_perfil_app: "Perfil Completo no Aplicativo de Corridas",
-  foto_perfil_app2: "Perfil Completo em Outro Aplicativo de Corridas",
-  foto_docveiculo: "Foto Documento do Veículo",
+  foto_perfil_app: "Perfil no App de Corridas",
+  foto_perfil_app2: "Perfil em Outro App",
+  foto_docveiculo: "Documento do Veículo",
   foto_veiculo: "Foto do Veículo",
-  video_comercio: "Vídeo do comercio",
-  ganhos_app: "Video do Relatório de Ganhos no App de Corridas",
-  foto_frente_doc: "Foto frente do documento",
-  foto_verso_doc: "Foto verso do documento",
-  fachada: "Foto da Fachada do Comércio",
+  video_comercio: "Vídeo do Comércio",
+  ganhos_app: "Relatório de Ganhos",
+  foto_frente_doc: "Foto Frente do Documento",
+  foto_verso_doc: "Foto Verso do Documento",
+  fachada: "Foto da Fachada",
+  video_fachada: "Vídeo da Fachada",
+  video_interior: "Vídeo do Interior",
   mei: "Certificado de MEI",
-  face: "Reconhecimento facial",
+  face: "Reconhecimento Facial",
 };
 
 interface Props {
@@ -82,6 +84,46 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
     onSelect(item, uri, `face_${Date.now()}.jpg`);
   };
 
+  const getIconInfo = (item: string) => {
+    if (item === "face") {
+      return {
+        icon: (
+          <MaterialCommunityIcons
+            name="face-recognition"
+            size={24}
+            color="#10B981"
+          />
+        ),
+        bg: "#ECFDF5",
+      };
+    }
+    if (
+      item.includes("video") ||
+      item === "ganhos_app" ||
+      item.includes("video")
+    ) {
+      return {
+        icon: <Ionicons name="videocam" size={24} color="#3B82F6" />,
+        bg: "#EFF6FF",
+      };
+    }
+    return {
+      icon: <FontAwesome6 name="camera" size={22} color="#A855F7" />,
+      bg: "#FAF5FF",
+    };
+  };
+
+  const iconInfo = getIconInfo(item);
+  const displayName = documentDisplayNames[item] || item;
+
+  const handlePress = () => {
+    if (item === "face") {
+      requestPermission();
+    } else {
+      pickMedia(item);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -100,79 +142,92 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
         </View>
       </Modal>
 
-      <View style={styles.container}>
-        <Text style={styles.title}>{documentDisplayNames[item] || item}</Text>
-
-        {item === "face" && (
-          <>
-            {selectedUri && (
-              <Image
-                source={{ uri: selectedUri }}
-                style={styles.previewImage}
-                resizeMode="contain"
-              />
-            )}
-            <ButtonComponent
-              title={
-                selectedUri
-                  ? "Refazer Reconhecimento Facial"
-                  : "Fazer Reconhecimento Facial"
-              }
-              iconLeft="camera"
-              iconRight={null}
-              onPress={requestPermission}
+      <View style={styles.card}>
+        <View style={[styles.iconContainer, { backgroundColor: iconInfo.bg }]}>
+          {iconInfo.icon}
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{displayName}</Text>
+          <View style={styles.statusContainer}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: selectedUri ? "#10B981" : "#EA580C" },
+              ]}
             />
-          </>
-        )}
-
-        {item !== "face" && (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => pickMedia(item)}
-          >
-            <FontAwesome6 name="upload" size={24} color={Colors.green.button} />
-            {selectedUri ? (
-              <Text style={styles.textButton}>{selectedUri}</Text>
-            ) : (
-              <Text style={styles.textButton}>Clique para enviar</Text>
-            )}
-            <Text style={styles.textButton2}>
-              {isVideoType(item) ? "MP4" : "PNG, JPG ou PDF"}
+            <Text
+              style={[
+                styles.statusText,
+                { color: selectedUri ? "#10B981" : "#EA580C" },
+              ]}
+            >
+              {selectedUri ? "Arquivo Selecionado" : "Divergente - Reenviar"}
             </Text>
-          </TouchableOpacity>
-        )}
+          </View>
+        </View>
+        <TouchableOpacity style={styles.sendButton} onPress={handlePress}>
+          <Text style={styles.sendButtonText}>
+            {selectedUri ? "Alterar" : "Enviar"}
+          </Text>
+        </TouchableOpacity>
       </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {},
-  title: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: Colors.black,
-    marginBottom: 4,
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 12,
   },
-  button: {
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderStyle: "dotted",
-    borderColor: Colors.gray.primary,
-    flexDirection: "column",
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    marginRight: 12,
   },
-  textButton: {
-    color: Colors.black,
-    fontSize: 18,
-    fontWeight: "bold",
+  textContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
-  textButton2: {
-    color: Colors.gray.text,
+  title: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  statusText: {
     fontSize: 12,
+    fontWeight: "500",
+  },
+  sendButton: {
+    backgroundColor: Colors.green.button,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  sendButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
   closeButton: {
     position: "absolute",
@@ -182,13 +237,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 20,
-  },
-  previewImage: {
-    width: "100%",
-    height: 300,
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: "#f0f0f0",
   },
 });
 
