@@ -49,6 +49,7 @@ const RegisterEmail: React.FC = () => {
         onPress={onSubmit}
         disabled={!email || !!validateEmail(email)}
         loading={isPending}
+        iconLeft={null}
       />
     </LayoutRegister>
   );

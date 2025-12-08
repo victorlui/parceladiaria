@@ -34,7 +34,7 @@ const ProfileSelection: React.FC = () => {
   const onContinue = (item: any) => {
     let etapa =
       item.id === "comerciante"
-        ? Etapas.REGISTRANDO_FRENTE_DOCUMENTO_COMERCIO
+        ? Etapas.COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL
         : Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH;
 
     const request = {

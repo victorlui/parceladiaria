@@ -1,237 +1,235 @@
+import { Colors } from "@/constants/Colors";
+import React, { useEffect, useRef, useState } from "react";
+
 import {
+  Alert,
+  Image,
   Keyboard,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
-import { usePasswordsLoginForm } from "@/hooks/useRegisterForm";
-import { FormInput } from "@/components/FormInput";
-import { useRegisterAuthStore } from "@/store/register";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
-import { useAlerts } from "@/components/useAlert";
-import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
-import { useEffect } from "react";
-import { PasswordLoginSchema } from "@/lib/password_validation";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { Colors } from "@/constants/Colors";
-import { StatusBar } from "expo-status-bar";
+import InputComponent from "@/components/ui/Input";
+import { FontAwesome } from "@expo/vector-icons";
+import ButtonComponent from "@/components/ui/Button";
+import { useAlerts } from "@/components/useAlert";
+import { validateCPF } from "@/utils/validation";
+import {
+  useCheckCPFMutation,
+  useLoginMutation,
+} from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
-import LogoComponent from "@/components/ui/Logo";
+import { useRegisterAuthStore } from "@/store/register";
 
-export default function InsertPassword() {
-  const { AlertDisplay, showError, showWarning, hideAlert } = useAlerts();
-  const { control, handleSubmit } = usePasswordsLoginForm();
-
-  const { cpf, setPassword } = useRegisterAuthStore();
+const InsertPassword: React.FC = () => {
+  const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
+  const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const senhaRef = useRef<TextInput>(null);
+  const hasShownError = useRef(false);
 
   useEffect(() => {
-    if (isError) {
-      hideAlert();
-      showError("Senha incorreta", "");
+    if (isError && !hasShownError.current) {
+      hasShownError.current = true;
+      showError("Atenção", "Acesso negado");
     }
-  }, [isError]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!isError) {
+      hasShownError.current = false;
+    }
+  }, [isError, showError]);
 
-  const onSubmit = (data: PasswordLoginSchema) => {
-    if (!data.password) {
-      showWarning("Atenção", "Por favor, insira sua senha.");
+  const onSubmit = () => {
+    Keyboard.dismiss();
+    if (!password) {
+      showWarning("Atenção", "Preencha todos os campos");
       return;
     }
-    Keyboard.dismiss();
-    setPassword(data.password || "");
-    mutate({ cpf: cpf ?? "", password: data.password! });
+
+    setPasswordStore(password);
+    mutate({
+      cpf: cpf ?? "",
+      password,
+    });
+  };
+
+  const navigationForgotPassword = () => {
+    router.push("/(auth)/cpf-otp-screen");
+  };
+
+  const navigationRegister = () => {
+    router.push("/(register_new)/register-cpf");
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
+    <SafeAreaView style={styles.safeArea}>
       <AlertDisplay />
-
-      <LinearGradient
-        colors={["#FAFBFC", "#F8FAFC", "#FFFFFF"]}
-        style={styles.gradientBackground}
-      >
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        animated={true}
+      />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
+          style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.content}>
-              {/* Logo Section */}
-              <LogoComponent logoWithText={false} width={240} />
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("@/assets/images/logo-verde.png")}
+                resizeMode="contain"
+                style={styles.logo}
+              />
+            </View>
 
-              <View style={styles.welcomeCard}>
-                <Text style={styles.welcomeTitle}>Senha de acesso</Text>
-                <Text style={styles.welcomeSubtitle}>
-                  Digite sua senha para acessar sua conta
-                </Text>
-              </View>
+            <Text style={styles.title}>Senha de acesso</Text>
+            <Text style={styles.subtitle}>
+              Digite sua senha para acessar sua conta
+            </Text>
 
-              {/* Password Input Card */}
-              <View style={styles.inputCard}>
-                <View style={styles.cardHeader}>
-                  <MaterialIcons name="lock" size={20} color="#053D39" />
-                  <Text style={styles.cardTitle}>Autenticação</Text>
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <FormInput
-                    name="password"
-                    control={control}
-                    secureTextEntry
-                    placeholder="Digite sua senha"
-                    returnKeyType="done"
-                    onSubmitEditing={handleSubmit(onSubmit)}
-                    icon={<FontAwesome6 name="key" size={24} color="#9CA3AF" />}
+            <View style={styles.formContainer}>
+              <InputComponent
+                ref={senhaRef}
+                placeholder="Senha"
+                secureTextEntry={!showPassword}
+                value={password}
+                icon={
+                  <FontAwesome
+                    name="lock"
+                    size={22}
+                    color={Colors.gray.primary}
                   />
-
-                  <TouchableOpacity
-                    style={styles.forgotPasswordLink}
+                }
+                rightIcon={
+                  <FontAwesome
+                    name={showPassword ? "eye-slash" : "eye"}
+                    size={22}
+                    color={Colors.gray.primary}
                     onPress={() => {
-                      router.push("/(auth)/cpf-otp-screen");
+                      setShowPassword(!showPassword);
+                    }}
+                  />
+                }
+                onChangeText={setPassword}
+                returnKeyType="done"
+                onSubmitEditing={onSubmit}
+              />
+            </View>
+            <View style={styles.footerContainer}>
+              <ButtonComponent
+                title="Acessar"
+                onPress={onSubmit}
+                loading={isPending}
+                iconLeft={null}
+              />
+              <TouchableOpacity
+                onPress={navigationForgotPassword}
+                style={styles.forgotPasswordContainer}
+              >
+                <Text style={styles.forgotPasswordText}>
+                  Esqueceu sua senha?
+                </Text>
+              </TouchableOpacity>
+              {/* <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 3,
+                }}
+              >
+                <Text style={{ fontSize: 16, color: Colors.gray.text }}>
+                  Não tem uma conta?{" "}
+                </Text>
+                <TouchableOpacity onPress={navigationRegister}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: Colors.green.primary,
+                      fontWeight: "bold",
+                      textDecorationLine: "underline",
                     }}
                   >
-                    <Text style={styles.forgotPasswordText}>
-                      Esqueci minha senha
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.loginButton,
-                    isPending && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={isPending}
-                  activeOpacity={0.8}
-                >
-                  <MaterialIcons
-                    name={isPending ? "hourglass-empty" : "login"}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                  <Text style={styles.buttonText}>
-                    {isPending ? "Verificando..." : "Entrar"}
+                    Registre-se
                   </Text>
                 </TouchableOpacity>
-              </View>
+              </View> */}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: Colors.white,
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
-  },
-  content: {
-    padding: 20,
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
   logoContainer: {
+    marginBottom: 16,
     alignItems: "center",
   },
   logo: {
-    width: "100%",
-    height: 140,
+    height: 100,
+    width: 100,
   },
-  welcomeCard: {
-    borderRadius: 16,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-    alignItems: "center",
-  },
-  iconContainer: {
-    backgroundColor: "#053D39",
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  welcomeTitle: {
+  title: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
+    fontWeight: "700",
+    color: Colors.green.primary,
+    marginBottom: 10,
   },
-  welcomeSubtitle: {
+  subtitle: {
     fontSize: 16,
-    color: "#6B7280",
+    color: Colors.gray.primary,
     textAlign: "center",
-    lineHeight: 22,
+    marginBottom: 24,
   },
-  inputCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-
-    padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(155, 209, 61, 0.1)",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginLeft: 8,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  loginButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  formContainer: {
+    width: "100%",
     justifyContent: "center",
-    backgroundColor: "#053D39",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    alignItems: "center",
+    gap: 14,
   },
-  buttonDisabled: {
-    backgroundColor: "#D1D5DB",
+  footerContainer: {
+    width: "100%",
+    marginTop: 24,
+    justifyContent: "center",
+    gap: 14,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    marginLeft: 8,
-  },
-  forgotPasswordLink: {
-    alignSelf: "flex-end",
-    paddingVertical: 4,
+  forgotPasswordContainer: {
+    padding: 3,
   },
   forgotPasswordText: {
-    fontSize: 14,
-    color: "#053D39",
-    fontWeight: "500",
+    fontSize: 16,
+    color: Colors.green.primary,
+    textDecorationLine: "underline",
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });
+
+export default InsertPassword;

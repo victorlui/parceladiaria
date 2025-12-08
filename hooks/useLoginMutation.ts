@@ -1,3 +1,4 @@
+import api from "@/services/api";
 import { useMutation } from "@tanstack/react-query";
 import { CPFSchema } from "@/lib/cpf_validation";
 import { checkCPF } from "@/services/check-cpf";
@@ -6,9 +7,7 @@ import { login } from "@/services/login";
 import { Etapas, getRouteByEtapa, StatusCadastro } from "@/utils";
 import { useAuthStore } from "@/store/auth";
 import { useAlerts } from "@/components/useAlert";
-import api from "@/services/api";
 import { ApiUserData } from "@/interfaces/login_inteface";
-import { is } from "zod/v4/locales";
 
 export const useCheckCPFMutation = () => {
   const { showError } = useAlerts();
@@ -16,7 +15,7 @@ export const useCheckCPFMutation = () => {
     mutationFn: ({ cpf }: CPFSchema) => checkCPF(cpf),
     onSuccess: ({ data: { type }, message }) => {
       if (!type && message === "Sem cadastro") {
-        router.push("/(register)/terms-of-use");
+        router.push("/(register_new)/register-cpf");
       }
 
       if ((type && type === "lead") || type === "client") {

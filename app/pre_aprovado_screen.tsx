@@ -19,8 +19,10 @@ import { acceptedTerms } from "@/services/terms";
 import { useAlerts } from "@/components/useAlert";
 import { router } from "expo-router";
 import LoadingDots from "@/components/ui/LoadingDots";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
 const PreAprovado: React.FC = () => {
+  useDisableBackHandler();
   const { userRegister, logout } = useAuthStore();
   const { showSuccess, hideAlert, AlertDisplay } = useAlerts();
   const [accepted, setAccepted] = useState(false);

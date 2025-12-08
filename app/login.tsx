@@ -2,7 +2,6 @@ import { Colors } from "@/constants/Colors";
 import React, { useEffect, useRef, useState } from "react";
 
 import {
-  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -12,7 +11,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -22,16 +20,17 @@ import { FontAwesome } from "@expo/vector-icons";
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { validateCPF } from "@/utils/validation";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
-import { router } from "expo-router";
+import { useCheckCPFMutation } from "@/hooks/useLoginMutation";
+import { useRegisterAuthStore } from "@/store/register";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 
 const Login: React.FC = () => {
+  useDisableBackHandler();
   const { AlertDisplay, showWarning, showError } = useAlerts();
-  const { mutate, isPending, isError } = useLoginMutation();
+  const { setCpf: setCPF } = useRegisterAuthStore();
+  const { mutate, isError, isPending } = useCheckCPFMutation();
   const [cpf, setCpf] = useState("");
-  const [password, setPassword] = useState("");
   const cpfRef = useRef<TextInput>(null);
-  const senhaRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
 
   useEffect(() => {
@@ -46,7 +45,7 @@ const Login: React.FC = () => {
 
   const onSubmit = () => {
     Keyboard.dismiss();
-    if (!cpf || !password) {
+    if (!cpf) {
       showWarning("Atenção", "Preencha todos os campos");
       return;
     }
@@ -57,18 +56,10 @@ const Login: React.FC = () => {
       return;
     }
 
+    setCPF(cpf);
     mutate({
       cpf,
-      password,
     });
-  };
-
-  const navigationForgotPassword = () => {
-    router.push("/(auth)/cpf-otp-screen");
-  };
-
-  const navigationRegister = () => {
-    router.push("/(register_new)/register-cpf");
   };
 
   return (
@@ -97,9 +88,7 @@ const Login: React.FC = () => {
             </View>
 
             <Text style={styles.title}>Parcela Diária</Text>
-            <Text style={styles.subtitle}>
-              Insira seu CPF e sua senha para continuar
-            </Text>
+            <Text style={styles.subtitle}>Insira seu CPF para continuar</Text>
 
             <View style={styles.formContainer}>
               <InputComponent
@@ -117,24 +106,8 @@ const Login: React.FC = () => {
                   />
                 }
                 onChangeText={setCpf}
-                returnKeyType="next"
-                onSubmitEditing={() => senhaRef.current?.focus()}
-              />
-              <InputComponent
-                ref={senhaRef}
-                placeholder="Senha"
-                secureTextEntry
-                value={password}
-                icon={
-                  <FontAwesome
-                    name="lock"
-                    size={22}
-                    color={Colors.gray.primary}
-                  />
-                }
-                onChangeText={setPassword}
-                returnKeyType="done"
-                onSubmitEditing={onSubmit}
+                returnKeyType="send"
+                onSubmitEditing={() => onSubmit()}
               />
             </View>
             <View style={styles.footerContainer}>
@@ -144,38 +117,6 @@ const Login: React.FC = () => {
                 loading={isPending}
                 iconLeft={null}
               />
-              <TouchableOpacity
-                onPress={navigationForgotPassword}
-                style={styles.forgotPasswordContainer}
-              >
-                <Text style={styles.forgotPasswordText}>
-                  Esqueceu sua senha?
-                </Text>
-              </TouchableOpacity>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: 3,
-                }}
-              >
-                <Text style={{ fontSize: 16, color: Colors.gray.text }}>
-                  Não tem uma conta?{" "}
-                </Text>
-                <TouchableOpacity onPress={navigationRegister}>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: Colors.green.primary,
-                      fontWeight: "bold",
-                      textDecorationLine: "underline",
-                    }}
-                  >
-                    Registre-se
-                  </Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

@@ -11,8 +11,11 @@ import { StyleSheet, Text, View } from "react-native";
 const CNHFront: React.FC = () => {
   const { userRegister } = useAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
+  const [loading, setLoading] = React.useState(false);
 
   const sendFileFront = async (file: File) => {
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     try {
       const finalUrl = await uploadFileToS3({
         file: {
@@ -41,6 +44,8 @@ const CNHFront: React.FC = () => {
       });
     } catch (error) {
       console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,7 +62,7 @@ const CNHFront: React.FC = () => {
           : "Envie uma foto ou anexe o PDF do seu documento"
       }
     >
-      {isPending && <Spinner text="Enviando arquivo" />}
+      {(loading || isPending) && <Spinner text="Enviando arquivo" />}
       <View>
         <View style={style.infoContainer}>
           <Text style={style.infoIcon}>✓</Text>

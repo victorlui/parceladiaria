@@ -31,6 +31,7 @@ const RegisterPhone: React.FC = () => {
   const [code, setCode] = React.useState("");
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showOtpError, setShowOtpError] = React.useState(false);
 
   const sendCode = async () => {
     Keyboard.dismiss();
@@ -45,6 +46,7 @@ const RegisterPhone: React.FC = () => {
         method: "sms",
       });
       setIsSuccess(true);
+      setShowOtpError(false);
       console.log("response", response.data);
     } catch (error: any) {
       console.log("error", error.response);
@@ -61,8 +63,10 @@ const RegisterPhone: React.FC = () => {
   const confirmOTP = async () => {
     Keyboard.dismiss();
     if (code.length !== 6) {
+      setShowOtpError(true);
       return;
     }
+    setShowOtpError(false);
     setIsLoading(true);
     try {
       await api.post("/auth/otp/check", {
@@ -135,7 +139,9 @@ const RegisterPhone: React.FC = () => {
           onChangeText={setCode}
           returnKeyType="done"
           onSubmitEditing={confirmOTP}
-          error={code.length !== 6 ? "Código inválido" : undefined}
+          error={
+            showOtpError && code.length !== 6 ? "Código inválido" : undefined
+          }
         />
       )}
 
@@ -144,6 +150,7 @@ const RegisterPhone: React.FC = () => {
         onPress={isSuccess ? confirmOTP : sendCode}
         disabled={!phone || (isSuccess && code.length !== 6)}
         loading={isLoading}
+        iconLeft={null}
       />
       {isSuccess && (
         <TouchableOpacity style={styles.sendCodeContainer} onPress={sendCode}>

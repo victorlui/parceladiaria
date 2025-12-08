@@ -5,6 +5,7 @@ import LoadingDots from "@/components/ui/LoadingDots";
 import StatusBar from "@/components/ui/StatusBar";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
@@ -13,7 +14,9 @@ import { Entypo, FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,8 +26,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
+  useDisableBackHandler();
   const { userRegister, logout } = useAuthStore();
-  const { AlertDisplay, showWarning, showSuccess } = useAlerts();
+  const { AlertDisplay, showWarning } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { uri: string; nameImage: string }>
   >({});
@@ -55,17 +59,22 @@ const DivergenciaScreen: React.FC = () => {
     foto_veiculo:
       "Selfie ao lado do veículo mostrando claramente a placa e seu rosto.",
     video_comercio: "Envie um vídeo curto mostrando o comércio.",
-    ganhos_app: "Envie vídeo do relatório de ganhos no app de corridas.",
+    video_perfil_app: "Envie Vídeo do seu perfil no app de corridas.",
     foto_frente_doc: "Foto da frente do documento legível.",
     foto_verso_doc: "Foto do verso do documento legível.",
-    fachada: "Foto da fachada do comércio.",
+    video_fachada: "Vídeo da fachada do comércio.",
+    video_interior: "Vídeo do interior do comércio.",
     mei: "Certificado de MEI.",
-    face: "Reconhecimento facial.",
+    face: "Reenvie o Reconhecimento facial.",
   };
 
-  const getObservacaoText = (key: string) =>
-    observacoesPorDocumento[key] ||
-    `Envie o arquivo solicitado: ${documentDisplayNames[key] || key}.`;
+  const getObservacaoText = (key: string) => {
+    console.log("key", observacoesPorDocumento[key]);
+    return (
+      observacoesPorDocumento[key] ||
+      `Envie o arquivo solicitado: ${documentDisplayNames[key] || key}.`
+    );
+  };
 
   console.log("divergenciasArray", divergenciasArray);
 
@@ -129,9 +138,13 @@ const DivergenciaScreen: React.FC = () => {
         <ItemsDivergentes
           key={index}
           item={item}
-          selectedUri={selectedFiles[item]?.nameImage}
+          selectedUri={
+            item === "face"
+              ? selectedFiles[item]?.uri
+              : selectedFiles[item]?.nameImage
+          }
           onSelect={(documentType, uri, name) => {
-            console.log("name", name);
+            console.log("image", documentType, uri, name);
             setSelectedFiles((prev) => ({
               ...prev,
               [documentType]: { uri, nameImage: name },
@@ -144,10 +157,26 @@ const DivergenciaScreen: React.FC = () => {
 
   // Componente para animar os pontinhos de carregamento
 
+  const LoadingScreen: React.FC = () => (
+    <View style={styles.loadingContainer}>
+      <View style={styles.spinnerWrapper}>
+        <ActivityIndicator size={140} color={Colors.green.primary} />
+        <Image
+          source={require("@/assets/images/logo.png")}
+          style={styles.spinnerLogo}
+          resizeMode="contain"
+        />
+      </View>
+
+      <Text style={styles.loadingText}>Enviando imagem, favor aguarde...</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
       <StatusBar />
       <AlertDisplay />
+      {isLoading && <LoadingScreen />}
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -161,41 +190,19 @@ const DivergenciaScreen: React.FC = () => {
           <View style={styles.observacoes}>
             <Text style={[styles.title, { fontSize: 16 }]}>Observações:</Text>
             <View style={{ marginTop: 8 }}>
-              {divergenciasArray.length > 0 ? (
+              {divergenciasArray.length > 0 && (
                 <View>
                   {divergenciasArray.map((key: string, idx: number) => (
                     <View key={idx} style={{ marginBottom: 10 }}>
-                      <Text style={{ fontSize: 14, color: "#000" }}>
+                      {/* <Text style={{ fontSize: 14, color: "#000" }}>
                         {"\u2022"} {documentDisplayNames[key] || key}
-                      </Text>
+                      </Text> */}
                       <Text style={{ fontSize: 14, color: "#000" }}>
                         {getObservacaoText(key)}
                       </Text>
                     </View>
                   ))}
                 </View>
-              ) : (
-                <Text style={{ fontSize: 14, color: "#000" }}>
-                  {"\u2022"} Perfil Completo{"\n"}O perfil deve conter as
-                  seguintes informações:{"\n"}
-                  {"  "}° Quantidade de corridas realizadas{"\n"}
-                  {"  "}° Tempo de uso no aplicativo{"\n"}
-                  {"  "}° Foto de perfil atualizada e visível{"\n"}
-                  {"\n"}
-                  {"\u2022"} Selfie ao Lado do Veículo{"\n"}
-                  Tire uma selfie sua ao lado do veículo, mostrando de forma
-                  clara e legível a placa e o seu rosto.{"\n"}
-                  {"\n"}
-                  {"\u2022"} CRLV Atualizado{"\n"}
-                  Envie uma foto ou PDF do CRLV atualizado (exercício
-                  2024/2025).
-                  {"\n"}
-                  {"\n"}
-                  {"\u2022"} CNH Atualizada{"\n"}
-                  Envie foto ou PDF (frente e verso) da CNH atualizada, com
-                  todos os dados legíveis.{"\n"}
-                  Retire a CNH do plástico para a foto.
-                </Text>
               )}
             </View>
           </View>
@@ -311,6 +318,27 @@ const styles = StyleSheet.create({
   textButtonSair: {
     color: Colors.black,
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  spinnerWrapper: {
+    width: 250,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  spinnerLogo: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: "center",
     fontWeight: "bold",
   },
 });

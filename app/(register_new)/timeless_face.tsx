@@ -13,12 +13,18 @@ import { Ionicons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera } from "react-native-vision-camera";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import {
+  useLoginDataMutation,
+  useUpdateUserMutation,
+} from "@/hooks/useRegisterMutation";
 import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
 import { router } from "expo-router";
+import { useRegisterNewStore } from "@/store/register_new";
+import { useRegisterAuthStore } from "@/store/register";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -37,10 +43,27 @@ const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   </View>
 );
 
+const LoadingScreen: React.FC = () => (
+  <View style={styles.loadingContainer}>
+    <View style={styles.spinnerWrapper}>
+      <ActivityIndicator size={140} color={Colors.green.primary} />
+      <Image
+        source={require("@/assets/images/logo.png")}
+        style={styles.spinnerLogo}
+        resizeMode="contain"
+      />
+    </View>
+
+    <Text style={styles.loadingText}>Enviando imagem, favor aguarde...</Text>
+  </View>
+);
+
 const TimelessFace: React.FC = () => {
+  const { data } = useRegisterNewStore();
+  const { cpf, password } = useRegisterAuthStore();
   const { mutate } = useUpdateUserMutation();
+  const { mutate: loginMutate, isPending } = useLoginMutation();
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
-  const [capturedPhoto, setCapturedPhoto] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
 
@@ -58,7 +81,11 @@ const TimelessFace: React.FC = () => {
   };
 
   const completeRegistration = async () => {
-    router.replace("/login");
+    if (!password) {
+      loginMutate({ cpf: cpf ?? "", password: data?.password ?? "" });
+      return;
+    }
+    loginMutate({ cpf: cpf ?? "", password: password ?? "" });
   };
 
   const sendPhoto = async (photo: string) => {
@@ -72,7 +99,6 @@ const TimelessFace: React.FC = () => {
           mimeType: "image/jpeg",
         },
       });
-      console.log("finalUrl", finalUrl);
       mutate({
         request: {
           etapa: Etapas.FINALIZADO,
@@ -146,22 +172,7 @@ const TimelessFace: React.FC = () => {
         </>
       )}
 
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <View style={styles.spinnerWrapper}>
-            <ActivityIndicator size={140} color={Colors.green.primary} />
-            <Image
-              source={require("@/assets/images/logo.png")}
-              style={styles.spinnerLogo}
-              resizeMode="contain"
-            />
-          </View>
-
-          <Text style={styles.loadingText}>
-            Enviando imagem, favor aguarde...
-          </Text>
-        </View>
-      )}
+      {(isLoading || isPending) && <LoadingScreen />}
 
       {!isLoading && isSuccess && (
         <>
@@ -179,7 +190,7 @@ const TimelessFace: React.FC = () => {
           </View>
           <View style={{ marginTop: -180, width: "100%" }}>
             <ButtonComponent
-              title="Login"
+              title="Entrar"
               iconLeft="home"
               iconRight={null}
               onPress={completeRegistration}

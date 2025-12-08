@@ -10,13 +10,15 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { router } from "expo-router";
 import { useRegisterNewStore } from "@/store/register_new";
+import { useRegisterAuthStore } from "@/store/register";
 
 const RegisterCPF: React.FC = () => {
   const { showWarning, AlertDisplay } = useAlerts();
   const { data, setData } = useRegisterNewStore();
+  const { cpf: cpfAuth } = useRegisterAuthStore();
   const cpfRef = useRef<TextInput>(null);
   const birthDateRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("");
+  const [cpf, setCpf] = useState(cpfAuth || "");
   const [birthDate, setBirthDate] = useState("");
   const [cpfTouched, setCpfTouched] = useState(false);
   const [birthDateTouched, setBirthDateTouched] = useState(false);

@@ -29,7 +29,6 @@
       "icon": "./assets/images/ios-icon.png"
     },
     "android": {
-      "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -65,9 +64,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/icon_new.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+
+          "resizeMode": "cover",
+          "backgroundColor": "#053E38"
         }
       ],
       [
@@ -121,7 +120,16 @@
           "enableMicrophonePermission": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

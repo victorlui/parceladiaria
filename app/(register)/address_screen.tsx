@@ -45,8 +45,9 @@ const AddressScreen: React.FC = () => {
   const [estadoError, setEstadoError] = React.useState<string>("");
   const [cidadeError, setCidadeError] = React.useState<string>("");
 
-  const searchCep = async () => {
-    const cleanCep = cep.replace(/\D/g, "");
+  const searchCep = async (cepValue?: string) => {
+    const currentCep = typeof cepValue === "string" ? cepValue : cep;
+    const cleanCep = currentCep.replace(/\D/g, "");
     if (cleanCep.length === 8) {
       setLoadingCep(true);
       try {
@@ -63,7 +64,6 @@ const AddressScreen: React.FC = () => {
         console.log("ViaCEP erro", e);
       } finally {
         setLoadingCep(false);
-        cepRef.current?.blur();
       }
     }
   };
@@ -167,9 +167,21 @@ const AddressScreen: React.FC = () => {
           onChangeText={(text) => {
             setCep(text);
             if (cepError) setCepError("");
+            const clean = text.replace(/\D/g, "");
+            if (clean.length === 8) {
+              searchCep(text);
+            }
           }}
           returnKeyType="next"
-          onSubmitEditing={searchCep}
+          onSubmitEditing={() => {
+            searchCep();
+            ruaRef.current?.focus();
+          }}
+          onBlur={() => {
+            if (!cepError) {
+              searchCep();
+            }
+          }}
           error={cepError}
         />
         <InputComponent
@@ -271,6 +283,7 @@ const AddressScreen: React.FC = () => {
           title="Próximo"
           onPress={onSubmit}
           loading={isPending}
+          iconLeft={null}
         />
       </View>
     </LayoutRegister>

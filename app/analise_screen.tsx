@@ -1,5 +1,6 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
+import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -8,6 +9,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const AnaliseScreen: React.FC = () => {
+  useDisableBackHandler();
   const { logout } = useAuthStore();
   return (
     <SafeAreaView style={styles.container}>

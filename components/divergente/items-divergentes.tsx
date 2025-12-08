@@ -1,8 +1,11 @@
+import ButtonComponent from "../ui/Button";
+import React from "react";
 import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { FontAwesome6 } from "@expo/vector-icons";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Camera } from "react-native-vision-camera";
+import FaceDetector from "../FaceDetector";
 
 export const documentDisplayNames: Record<string, string> = {
   comprovante_endereco: "Comprovante de endereço",
@@ -27,9 +30,23 @@ interface Props {
 
 const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
   const { takePhoto, takeVideo } = useDocumentPicker(100);
+  const [showFaceDetector, setShowFaceDetector] = React.useState(false);
+
+  const requestPermission = async () => {
+    const status = await Camera.requestCameraPermission();
+    if (status === "denied") {
+      Alert.alert(
+        "Permissão necessária",
+        "Você negou o acesso à câmera. Para usar esta função, ative a câmera nas Configurações.",
+        [{ text: "OK", style: "cancel" }]
+      );
+    }
+
+    setShowFaceDetector(true);
+  };
 
   const isVideoType = (documentType: string) =>
-    documentType === "video_comercio" || documentType === "ganhos_app";
+    documentType.startsWith("video") || documentType === "ganhos_app";
 
   const buildFileName = (
     documentType: string,
@@ -59,19 +76,73 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
     }
   };
 
+  const sendPhoto = async (photo: string) => {
+    setShowFaceDetector(false);
+    const uri = photo.startsWith("file://") ? photo : `file://${photo}`;
+    onSelect(item, uri, `face_${Date.now()}.jpg`);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{documentDisplayNames[item] || item}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => pickMedia(item)}>
-        <FontAwesome6 name="upload" size={24} color={Colors.green.button} />
-        {selectedUri ? (
-          <Text style={styles.textButton}>{selectedUri}</Text>
-        ) : (
-          <Text style={styles.textButton}>Clique para enviar</Text>
+    <>
+      <Modal
+        visible={showFaceDetector}
+        animationType="slide"
+        onRequestClose={() => setShowFaceDetector(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <FaceDetector takePhoto={sendPhoto} />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowFaceDetector(false)}
+          >
+            <FontAwesome6 name="xmark" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <View style={styles.container}>
+        <Text style={styles.title}>{documentDisplayNames[item] || item}</Text>
+
+        {item === "face" && (
+          <>
+            {selectedUri && (
+              <Image
+                source={{ uri: selectedUri }}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            )}
+            <ButtonComponent
+              title={
+                selectedUri
+                  ? "Refazer Reconhecimento Facial"
+                  : "Fazer Reconhecimento Facial"
+              }
+              iconLeft="camera"
+              iconRight={null}
+              onPress={requestPermission}
+            />
+          </>
         )}
-        <Text style={styles.textButton2}>{isVideoType(item) ? "MP4" : "PNG, JPG ou PDF"}</Text>
-      </TouchableOpacity>
-    </View>
+
+        {item !== "face" && (
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => pickMedia(item)}
+          >
+            <FontAwesome6 name="upload" size={24} color={Colors.green.button} />
+            {selectedUri ? (
+              <Text style={styles.textButton}>{selectedUri}</Text>
+            ) : (
+              <Text style={styles.textButton}>Clique para enviar</Text>
+            )}
+            <Text style={styles.textButton2}>
+              {isVideoType(item) ? "MP4" : "PNG, JPG ou PDF"}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </>
   );
 };
 
@@ -102,6 +173,22 @@ const styles = StyleSheet.create({
   textButton2: {
     color: Colors.gray.text,
     fontSize: 12,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 20,
+  },
+  previewImage: {
+    width: "100%",
+    height: 300,
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: "#f0f0f0",
   },
 });
 
