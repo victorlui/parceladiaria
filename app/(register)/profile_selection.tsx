@@ -39,7 +39,7 @@ const ProfileSelection: React.FC = () => {
 
     const request = {
       etapa,
-      profissao: item.profissaoValue,
+      profissao: item.label,
     };
 
     mutate({ request });

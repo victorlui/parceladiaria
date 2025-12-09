@@ -59,13 +59,10 @@ const LoadingScreen: React.FC = () => (
 );
 
 const TimelessFace: React.FC = () => {
-  const { data } = useRegisterNewStore();
-  const { cpf, password } = useRegisterAuthStore();
   const { mutate } = useUpdateUserMutation();
   const { mutate: loginMutate, isPending } = useLoginMutation();
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
 
   const requestPermission = async () => {
     const status = await Camera.requestCameraPermission();
@@ -78,14 +75,6 @@ const TimelessFace: React.FC = () => {
     }
 
     setShowFaceDetector(true);
-  };
-
-  const completeRegistration = async () => {
-    if (!password) {
-      loginMutate({ cpf: cpf ?? "", password: data?.password ?? "" });
-      return;
-    }
-    loginMutate({ cpf: cpf ?? "", password: password ?? "" });
   };
 
   const sendPhoto = async (photo: string) => {
@@ -101,12 +90,11 @@ const TimelessFace: React.FC = () => {
       });
       mutate({
         request: {
-          etapa: Etapas.FINALIZADO,
+          etapa: Etapas.ACEITANDO_TERMOS,
           face: finalUrl,
         },
       });
-      setIsLoading(false);
-      setIsSuccess(true);
+      router.push("/(register_new)/register-finish");
     } catch (error) {
       console.error("Erro ao enviar foto:", error);
       Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
@@ -118,7 +106,7 @@ const TimelessFace: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {!isLoading && !isSuccess && (
+      {!isLoading && (
         <>
           <View style={styles.avatarContainer}>
             <View style={styles.avatarOuter}>
@@ -173,31 +161,6 @@ const TimelessFace: React.FC = () => {
       )}
 
       {(isLoading || isPending) && <LoadingScreen />}
-
-      {!isLoading && isSuccess && (
-        <>
-          <View style={styles.successContainer}>
-            <FontAwesome
-              name="check-circle"
-              size={100}
-              color={Colors.green.secondary}
-            />
-            <Text style={styles.successTitle}>Cadastro Concluído</Text>
-            <Text style={styles.successText}>
-              Seu cadastro foi enviado com sucesso. Em breve entraremos em
-              contato
-            </Text>
-          </View>
-          <View style={{ marginTop: -180, width: "100%" }}>
-            <ButtonComponent
-              title="Entrar"
-              iconLeft="home"
-              iconRight={null}
-              onPress={completeRegistration}
-            />
-          </View>
-        </>
-      )}
     </SafeAreaView>
   );
 };
@@ -288,22 +251,6 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-  },
-  successContainer: {
-    alignItems: "center",
-    gap: 12,
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.black,
-    textAlign: "center",
-  },
-  successText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.gray.primary,
-    textAlign: "center",
   },
 });
 

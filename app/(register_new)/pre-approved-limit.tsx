@@ -126,6 +126,7 @@ const PreApprovedLimit: React.FC = () => {
               title="Continuar"
               onPress={onSubmit}
               disabled={!accepted}
+              iconLeft={null}
             />
 
             <ModalTerms

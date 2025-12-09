@@ -74,6 +74,7 @@ export enum Etapas {
   INFORMANDO_PIX = "Informando PIX",
 
   REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial",
+  ACEITANDO_TERMOS = "Aceitando termos",
 
   // motorista carro ou moto
   MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
@@ -100,6 +101,7 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
 
   [Etapas.REGISTRANDO_TIMELESS_FACE]: "/(register_new)/timeless_face",
+  [Etapas.ACEITANDO_TERMOS]: "/(register_new)/register-finish",
 
   // motorista carro ou moto
   [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
