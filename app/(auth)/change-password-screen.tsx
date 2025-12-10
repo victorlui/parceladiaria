@@ -193,6 +193,7 @@ const ChangePassword: React.FC = () => {
                 title="Redefinir"
                 onPress={onSubmit}
                 loading={isLoading}
+                iconLeft={null}
               />
 
               <View

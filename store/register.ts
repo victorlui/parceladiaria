@@ -8,6 +8,7 @@ type RegisterAuth = {
   phone: string | null;
   code: string | null;
   address: AddressSchema | null;
+  hasCompany: boolean | null;
   etapa: Etapas | null;
   password: string | null;
   setPassword: (password: string) => void;
@@ -17,6 +18,7 @@ type RegisterAuth = {
   setCode: (code: string) => void;
   setAddress: (address: AddressSchema) => void;
   setEmail: (email: string) => void;
+  setHasCompany: (hasCompany: boolean) => void;
   clean: () => void;
 };
 
@@ -29,6 +31,10 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   etapa: null,
   password: null,
   email: null,
+  hasCompany: null,
+  setHasCompany: (hasCompany) => {
+    set({ hasCompany });
+  },
 
   setPassword: (password) => {
     set({ password });
@@ -48,7 +54,6 @@ export const useRegisterAuthStore = create<RegisterAuth>((set) => ({
   setEmail: (email) => {
     set({ email });
   },
-
 
   setCode: (code) => {
     set({ code });

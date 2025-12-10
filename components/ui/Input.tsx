@@ -22,7 +22,7 @@ type InputProps = {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
-  maskType?: "cpf" | "cellphone" | "date" | "cep";
+  maskType?: "cpf" | "cellphone" | "date" | "cep" | "cnpj";
 } & Omit<TextInputProps, "style" | "onChangeText" | "value" | "placeholder">;
 
 const InputComponent = forwardRef<TextInput, InputProps>(
@@ -57,13 +57,15 @@ const InputComponent = forwardRef<TextInput, InputProps>(
     const mask =
       maskType === "cpf"
         ? "999.999.999-99"
-        : maskType === "cellphone"
-          ? "(99) 99999-9999"
-          : maskType === "cep"
-            ? "99999-999"
-            : maskType === "date"
-              ? "99/99/9999"
-            : undefined;
+        : maskType === "cnpj"
+          ? "99.999.999/9999-99"
+          : maskType === "cellphone"
+            ? "(99) 99999-9999"
+            : maskType === "cep"
+              ? "99999-999"
+              : maskType === "date"
+                ? "99/99/9999"
+                : undefined;
 
     return (
       <View style={[styles.wrapper, containerStyle]}>

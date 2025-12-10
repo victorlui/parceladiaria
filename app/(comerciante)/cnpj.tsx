@@ -3,48 +3,38 @@ import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
-import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
-import { Keyboard } from "react-native";
+import { View } from "react-native";
 
-const BusinessTypeScreen: React.FC = () => {
+const InformandoCNPJ: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
-  const { hasCompany } = useRegisterAuthStore();
   const [businessType, setBusinessType] = React.useState("");
 
   const submit = () => {
-    Keyboard.dismiss();
     mutate({
       request: {
-        tipo_comercio: businessType,
-        etapa: hasCompany
-          ? Etapas.COMERCIANTE_INFORMANDO_CNPJ
-          : Etapas.COMERCIANTE_ENVIANDO_EXTRATO,
+        cnpj: businessType,
+        etapa: Etapas.COMERCIANTE_ENVIANDO_EXTRATO,
       },
     });
   };
 
   return (
     <LayoutRegister
-      title="Qual o seu tipo de comércio?"
-      subtitle="Ex: Barbearia, Lanchonete, Oficina, etc."
+      title="Informe seu CNPJ"
+      subtitle="Digite os números do seu CNPJ."
     >
       <InputComponent
-        label="Tipo de comércio"
-        placeholder="Ex: Barbearia, Lanchonete, Oficina, etc."
+        label="CNPJ"
+        placeholder="00.000.000/0000-00"
         value={businessType}
         onChangeText={setBusinessType}
-        returnKeyType="done"
-        onSubmitEditing={submit}
         icon={
-          <MaterialIcons
-            name="business-center"
-            size={24}
-            color={Colors.gray.primary}
-          />
+          <FontAwesome name="building" size={20} color={Colors.gray.primary} />
         }
+        maskType="cnpj"
       />
 
       <ButtonComponent
@@ -58,4 +48,4 @@ const BusinessTypeScreen: React.FC = () => {
   );
 };
 
-export default BusinessTypeScreen;
+export default InformandoCNPJ;

@@ -26,7 +26,7 @@ export default function DocumentBackScreen() {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
+          etapa: Etapas.COMERCIANTE_ENVIANDO_VIDEO_INTERIOR,
           foto_verso_doc: finalUrl,
         },
       });

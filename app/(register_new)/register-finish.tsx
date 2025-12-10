@@ -7,6 +7,7 @@ import { useRegisterAuthStore } from "@/store/register";
 import { useRegisterNewStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
 import { FontAwesome } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -19,7 +20,7 @@ import {
   View,
 } from "react-native";
 
-const LoadingScreen: React.FC = () => (
+const LoadingScreen = (text: string) => (
   <View style={styles.loadingContainer}>
     <View style={styles.spinnerWrapper}>
       <ActivityIndicator size={140} color={Colors.green.primary} />
@@ -30,31 +31,58 @@ const LoadingScreen: React.FC = () => (
       />
     </View>
 
-    <Text style={styles.loadingText}>
-      Aguarde, estamos processando seu cadastro...
-    </Text>
+    <Text style={styles.loadingText}>{text}</Text>
   </View>
 );
 
 const RegisterFinish: React.FC = () => {
   const { data } = useRegisterNewStore();
   const { cpf, password } = useRegisterAuthStore();
-  const { mutate, data: registerData } = useUpdateUserMutation();
-  const { mutate: loginMutate, isPending } = useLoginMutation();
+  const {
+    mutate,
+    isPending: isRegistering,
+    isError,
+    error,
+    isSuccess: isRegisterSuccess,
+  } = useUpdateUserMutation();
+  const { mutate: loginMutate, isPending: isLoggingIn } = useLoginMutation();
   const [accepted, setAccepted] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
 
-  const completeRegistration = async () => {
-    if (!password) {
-      loginMutate({ cpf: cpf ?? "", password: data?.password ?? "" });
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isError) {
+        Alert.alert(
+          "Erro",
+          error?.message || "Ocorreu um erro ao finalizar o cadastro."
+        );
+      }
+    }, [isError])
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isRegisterSuccess) {
+        setIsSuccess(true);
+      }
+    }, [isRegisterSuccess])
+  );
+
+  const completeRegistration = () => {
+    const userCpf = cpf ?? "";
+    const userPassword = password ?? data?.password ?? "";
+
+    if (!userCpf || !userPassword) {
+      Alert.alert("Erro", "Não foi possível realizar o login automático.");
       return;
     }
-    loginMutate({ cpf: cpf ?? "", password: password ?? "" });
+    loginMutate({ cpf: userCpf, password: userPassword });
   };
 
-  const onSubmit = () => {
-    setIsLoading(true);
+  const onSubmit = async () => {
+    if (!accepted) return;
+
     try {
       mutate({
         request: {
@@ -62,19 +90,17 @@ const RegisterFinish: React.FC = () => {
           termos: 1,
         },
       });
-      console.log("Resposta do servidor:", registerData);
-      setIsSuccess(true);
     } catch (error) {
-      console.error("Erro ao enviar foto:", error);
-      Alert.alert("Erro", "Ocorreu um erro ao aceitar os termos.");
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
+      console.log("error", error);
     }
   };
 
-  if (isLoading || isPending) {
-    return <LoadingScreen />;
+  if (isRegistering) {
+    return LoadingScreen("Aguarde, estamos processando seu cadastro...");
+  }
+
+  if (isLoggingIn) {
+    return LoadingScreen("Entrando...");
   }
 
   if (isSuccess) {

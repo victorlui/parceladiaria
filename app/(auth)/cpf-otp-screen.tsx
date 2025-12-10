@@ -205,6 +205,7 @@ const CPFOTPScreen: React.FC = () => {
               <ButtonComponent
                 title={isSuccess ? "Confirmar código" : "Enviar Código"}
                 onPress={isSuccess ? confirmOTP : () => onSubmit("sms")}
+                iconLeft={null}
               />
             )}
 

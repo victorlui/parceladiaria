@@ -1,11 +1,13 @@
 import ButtonComponent from "@/components/ui/Button";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
+import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
 import React from "react";
 
 const HasACompany: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
+  const { setHasCompany } = useRegisterAuthStore();
 
   const submit = (hasCompany: boolean) => {
     mutate({
@@ -14,6 +16,7 @@ const HasACompany: React.FC = () => {
         etapa: Etapas.COMERCIANTE_ENVIANDO_TIPO_COMERCIO,
       },
     });
+    setHasCompany(hasCompany);
   };
 
   return (
@@ -39,7 +42,7 @@ const HasACompany: React.FC = () => {
             iconRight={null}
           />
           <ButtonComponent
-            title="Não, sou autônome"
+            title="Não, sou autônomo"
             onPress={() => submit(false)}
             iconLeft="close"
             iconRight={null}

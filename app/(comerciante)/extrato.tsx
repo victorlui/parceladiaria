@@ -5,13 +5,12 @@ import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { Etapas } from "@/utils";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { View } from "react-native";
 
-const StoreInteriorVideo: React.FC = () => {
+const ExtratoBancario: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
 
   const [loading, setLoading] = React.useState(false);
-
   const sendFile = async (file: File) => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -27,8 +26,8 @@ const StoreInteriorVideo: React.FC = () => {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
-          video_interior: finalUrl,
+          etapa: Etapas.COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL,
+          extrato_bancario: finalUrl,
         },
       });
     } catch (error) {
@@ -40,20 +39,21 @@ const StoreInteriorVideo: React.FC = () => {
 
   return (
     <LayoutRegister
-      title="Vídeo do Interior"
-      subtitle="Grave um vídeo curto do interior do seu estabelecimento."
+      title="Extrato Bancário"
+      subtitle="Precisamos do seu extrato bancário dos últimos 60 dias."
     >
-      {(loading || isPending) && <Spinner text="Enviando vídeo	" />}
+      {(loading || isPending) && <Spinner text="Enviando extrato bancário	" />}
       <View style={{ width: "90%" }}>
         <SendFilesButtons
           sendFile={sendFile}
-          video={true}
+          video={false}
           pdf={false}
           photo={false}
+          library={true}
         />
       </View>
     </LayoutRegister>
   );
 };
 
-export default StoreInteriorVideo;
+export default ExtratoBancario;

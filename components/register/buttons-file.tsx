@@ -7,6 +7,7 @@ interface Props {
   photo?: boolean;
   pdf?: boolean;
   video?: boolean;
+  library?: boolean;
   sendFile: (file: File) => Promise<void>;
   isLoading?: boolean;
 }
@@ -17,11 +18,19 @@ const SendFilesButtons: React.FC<Props> = ({
   sendFile,
   isLoading = false,
   video = false,
+  library = false,
 }) => {
   const { selectPDF, takePhoto, takeVideo } = useDocumentPicker(10);
 
   const handleTakePhoto = async () => {
     const selected = await takePhoto("camera");
+    if (selected) {
+      sendFile(selected as unknown as File);
+    }
+  };
+
+  const handleSelectLibrary = async () => {
+    const selected = await takePhoto("library");
     if (selected) {
       sendFile(selected as unknown as File);
     }
@@ -65,6 +74,14 @@ const SendFilesButtons: React.FC<Props> = ({
           title="Enviar Vídeo Gravado"
           onPress={handleTakeVideo}
           iconLeft="videocam"
+          iconRight={null}
+        />
+      )}
+      {library && (
+        <ButtonComponent
+          title="Anexar"
+          onPress={handleSelectLibrary}
+          iconLeft="file"
           iconRight={null}
         />
       )}

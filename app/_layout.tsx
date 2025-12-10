@@ -64,8 +64,6 @@ export default function RootLayout() {
   useEffect(() => {
     if (isLoading) return;
 
-    console.log("inicio", user);
-
     if (!token && !user) {
       router.replace("/login");
       return;

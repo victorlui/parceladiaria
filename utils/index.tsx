@@ -67,7 +67,7 @@ export enum Etapas {
   FINALIZADO = "Finalizado",
   APP_ANALISE = "analise",
   REGISTRANDO_COMPROVANTE_ENDERECO = "registrando_comprovante_endereco",
-  REGISTRANDO_PROFISSAO = "registrando_profissao",
+  REGISTRANDO_PROFISSAO = "Informando Profissão",
   REGISTRANDO_EMAIL = "registrando_email",
   REGISTRANDO_ENDERECO = "registrando_endereco",
   REGISTRANDO_PIX = "registrando_pix",
@@ -84,6 +84,8 @@ export enum Etapas {
   //comerciante
   COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA = "Informando se possui empresa",
   COMERCIANTE_ENVIANDO_TIPO_COMERCIO = "Enviando tipo de comercio",
+  COMERCIANTE_INFORMANDO_CNPJ = "Informando CNPJ",
+  COMERCIANTE_ENVIANDO_EXTRATO = "Enviando extrato",
   COMERCIANTE_ENVIANDO_VIDEO_FACHADA = "Enviando video fachada",
   COMERCIANTE_ENVIANDO_VIDEO_INTERIOR = "Enviando video interior",
   COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL = "Enviando frente documento pessoal",
@@ -113,6 +115,8 @@ const routeMap: Record<Etapas, string> = {
     "/(comerciante)/has_company_screen",
   [Etapas.COMERCIANTE_ENVIANDO_TIPO_COMERCIO]:
     "/(comerciante)/bussines_type_screen",
+  [Etapas.COMERCIANTE_INFORMANDO_CNPJ]: "/(comerciante)/cnpj",
+  [Etapas.COMERCIANTE_ENVIANDO_EXTRATO]: "/(comerciante)/extrato",
   [Etapas.COMERCIANTE_ENVIANDO_VIDEO_FACHADA]:
     "/(comerciante)/storefront_video_screen",
   [Etapas.COMERCIANTE_ENVIANDO_VIDEO_INTERIOR]:

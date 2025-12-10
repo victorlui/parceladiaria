@@ -1,15 +1,21 @@
 import { Colors } from "@/constants/Colors";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import LoadingDots from "./LoadingDots";
 
 interface Props {
   title: string;
   onPress: () => void;
   loading?: boolean;
-  iconRight?: keyof typeof Ionicons.glyphMap | null;
-  iconLeft?: keyof typeof Ionicons.glyphMap | null;
+  iconRight?:
+    | keyof typeof Ionicons.glyphMap
+    | keyof typeof FontAwesome.glyphMap
+    | null;
+  iconLeft?:
+    | keyof typeof Ionicons.glyphMap
+    | keyof typeof FontAwesome.glyphMap
+    | null;
   disabled?: boolean;
   outline?: boolean;
 }
@@ -23,6 +29,32 @@ const ButtonComponent: React.FC<Props> = ({
   disabled = false,
   outline = false,
 }) => {
+  const renderIcon = (iconName: string, style: any) => {
+    const color = outline ? Colors.green.button : Colors.white;
+
+    if (Object.prototype.hasOwnProperty.call(Ionicons.glyphMap, iconName)) {
+      return (
+        <Ionicons
+          name={iconName as keyof typeof Ionicons.glyphMap}
+          size={18}
+          color={color}
+          style={style}
+        />
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(FontAwesome.glyphMap, iconName)) {
+      return (
+        <FontAwesome
+          name={iconName as keyof typeof FontAwesome.glyphMap}
+          size={18}
+          color={color}
+          style={style}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -34,14 +66,7 @@ const ButtonComponent: React.FC<Props> = ({
       disabled={loading || disabled}
     >
       <View style={styles.content}>
-        {!loading && iconLeft && (
-          <Ionicons
-            name={iconLeft}
-            size={18}
-            color={outline ? Colors.green.button : Colors.white}
-            style={styles.iconLeft}
-          />
-        )}
+        {!loading && iconLeft && renderIcon(iconLeft, styles.iconLeft)}
         {loading && <LoadingDots text="Aguarde..." />}
         {!loading && (
           <Text
@@ -50,14 +75,7 @@ const ButtonComponent: React.FC<Props> = ({
             {title}
           </Text>
         )}
-        {!loading && iconRight && (
-          <Ionicons
-            name={iconRight}
-            size={18}
-            color={outline ? Colors.green.button : Colors.white}
-            style={styles.iconRight}
-          />
-        )}
+        {!loading && iconRight && renderIcon(iconRight, styles.iconRight)}
       </View>
     </TouchableOpacity>
   );

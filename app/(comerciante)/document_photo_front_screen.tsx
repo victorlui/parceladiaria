@@ -31,7 +31,7 @@ export default function DocumentFrontScreen() {
         (file.name && file.name.toLowerCase().endsWith(".pdf"));
 
       const nextEtapa = isPdf
-        ? Etapas.REGISTRANDO_TIMELESS_FACE
+        ? Etapas.COMERCIANTE_ENVIANDO_VIDEO_FACHADA
         : Etapas.COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL;
 
       mutate({
