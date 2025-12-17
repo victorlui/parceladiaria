@@ -8,10 +8,41 @@ import { ActivityIndicator, Alert, View } from "react-native";
 import { StatusCadastro } from "@/utils";
 import { useAlerts } from "@/components/useAlert";
 import * as Updates from "expo-updates";
+import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
+  registerForPushNotificationsAsync();
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("📩 Recebida:", notification);
+      }
+    );
+
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    Notifications.setNotificationChannelAsync("default", {
+      name: "Notificações",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
+      vibrationPattern: [0, 250, 250, 250],
+    });
+  }, []);
 
   useEffect(() => {
     async function checkUpdate() {

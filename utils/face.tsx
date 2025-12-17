@@ -1,38 +1,26 @@
 import { Face } from "react-native-vision-camera-face-detector";
+import { Platform, Dimensions } from "react-native";
 
+const IS_IOS = Platform.OS === "ios";
+
+// Definição da Interface (Mantenha o código original se preferir)
 interface FaceValidationResult {
   isValid: boolean;
   message: string;
   confidence: number;
   progress: number;
 }
-const ovalWidth = 200;
-const ovalHeight = 300;
 
-const isFaceInsideOval = (face: Face) => {
-  if (!face) return false;
+interface FrameSize {
+  width: number;
+  height: number;
+}
 
-  const faceCenterX = face.bounds.x + face.bounds.width / 2;
-  const faceCenterY = face.bounds.y + face.bounds.height / 2;
-
-  // centro do preview
-  const ovalCenterX = ovalWidth / 2;
-  const ovalCenterY = ovalHeight / 2;
-
-  const ovalRadiusX = ovalWidth / 2;
-  const ovalRadiusY = ovalHeight / 2;
-
-  const dx = faceCenterX - ovalCenterX;
-  const dy = faceCenterY - ovalCenterY;
-
-  return (
-    (dx * dx) / (ovalRadiusX * ovalRadiusX) +
-      (dy * dy) / (ovalRadiusY * ovalRadiusY) <=
-    1
-  );
-};
-
-export const validateFaceQuality = (face: Face): FaceValidationResult => {
+// NOVO CÓDIGO: Aceitando frameSize como segundo argumento
+export const validateFaceQuality = (
+  face: Face,
+  frameSize: FrameSize
+): FaceValidationResult => {
   "worklet";
   const result: FaceValidationResult = {
     isValid: false,
@@ -49,17 +37,22 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
     };
   }
 
-  let progress = 0;
+  let progress = 0; /* ============================================================
+       1 — TAMANHO DA FACE (20%) - MANTENDO OS AJUSTES
+     ============================================================ */
 
-  /* ============================================================
-       1 — TAMANHO DA FACE (20%)
-     ============================================================ */
   const faceWidth = face.bounds.width;
   const faceHeight = face.bounds.height;
   const faceArea = faceWidth * faceHeight;
 
-  const minArea = 28000;
-  const maxArea = 55000;
+  let minArea = 28000;
+  let maxArea = 55000;
+
+  if (IS_IOS) {
+    // Limites Ajustados para iOS (Mantidos da última tentativa)
+    minArea = 20000;
+    maxArea = 90000;
+  }
 
   if (faceArea >= minArea && faceArea <= maxArea) {
     progress += 20;
@@ -72,16 +65,15 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
           : "Afaste um pouco seu rosto",
       progress,
     };
-  }
+  } /* ============================================================
+       2 — CENTRALIZAÇÃO DENTRO DO OVAL (20%) — DINÂMICO AGORA
+     ============================================================ */
 
-  /* ============================================================
-       2 — CENTRALIZAÇÃO DENTRO DO OVAL (20%) — 100% CORRETO
-     ============================================================ */
   const centerX = face.bounds.x + face.bounds.width / 2;
-  const centerY = face.bounds.y + face.bounds.height / 2;
-  const screenCenterX = 200;
-  const screenCenterY = 300;
-  const maxDistanceFromCenter = 100;
+  const centerY = face.bounds.y + face.bounds.height / 2; // CÁLCULO DINÂMICO DO CENTRO COM BASE NO frameSize PASSADO
+  const screenCenterX = frameSize.width / 2;
+  const screenCenterY = frameSize.height / 2; // Ajuste a tolerância (pode ser necessário aumentar este valor para iOS)
+  const maxDistanceFromCenter = IS_IOS ? 120 : 100;
 
   const distanceFromCenter = Math.sqrt(
     Math.pow(centerX - screenCenterX, 2) + Math.pow(centerY - screenCenterY, 2)
@@ -95,13 +87,11 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
       message: "Centralize seu rosto dentro do oval",
       progress,
     };
-  }
+  } /* ============================================================
+       3 — ÂNGULOS DA CABEÇA (20%)
+     ============================================================ */ // Mantido o maxAngle 8 (você pode aumentar se for muito rígido)
 
-  /* ============================================================
-       3 — ÂNGULOS DA CABEÇA (20%)
-     ============================================================ */
-
-  const maxAngle = 8; // mais rígido
+  const maxAngle = 8;
 
   if (
     Math.abs(face.pitchAngle ?? 0) <= maxAngle &&
@@ -115,11 +105,9 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
       message: "Mantenha a cabeça reta e olhando para frente",
       progress,
     };
-  }
-
-  /* ============================================================
-       4 — OLHOS ABERTOS (20%)
-     ============================================================ */
+  } /* ============================================================
+       4 — OLHOS ABERTOS (20%)
+     ============================================================ */
 
   const minEyeProb = 0.85;
 
@@ -134,16 +122,11 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
       message: "Mantenha os olhos bem abertos",
       progress,
     };
-  }
+  } /* ============================================================
+       5 — CONTORNO COMPLETO (20%)
+     ============================================================ */ // ... (mantido inalterado)
 
-  /* ============================================================
-       5 — CONTORNO COMPLETO (20%)
-     ============================================================ */
-
-  // Conta de pontos apenas em FACE (padrão)
   const faceContourPoints = face.contours?.FACE?.length ?? 0;
-
-  // Se tiver ao menos 30 pontos em FACE, aceitaremos (muitos dispositivos retornam ~35)
   const MIN_FACE_CONTOUR_POINTS = 30;
 
   let contourOk = false;
@@ -151,8 +134,6 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
   if (faceContourPoints >= MIN_FACE_CONTOUR_POINTS) {
     contourOk = true;
   } else {
-    // fallback: soma pontos de todos os contornos disponíveis (olhos, nariz, boca, etc.)
-    // alguns detectores dividem os pontos em múltiplos contornos, então somar dá uma visão completa.
     const allContourKeys = Object.keys(face.contours ?? {});
     let totalContourPoints = 0;
     for (const key of allContourKeys) {
@@ -160,8 +141,6 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
       if (Array.isArray(arr)) totalContourPoints += arr.length;
     }
 
-    // Se a soma de todos os contornos for suficiente, aceitamos também.
-    // Ajuste este limiar se quiser ser mais/menos rígido.
     const MIN_TOTAL_CONTOUR_POINTS = 60;
 
     if (totalContourPoints >= MIN_TOTAL_CONTOUR_POINTS) {
@@ -174,18 +153,16 @@ export const validateFaceQuality = (face: Face): FaceValidationResult => {
   if (contourOk) {
     progress += 20;
   } else {
-    // Mensagem informativa: mostra quantos pontos foram detectados para debugging
     const debugCount = face.contours?.FACE?.length ?? 0;
     return {
       ...result,
       message: `Detectando todos os pontos da face... (encontrados: ${debugCount})`,
       progress,
     };
-  }
+  } /* ============================================================
+       FINAL: TUDO OK
+     ============================================================ */
 
-  /* ============================================================
-       FINAL: TUDO OK
-     ============================================================ */
   return {
     ...result,
     isValid: progress === 100,

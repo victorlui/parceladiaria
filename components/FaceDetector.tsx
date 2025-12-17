@@ -34,6 +34,12 @@ interface Props {
   takePhoto: (path: string) => Promise<void>;
 }
 
+// Adicionando a interface FrameSize aqui também para consistência
+interface FrameSize {
+  width: number;
+  height: number;
+}
+
 const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
   const camera = useRef<any>(null);
   const device = useCameraDevice("front");
@@ -50,9 +56,8 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
   const [photoTaken, setPhotoTaken] = React.useState(false);
   const [detectionProgress, setDetectionProgress] = React.useState(0); // 0-100%
   const [validationResult, setValidationResult] =
-    React.useState<FaceValidationResult | null>(null);
+    React.useState<FaceValidationResult | null>(null); // flag para indicar se já estamos no processo de contar (delay ou intervalo)
 
-  // flag para indicar se já estamos no processo de contar (delay ou intervalo)
   const captureInterval = useRef<NodeJS.Timeout | null>(null);
   const startDelayTimeout = useRef<NodeJS.Timeout | null>(null);
   const stableValidFace = useRef(false);
@@ -65,6 +70,7 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
   const ovalWidth = 200;
   const ovalHeight = 300;
+  // Captura das dimensões da tela (Correto)
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
   const START_DELAY_MS = 1200; // ← espere 1.2s antes de começar o contador
 
@@ -96,8 +102,7 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
       setFaceDetected(true);
       setValidationResult(result);
-      setDetectionProgress(result.progress);
-      // Gerenciar lógica do timer e captura
+      setDetectionProgress(result.progress); // Gerenciar lógica do timer e captura
       handleValidationState(result);
     }
   );
@@ -119,35 +124,30 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
   const handleValidationState = Worklets.createRunOnJS(
     (validation: FaceValidationResult) => {
-      const isStableNow = validation.isValid;
+      const isStableNow = validation.isValid; // Se ficou inválido → cancelar tudo imediatamente
 
-      // Se ficou inválido → cancelar tudo imediatamente
       if (!isStableNow) {
         clearAllTimers();
         return;
-      }
+      } // Se já estamos no processo de delay/contagem, não reiniciar
 
-      // Se já estamos no processo de delay/contagem, não reiniciar
       if (isCountingOrDelaying.current) {
         // ainda garantir stable flag
         stableValidFace.current = true;
         return;
-      }
+      } // Marca que iniciamos processo
 
-      // Marca que iniciamos processo
       isCountingOrDelaying.current = true;
       stableValidFace.current = true;
-      setFreezeMessage(true);
+      setFreezeMessage(true); // Inicia o delay antes de começar a contagem
 
-      // Inicia o delay antes de começar a contagem
       startDelayTimeout.current = setTimeout(() => {
         // Se durante o delay foi invalidado, aborta
         if (!stableValidFace.current) {
           clearAllTimers();
           return;
-        }
+        } // começa a contagem
 
-        // começa a contagem
         let currentCount = 3;
         setCountdown(currentCount);
 
@@ -163,9 +163,8 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
           if (currentCount <= 0) {
             // prevent race: limpa antes de capturar
-            clearAllTimers();
+            clearAllTimers(); // captura (se ainda não tirou)
 
-            // captura (se ainda não tirou)
             if (!photoTaken) {
               capturePhotoMock();
             }
@@ -194,24 +193,31 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
   const frameProcessor = useFrameProcessor(
     (frame) => {
-      "worklet";
+      "worklet"; // Se a foto já foi capturada, não processar mais validações
 
-      // Se a foto já foi capturada, não processar mais validações
       if (photoTaken) {
         return;
-      }
+      } // Rodar direto no worklet — sem runAsync()
 
-      // Rodar direto no worklet — sem runAsync()
       const faces = detectFaces(frame);
 
       if (faces && faces.length > 0) {
-        const validation = validateFaceQuality(faces[0]);
+        // =================================================================
+        // AJUSTE: Passando as dimensões da tela para o worklet.
+        // O validateFaceQuality precisa receber o `frameSize` como segundo parâmetro.
+        // Já que frameProcessor passa o frame, vamos criar um objeto FrameSize:
+        const frameSize: FrameSize = {
+          width: screenWidth,
+          height: screenHeight,
+        };
+        const validation = validateFaceQuality(faces[0], frameSize);
+        // =================================================================
         handleValidationUpdate(true, validation);
       } else {
         handleValidationUpdate(false, null);
       }
     },
-    [photoTaken, screenWidth, screenHeight]
+    [photoTaken, screenWidth, screenHeight] // Dependências corretas
   );
 
   const getStatusColor = () => {
@@ -225,6 +231,7 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
 
   return (
     <View style={styles.container}>
+           {" "}
       <Camera
         ref={camera}
         style={styles.camera}
@@ -233,24 +240,33 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
         photo
         frameProcessor={frameProcessor}
       />
+           {" "}
       <View style={styles.overlay}>
+               {" "}
         <View
           style={[
             styles.statusContainer,
             { backgroundColor: getStatusColor() },
           ]}
         >
-          {isValidating && <ActivityIndicator size="small" color="white" />}
+                   {" "}
+          {isValidating && <ActivityIndicator size="small" color="white" />}   
+               {" "}
           <Text style={styles.statusText}>
+                       {" "}
             {freezeMessage
               ? "Não se mexa..."
               : validationResult?.message ||
                 (faceDetected
                   ? "Detectando face..."
                   : "Posicione seu rosto na câmera")}
+                     {" "}
           </Text>
+                 {" "}
         </View>
+             {" "}
       </View>
+           {" "}
       <View
         style={[
           styles.faceGuide,
@@ -267,8 +283,9 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
         ]}
         pointerEvents="none"
       >
+               {" "}
         <Svg width={ovalWidth} height={ovalHeight}>
-          {/* Borda principal que muda de cor */}
+                    {/* Borda principal que muda de cor */}         {" "}
           <Ellipse
             cx={ovalWidth / 2}
             cy={ovalHeight / 2}
@@ -280,8 +297,8 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
             strokeDasharray="10 6" // ← borda tracejada (igual ao antigo faceOval)
             strokeLinecap="round"
           />
-
-          {/* Borda cinza secundária fixa, só para dar referência */}
+                    {/* Borda cinza secundária fixa, só para dar referência */} 
+                 {" "}
           <Ellipse
             cx={ovalWidth / 2}
             cy={ovalHeight / 2}
@@ -291,8 +308,11 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
             strokeWidth={2}
             fill="none"
           />
+                 {" "}
         </Svg>
+             {" "}
       </View>
+           {" "}
       {countdown !== null && (
         <View
           style={{
@@ -302,9 +322,10 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
             alignItems: "center",
           }}
         >
-          <AnimatedCountdown value={countdown} />
+                    <AnimatedCountdown value={countdown} />       {" "}
         </View>
       )}
+         {" "}
     </View>
   );
 };

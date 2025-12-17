@@ -1,3 +1,4 @@
+import { useNotificationsStore } from "@/store/notifications";
 import api from "./api";
 import { ApiUserResponse } from "@/interfaces/login_inteface";
 
@@ -5,10 +6,17 @@ export async function login(
   cpf: string,
   password: string
 ): Promise<ApiUserResponse> {
+  const pushToken = useNotificationsStore.getState().pushToken;
+  console.log("pushToken", {
+    cpf,
+    password,
+    pushToken,
+  });
   try {
     const response = await api.post(`/auth/login`, {
       cpf,
       password,
+      pushToken,
     });
 
     return response.data.data;

@@ -2,13 +2,16 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "expotemplatebase",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "jsEngine": "hermes",
+    "locales": {
+      "pt-BR": "./locales/pt-BR.json"
+    },
     "androidStatusBar": {
       "barStyle": "light-content",
       "backgroundColor": "#FFFFFF"
@@ -23,7 +26,9 @@
       "infoPlist": {
         "UIUserInterfaceStyle": "Light",
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "$(PRODUCT_NAME) precisa acessar sua camera"
+        "NSCameraUsageDescription": "$(PRODUCT_NAME) precisa acessar sua camera",
+        "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) precisa acessar o microfone.",
+        "CFBundleDevelopmentRegion": "pt_BR"
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png"
@@ -51,7 +56,8 @@
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
-      "package": "br.com.parceladiaria"
+      "package": "br.com.parceladiaria",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -127,6 +133,9 @@
         {
           "android": {
             "minSdkVersion": 26
+          },
+          "ios": {
+            "deploymentTarget": "16.0"
           }
         }
       ]

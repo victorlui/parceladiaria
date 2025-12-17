@@ -18,6 +18,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 
 const RegisterPhone: React.FC = () => {
@@ -32,6 +33,17 @@ const RegisterPhone: React.FC = () => {
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [showOtpError, setShowOtpError] = React.useState(false);
+  const [timer, setTimer] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval: any;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const sendCode = async () => {
     Keyboard.dismiss();
@@ -47,6 +59,7 @@ const RegisterPhone: React.FC = () => {
       });
       setIsSuccess(true);
       setShowOtpError(false);
+      setTimer(60);
       console.log("response", response.data);
     } catch (error: any) {
       console.log("error", error.response);
@@ -153,9 +166,15 @@ const RegisterPhone: React.FC = () => {
         iconLeft={null}
       />
       {isSuccess && (
-        <TouchableOpacity style={styles.sendCodeContainer} onPress={sendCode}>
-          <Text style={styles.sendCodeText}>Não recebeu? Reenviar código</Text>
-        </TouchableOpacity>
+        timer > 0 ? (
+          <View style={styles.sendCodeContainer}>
+            <Text style={styles.sendCodeText}>Reenviar código em {timer}s</Text>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.sendCodeContainer} onPress={sendCode}>
+            <Text style={styles.sendCodeText}>Não recebeu? Reenviar código</Text>
+          </TouchableOpacity>
+        )
       )}
     </LayoutRegister>
   );
