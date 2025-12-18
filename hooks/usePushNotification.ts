@@ -1,7 +1,7 @@
 import * as Notification from "expo-notifications";
 import * as Linking from "expo-linking";
 import { Alert } from "react-native";
-import { useEffect } from "react";
+import Constants from "expo-constants";
 import { useNotificationsStore } from "@/store/notifications";
 
 export async function registerForPushNotificationsAsync() {
@@ -33,7 +33,19 @@ export async function registerForPushNotificationsAsync() {
     return;
   }
 
-  const token = (await Notification.getExpoPushTokenAsync()).data;
+  const isDev = __DEV__;
+
+  const token = (
+    await Notification.getExpoPushTokenAsync(
+      isDev
+        ? undefined
+        : {
+            projectId:
+              Constants.easConfig?.projectId ||
+              Constants.expoConfig?.extra?.eas?.projectId,
+          }
+    )
+  ).data;
   setPushToken(token);
 
   return token;

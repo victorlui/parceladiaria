@@ -2,7 +2,7 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.0.2",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "expotemplatebase",
@@ -28,12 +28,16 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "$(PRODUCT_NAME) precisa acessar sua camera",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) precisa acessar o microfone.",
-        "CFBundleDevelopmentRegion": "pt_BR"
+        "CFBundleDevelopmentRegion": "pt_BR",
+        "AppStoreID": "6755193206",
+        "AppStoreCountry": "br"
       },
       "bundleIdentifier": "br.com.parceladiaria",
-      "icon": "./assets/images/ios-icon.png"
+      "icon": "./assets/images/ios-icon.png",
+      "buildNumber": "3"
     },
     "android": {
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -149,7 +153,7 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.0.5",
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557"
     }

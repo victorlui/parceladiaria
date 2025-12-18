@@ -10,6 +10,7 @@ import { useAlerts } from "@/components/useAlert";
 import * as Updates from "expo-updates";
 import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
 import * as Notifications from "expo-notifications";
+import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -24,6 +25,7 @@ export default function RootLayout() {
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
   registerForPushNotificationsAsync();
+  useForceInAppUpdate();
 
   useEffect(() => {
     const sub = Notifications.addNotificationReceivedListener(
