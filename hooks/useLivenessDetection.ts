@@ -1,43 +1,25 @@
-import { useSharedValue, useRunOnJS } from "react-native-worklets-core";
 import { Dimensions, Platform } from "react-native";
-import type { Face } from "react-native-vision-camera-face-detector";
 import { LivenessStep } from "@/interfaces/liveness";
+import { useRef } from "react";
 
 const HOLD_DURATION_MS = 3000;
-const POSITION_TOLERANCE_PX = 12;
-const ANGLE_TOLERANCE = 4;
-const MIN_FACE_RATIO = 0.6;
+const POSITION_TOLERANCE = 16;
+const MIN_FACE_RATIO = Platform.OS === "ios" ? 0.4 : 0.6;
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 export function useLivenessDetection(
   onSuccess: () => void,
   onFeedback: (msg: string, step: LivenessStep) => void
 ) {
-  const step = useSharedValue<LivenessStep>("POSITION");
-  const holdStartTime = useSharedValue<number | null>(null);
-  const lastFace = useSharedValue<{
-    x: number;
-    y: number;
-    yaw: number;
-    pitch: number;
-    roll: number;
-  } | null>(null);
+  const step = useRef<LivenessStep>("POSITION");
+  const holdStart = useRef<number | null>(null);
+  const last = useRef<any>(null);
 
-  const handleFeedback = useRunOnJS(onFeedback, []);
-  const handleSuccess = useRunOnJS(onSuccess, []);
+  /* ================= GUIA ================= */
 
-  const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
-
-  // ================= GUIA OVAL =================
-  const MAX_WIDTH = SCREEN_W * 0.85;
-  const FACE_ASPECT_RATIO = 1.45;
-
-  let guideWidth = Math.min(MAX_WIDTH, 320);
-  let guideHeight = guideWidth * FACE_ASPECT_RATIO;
-
-  if (guideHeight > SCREEN_H * 0.65) {
-    guideHeight = SCREEN_H * 0.65;
-    guideWidth = guideHeight / FACE_ASPECT_RATIO;
-  }
+  const guideWidth = Math.min(SCREEN_W * 0.85, 320);
+  const guideHeight = guideWidth * 1.45;
 
   const guide = {
     width: guideWidth,
@@ -46,108 +28,95 @@ export function useLivenessDetection(
     y: (SCREEN_H - guideHeight) / 2,
   };
 
-  // ================= RESET TOTAL =================
-  const resetLiveness = (message: string) => {
-    "worklet";
-    step.value = "POSITION";
-    holdStartTime.value = null;
-    lastFace.value = null;
-    handleFeedback(message, "POSITION");
-  };
+  /* ================= FRAME → TELA ================= */
 
-  // ================= PROCESSAMENTO =================
-  const processFace = (face: Face) => {
-    "worklet";
-
+  function mapToScreen(face: any, frame: any) {
     let { x, y, width, height } = face.bounds;
 
-    // espelhamento Android
     if (Platform.OS === "android") {
-      x = SCREEN_W - x - width;
+      x = frame.width - x - width;
     }
 
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
+    const frameRatio = frame.width / frame.height;
+    const screenRatio = SCREEN_W / SCREEN_H;
+
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (screenRatio > frameRatio) {
+      scale = SCREEN_W / frame.width;
+      offsetY = (frame.height * scale - SCREEN_H) / 2;
+    } else {
+      scale = SCREEN_H / frame.height;
+      offsetX = (frame.width * scale - SCREEN_W) / 2;
+    }
+
+    const sx = x * scale - offsetX;
+    const sy = y * scale - offsetY;
+    const sw = width * scale;
+    const sh = height * scale;
+
+    return {
+      centerX: sx + sw / 2,
+      centerY: sy + sh / 2,
+      width: sw,
+    };
+  }
+
+  /* ================= PROCESSAMENTO ================= */
+
+  function processFace(face: any, frame: any) {
+    const mapped = mapToScreen(face, frame);
 
     const insideGuide =
-      x >= guide.x &&
-      y >= guide.y &&
-      x + width <= guide.x + guide.width &&
-      y + height <= guide.y + guide.height;
+      mapped.centerX >= guide.x &&
+      mapped.centerX <= guide.x + guide.width &&
+      mapped.centerY >= guide.y &&
+      mapped.centerY <= guide.y + guide.height;
 
-    // 🚨 SE SAIR DO GUIA → RESET IMEDIATO
     if (!insideGuide) {
-      resetLiveness("Mantenha o rosto dentro do guia");
+      reset("Mantenha o rosto dentro do guia");
       return;
     }
 
-    // 🚨 SE O ROSTO ESTIVER MUITO PEQUENO (LONGE)
-    if (width < guide.width * MIN_FACE_RATIO) {
-      resetLiveness("Aproxime o rosto");
+    if (mapped.width < guide.width * MIN_FACE_RATIO) {
+      reset("Aproxime o rosto");
       return;
     }
 
-    // ================= POSITION =================
-    if (step.value === "POSITION") {
-      step.value = "HOLD_STILL";
-      holdStartTime.value = null;
-      lastFace.value = null;
-      handleFeedback("Mantenha o rosto parado", "HOLD_STILL");
+    if (step.current === "POSITION") {
+      step.current = "HOLD_STILL";
+      holdStart.current = Date.now();
+      last.current = mapped;
+      onFeedback("Mantenha o rosto parado", "HOLD_STILL");
       return;
     }
 
-    // ================= HOLD STILL =================
-    if (step.value === "HOLD_STILL") {
-      const now = Date.now();
+    if (step.current === "HOLD_STILL") {
+      const dx = Math.abs(mapped.centerX - last.current.centerX);
+      const dy = Math.abs(mapped.centerY - last.current.centerY);
 
-      if (!lastFace.value) {
-        lastFace.value = {
-          x: centerX,
-          y: centerY,
-          yaw: face.yawAngle,
-          pitch: face.pitchAngle,
-          roll: face.rollAngle,
-        };
-        holdStartTime.value = now;
+      if (dx > POSITION_TOLERANCE || dy > POSITION_TOLERANCE) {
+        holdStart.current = Date.now();
+        last.current = mapped;
         return;
       }
 
-      const dx = Math.abs(centerX - lastFace.value.x);
-      const dy = Math.abs(centerY - lastFace.value.y);
-      const dYaw = Math.abs(face.yawAngle - lastFace.value.yaw);
-      const dPitch = Math.abs(face.pitchAngle - lastFace.value.pitch);
-      const dRoll = Math.abs(face.rollAngle - lastFace.value.roll);
-
-      const moved =
-        dx > POSITION_TOLERANCE_PX ||
-        dy > POSITION_TOLERANCE_PX ||
-        dYaw > ANGLE_TOLERANCE ||
-        dPitch > ANGLE_TOLERANCE ||
-        dRoll > ANGLE_TOLERANCE;
-
-      if (moved) {
-        holdStartTime.value = now;
-        lastFace.value = {
-          x: centerX,
-          y: centerY,
-          yaw: face.yawAngle,
-          pitch: face.pitchAngle,
-          roll: face.rollAngle,
-        };
-        handleFeedback("Mantenha o rosto parado", "HOLD_STILL");
-        return;
-      }
-
-      if (
-        holdStartTime.value &&
-        now - holdStartTime.value >= HOLD_DURATION_MS
-      ) {
-        step.value = "SUCCESS";
-        handleFeedback("Prova de vida confirmada", "SUCCESS");
-        handleSuccess();
+      if (Date.now() - holdStart.current! >= HOLD_DURATION_MS) {
+        step.current = "SUCCESS";
+        onFeedback("Prova de vida confirmada", "SUCCESS");
+        onSuccess();
       }
     }
-  };
+  }
+
+  function reset(msg: string) {
+    step.current = "POSITION";
+    holdStart.current = null;
+    last.current = null;
+    onFeedback(msg, "POSITION");
+  }
 
   return { processFace, guide };
 }

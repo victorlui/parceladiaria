@@ -2,6 +2,7 @@ import { useAuthStore } from "@/store/auth";
 import { generateSignature } from "@/utils";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { router } from "expo-router";
+import Constants from "expo-constants";
 import { Alert } from "react-native";
 
 // Tipos para melhor tipagem
@@ -18,6 +19,7 @@ interface ApiHeaders {
   "X-Timestamp": string;
   Authorization?: string;
   "X-UserAgent": string;
+  "X-Version-app": string;
 }
 
 // Configuração da API
@@ -49,6 +51,7 @@ const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
       "X-UUID": apiConfig.uuid,
       "X-Timestamp": timestamp,
       "X-UserAgent": "mobile",
+      "X-Version-app": Constants.expoConfig?.version ?? "1.0.0",
     };
   } catch (error) {
     console.error("Erro ao gerar assinatura:", error);

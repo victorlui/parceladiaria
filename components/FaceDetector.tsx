@@ -77,6 +77,7 @@ const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
         photo={true}
         frameProcessor={frameProcessor}
         pixelFormat="yuv"
+        resizeMode="cover"
       />
 
       {/* Overlay */}

@@ -80,12 +80,12 @@ const CPFOTPScreen: React.FC = () => {
     try {
       await api.post("/auth/otp", {
         cpf,
-        method,
       });
 
       setIsSuccess(true);
       startResendTimer();
-    } catch (error) {
+    } catch (error: any) {
+      console.log(error.response);
       showError("Atenção", "Erro ao enviar código verifique o CPF");
     } finally {
       setIsLoading(false);

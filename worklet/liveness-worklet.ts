@@ -4,7 +4,9 @@ import {
   useFaceDetector,
 } from "react-native-vision-camera-face-detector";
 
-export function useLivenessFrameProcessor(processFace: (face: any) => void) {
+export function useLivenessFrameProcessor(
+  processFace: (face: any, frame: { width: number; height: number }) => void
+) {
   const faceDetectionOptions: CommonFaceDetectionOptions = {
     performanceMode: "accurate",
     landmarkMode: "all",
@@ -20,7 +22,10 @@ export function useLivenessFrameProcessor(processFace: (face: any) => void) {
     const faces = detectFaces(frame);
 
     if (faces.length > 0) {
-      processFace(faces[0]);
+      processFace(faces[0], {
+        width: frame.width,
+        height: frame.height,
+      });
     }
   }, []);
 }
