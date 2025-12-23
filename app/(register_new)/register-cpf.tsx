@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
-import { TextInput } from "react-native";
+import { Keyboard, TextInput } from "react-native";
 import { validateCPF, validateBirthDate18Plus } from "@/utils/validation";
 import { checkCPF } from "@/services/check-cpf";
 import { useAlerts } from "@/components/useAlert";
@@ -11,9 +11,11 @@ import InputComponent from "@/components/ui/Input";
 import { router } from "expo-router";
 import { useRegisterNewStore } from "@/store/register_new";
 import { useRegisterAuthStore } from "@/store/register";
+import api from "@/services/api";
+import { formatarData } from "@/utils/formats";
 
 const RegisterCPF: React.FC = () => {
-  const { showWarning, AlertDisplay } = useAlerts();
+  const { showWarning, AlertDisplay, showError } = useAlerts();
   const { data, setData } = useRegisterNewStore();
   const { cpf: cpfAuth } = useRegisterAuthStore();
   const cpfRef = useRef<TextInput>(null);
@@ -25,6 +27,7 @@ const RegisterCPF: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleNext = async () => {
+    Keyboard.dismiss();
     const cpfErr = validateCPF(cpf);
     const dateErr = validateBirthDate18Plus(birthDate);
     setCpfTouched(true);
@@ -34,9 +37,18 @@ const RegisterCPF: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const [day, month, year] = birthDate.split("/");
-      const formattedBirthDate = `${year}-${month}-${day}`;
-      const response: any = await checkCPF(cpf, formattedBirthDate);
+      const formattedBirthDate = formatarData(birthDate);
+
+      const { data } = await api.get(
+        `/auth/search/cpf/${cpf}/${formattedBirthDate}`
+      );
+
+      if (data?.data?.status === "recusado") {
+        showError("Atenção", "Data de Nascimento inválida");
+        return;
+      }
+
+      const response: any = await checkCPF(cpf, formattedBirthDate!);
 
       if (response.message === "Cadastro Localizado") {
         showWarning("Alerta!", "O CPF informado já está cadastrado. ");
@@ -99,6 +111,7 @@ const RegisterCPF: React.FC = () => {
         title="Continuar"
         onPress={handleNext}
         iconRight="arrow-forward"
+        iconLeft={null}
         loading={isLoading}
       />
     </LayoutRegister>

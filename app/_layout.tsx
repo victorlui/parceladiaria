@@ -11,6 +11,8 @@ import * as Updates from "expo-updates";
 import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
 import * as Notifications from "expo-notifications";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
+import analytics from "@react-native-firebase/analytics";
+import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,6 +28,7 @@ export default function RootLayout() {
   const { AlertDisplay } = useAlerts();
   registerForPushNotificationsAsync();
   useForceInAppUpdate();
+  AnalyticsBootstrap();
 
   useEffect(() => {
     const sub = Notifications.addNotificationReceivedListener(

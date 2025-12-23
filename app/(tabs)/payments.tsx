@@ -67,6 +67,11 @@ const PaymentsTab: React.FC = () => {
 
       console.log("sorted", sorted);
       setInstallments(sorted);
+
+      if (sorted.length > 0) {
+        setSelectedInstallments([sorted[0].id]);
+      }
+
       setUserData({
         ...user,
         lastLoan: responseClient.data.data.data.lastLoan,

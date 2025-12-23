@@ -1,134 +1,176 @@
-import { useLivenessDetection } from "@/hooks/useLivenessDetection";
-import { LivenessStep } from "@/interfaces/liveness";
-import { useLivenessFrameProcessor } from "@/worklet/liveness-worklet";
-import React, { useEffect, useState, useRef } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
-import { Camera, useCameraDevices } from "react-native-vision-camera";
+import { useFaceFrameProcessor } from "@/worklet/face-processor";
+import React, { useCallback, useState } from "react";
+import { Dimensions, StyleSheet, Text, TextInput, View } from "react-native";
+import { Camera, useCameraDevice } from "react-native-vision-camera";
+import { useNormalizedOval } from "@/liveness/useNormalizedOval";
+import Animated, {
+  useAnimatedProps,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
+import { runOnJS } from "react-native-worklets";
 
 interface Props {
   takePhoto: (path: string) => Promise<void>;
 }
 
-const HOLD_DURATION_MS = 3000;
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+const { width, height } = Dimensions.get("window");
+const SQUARE_WIDTH = width * 0.7;
+const SQUARE_HEIGHT = SQUARE_WIDTH * 1.25;
 
 const FaceDetector: React.FC<Props> = ({ takePhoto }) => {
-  const devices = useCameraDevices();
-  const device = devices.find((d) => d.position === "front");
-  const camera = useRef<Camera>(null);
+  const device = useCameraDevice("front");
+  const camera = React.useRef<Camera>(null);
+  const oval = useNormalizedOval();
 
-  const [feedback, setFeedback] = useState("Centralize o rosto");
-  const [step, setStep] = useState<LivenessStep>("POSITION");
-  const [timer, setTimer] = useState(0);
+  const {
+    frameProcessor,
+    isFaceInside,
+    facePos,
+    faceMessage,
+    captureProgress,
+    shouldTakePhoto,
+  } = useFaceFrameProcessor(oval);
 
-  const { processFace, guide } = useLivenessDetection(
-    async () => {
+  // Função disparada no JS Thread
+  const handleCapture = useCallback(async () => {
+    try {
       if (camera.current) {
-        try {
-          const photo = await camera.current.takePhoto({ flash: "off" });
-          await takePhoto(photo.path);
-        } catch (error) {
-          console.error("Erro ao tirar foto:", error);
-        }
+        console.log("Iniciando captura de foto...");
+        const photo = await camera.current.takePhoto({
+          flash: "off",
+        });
+        console.log("Sucesso! Caminho:", photo.path);
+
+        // Resetamos o sinal para não tirar fotos repetidas
+        shouldTakePhoto.value = false;
+        await takePhoto(photo.path);
+      }
+    } catch (e) {
+      console.error("Erro ao capturar:", e);
+      shouldTakePhoto.value = false;
+    }
+  }, [takePhoto, shouldTakePhoto]);
+
+  // Escuta o sinal da Worklet para disparar a função JS
+  useAnimatedReaction(
+    () => shouldTakePhoto.value,
+    (isReady, previous) => {
+      if (isReady && !previous) {
+        runOnJS(handleCapture)();
       }
     },
-    (msg: string, currentStep: LivenessStep) => {
-      setFeedback(msg);
-      setStep(currentStep);
-
-      // Se entrar ou reiniciar o HOLD_STILL, reseta o timer
-      if (currentStep === "HOLD_STILL") {
-        setTimer(HOLD_DURATION_MS);
-      } else {
-        setTimer(0);
-      }
-    }
+    [handleCapture]
   );
 
-  // ================= TIMER LOGIC =================
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
+  // Estilo animado que não causa re-render do componente
+  const animatedGuideStyle = useAnimatedStyle(() => {
+    return {
+      // Transição suave de cor (250ms)
+      borderColor: withTiming(isFaceInside.value ? "#00FF00" : "#FFFFFF", {
+        duration: 250,
+      }),
+      // Pequeno efeito de escala para indicar que o rosto foi "capturado"
+      transform: [
+        {
+          scale: withTiming(isFaceInside.value ? 1.05 : 1.0, { duration: 250 }),
+        },
+      ],
+      // Aumentar a espessura da borda quando estiver correto
+      borderWidth: withTiming(isFaceInside.value ? 5 : 2, { duration: 250 }),
+    };
+  }, [isFaceInside.value]);
 
-    if (step === "HOLD_STILL") {
-      interval = setInterval(() => {
-        setTimer((prev) => Math.max(prev - 100, 0));
-      }, 100);
-    }
+  const debugStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    top: 50,
+    left: 20,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    padding: 10,
+    borderRadius: 8,
+  }));
 
-    return () => clearInterval(interval);
-  }, [step]);
+  //   const debugTextProps = useAnimatedProps(
+  //     () =>
+  //       ({
+  //         text: `X: ${facePos.value.x.toFixed(2)} | Y: ${facePos.value.y.toFixed(2)}`,
+  //         defaultValue: "",
+  //       }) as any
+  //   );
 
-  if (!device) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Carregando câmera...</Text>
-      </View>
-    );
-  }
+  const messageProps = useAnimatedProps(
+    () =>
+      ({
+        text: faceMessage.value,
+        value: faceMessage.value,
+      }) as any
+  );
 
-  const frameProcessor = useLivenessFrameProcessor(processFace);
+  const countdownProps = useAnimatedProps(() => {
+    // Converte o progresso (0 a 1) para 3, 2, 1
+    const count = Math.ceil(3 - captureProgress.value * 3);
+    return {
+      text: captureProgress.value > 0 ? `${count}` : "",
+      value: captureProgress.value > 0 ? `${count}` : "",
+    } as any;
+  });
+
+  const animatedNumberStyle = useAnimatedStyle(() => ({
+    opacity: captureProgress.value > 0 ? 1 : 0,
+    transform: [{ scale: captureProgress.value > 0 ? 1 : 0.5 }],
+  }));
 
   return (
     <View style={styles.container}>
       <Camera
         ref={camera}
         style={StyleSheet.absoluteFill}
-        device={device}
-        isActive
-        photo={true}
+        device={device!}
         frameProcessor={frameProcessor}
-        pixelFormat="yuv"
+        isActive
         resizeMode="cover"
+        pixelFormat="yuv"
+        photo={true}
       />
+      {/* <Animated.View style={debugStyle}>
+        <AnimatedTextInput
+          editable={false}
+          style={{ color: "white", fontWeight: "bold" }}
+          animatedProps={debugTextProps}
+        />
+        <Text style={{ color: "gray", fontSize: 10 }}>
+          Alvo: CX 0.5 | CY 0.5
+        </Text>
+      </Animated.View> */}
 
-      {/* Overlay */}
-      <View style={styles.overlay} />
+      {/* Overlay de Mensagem - Posicionado para visibilidade clara */}
+      <View style={styles.messageBadge}>
+        <AnimatedTextInput
+          editable={false}
+          style={styles.messageText}
+          animatedProps={messageProps}
+        />
+      </View>
 
-      {/* Guia oval */}
-      <View
-        style={[
-          styles.guide,
-          {
-            width: guide.width,
-            height: guide.height,
-            left: guide.x,
-            top: guide.y,
-            borderRadius: guide.width / 2,
-            borderColor: guideColor(step),
-          },
-        ]}
-      />
+      {/* O QUADRADO NO MEIO DA TELA */}
+      <View style={styles.overlayContainer} pointerEvents="none">
+        <View style={styles.guideSquareContainer}>
+          {/* O número agora fica dentro do container do quadrado */}
+          <AnimatedTextInput
+            editable={false}
+            style={[styles.countdownText, animatedNumberStyle]}
+            animatedProps={countdownProps}
+          />
 
-      {/* TIMER MODERNO */}
-      {step === "HOLD_STILL" && (
-        <View style={styles.timerContainer}>
-          <View style={styles.timerCircle}>
-            <Text style={styles.timerText}>{Math.ceil(timer / 1000)}</Text>
-          </View>
+          {/* A borda do quadrado */}
+          <Animated.View style={[styles.guideSquare, animatedGuideStyle]} />
         </View>
-      )}
-
-      {/* Feedback */}
-      <View style={styles.feedback}>
-        <Text style={styles.text}>{feedback}</Text>
       </View>
     </View>
   );
 };
-
-// ================= CORES =================
-function guideColor(step: LivenessStep) {
-  switch (step) {
-    case "POSITION":
-      return "#FACC15";
-    case "HOLD_STILL":
-      return "#3B82F6";
-    case "SUCCESS":
-      return "#22C55E";
-    default:
-      return "#FACC15";
-  }
-}
-const { height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   container: {
@@ -141,49 +183,55 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.55)",
-  },
-  guide: {
     position: "absolute",
-    borderWidth: 3,
-  },
-  feedback: {
-    position: "absolute",
-    bottom: height * 0.08,
+    bottom: 40,
     width: "100%",
     alignItems: "center",
   },
   text: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    color: "#FFF",
+    fontSize: 16,
   },
-  // ===== TIMER MODERNO =====
-  timerContainer: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
+  },
+  guideSquareContainer: {
+    width: SQUARE_WIDTH,
+    height: SQUARE_HEIGHT,
+    justifyContent: "center", // Centraliza o número verticalmente
+    alignItems: "center", // Centraliza o número horizontalmente
+    position: "relative",
+  },
+  guideSquare: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 2,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+  },
+  messageBadge: {
+    position: "absolute",
+    top: height * 0.15,
+    alignSelf: "center",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 30,
     zIndex: 10,
   },
-  timerCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
+  messageText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+    textAlign: "center",
   },
-  timerText: {
-    color: "#fff",
-    fontSize: 48,
-    fontWeight: "700",
+
+  countdownText: {
+    fontSize: 80,
+    fontWeight: "bold",
+    color: "#FFF", // Cor verde para o número
+    textAlign: "center",
   },
 });
 

@@ -4,6 +4,7 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
+import { formatarData } from "@/utils/formats";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,8 +27,10 @@ const CPFOTPScreen: React.FC = () => {
   const { AlertDisplay, showError } = useAlerts();
   const { register } = useAuthStore();
   const cpfRef = useRef<TextInput>(null);
+  const dateRef = useRef<TextInput>(null);
   const otpRef = useRef<TextInput>(null);
   const [cpf, setCpf] = useState("");
+  const [date, setDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [otp, setOtp] = useState("");
@@ -76,17 +79,30 @@ const CPFOTPScreen: React.FC = () => {
       showError("Atenção", "CPF inválido");
       return;
     }
+    if (!date) {
+      showError("Atenção", "Data de Nascimento obrigatória");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await api.post("/auth/otp", {
-        cpf,
-      });
+      const formattedDate = formatarData(date);
 
+      const { data } = await api.get(
+        `/auth/search/cpf/${cpf}/${formattedDate}`
+      );
+
+      if (data?.data?.status === "recusado") {
+        showError("Atenção", "Data de Nascimento inválida");
+        return;
+      }
+
+      await api.post("/auth/otp", { cpf, method });
       setIsSuccess(true);
       startResendTimer();
     } catch (error: any) {
-      console.log(error.response);
-      showError("Atenção", "Erro ao enviar código verifique o CPF");
+      console.log("error", error.response);
+      showError("Atenção", error.response?.data?.message || "Erro inesperado");
     } finally {
       setIsLoading(false);
     }
@@ -156,24 +172,44 @@ const CPFOTPScreen: React.FC = () => {
 
           <View style={styles.formContainer}>
             {!isSuccess && (
-              <InputComponent
-                ref={cpfRef}
-                placeholder="Seu CPF"
-                keyboardType="numeric"
-                maxLength={11}
-                value={cpf}
-                maskType="cpf"
-                icon={
-                  <FontAwesome
-                    name="vcard"
-                    size={20}
-                    color={Colors.gray.primary}
-                  />
-                }
-                onChangeText={setCpf}
-                returnKeyType="done"
-                onSubmitEditing={() => onSubmit("sms")}
-              />
+              <>
+                <InputComponent
+                  ref={cpfRef}
+                  placeholder="Seu CPF"
+                  keyboardType="numeric"
+                  maxLength={11}
+                  value={cpf}
+                  maskType="cpf"
+                  icon={
+                    <FontAwesome
+                      name="vcard"
+                      size={20}
+                      color={Colors.gray.primary}
+                    />
+                  }
+                  onChangeText={setCpf}
+                  returnKeyType="next"
+                  onSubmitEditing={() => dateRef.current?.focus()}
+                />
+                <InputComponent
+                  ref={dateRef}
+                  placeholder="Data de Nascimento"
+                  keyboardType="numeric"
+                  maxLength={10}
+                  value={date}
+                  maskType="date"
+                  icon={
+                    <FontAwesome
+                      name="calendar"
+                      size={20}
+                      color={Colors.gray.primary}
+                    />
+                  }
+                  onChangeText={setDate}
+                  returnKeyType="done"
+                  onSubmitEditing={() => onSubmit("sms")}
+                />
+              </>
             )}
 
             {isSuccess && (
