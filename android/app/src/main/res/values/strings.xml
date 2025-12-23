@@ -1,7 +1,7 @@
 <resources>
   <string name="app_name">Parcela Diaria</string>
   <string name="expo_system_ui_user_interface_style" translatable="false">light</string>
-  <string name="expo_runtime_version">1.0.5</string>
+  <string name="expo_runtime_version">1.0.6</string>
   <string name="expo_navigation_bar_border_color" translatable="false">-14735049</string>
   <string name="expo_navigation_bar_visibility" translatable="false">visible</string>
   <string name="expo_navigation_bar_position" translatable="false">relative</string>
