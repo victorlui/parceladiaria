@@ -52,8 +52,8 @@ export const useLoginMutation = () => {
         } else {
           const rota = getRouteByEtapa(etapa as Etapas);
           if (rota) {
-            //router.push(rota as any);
-            router.push("/(register_new)/timeless_face");
+            router.push(rota as any);
+            //router.push("/(register_new)/timeless_face");
           }
         }
       } else {
