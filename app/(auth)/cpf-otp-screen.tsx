@@ -85,6 +85,7 @@ const CPFOTPScreen: React.FC = () => {
     }
 
     setIsLoading(true);
+
     try {
       const formattedDate = formatarData(date);
 
@@ -101,7 +102,14 @@ const CPFOTPScreen: React.FC = () => {
       setIsSuccess(true);
       startResendTimer();
     } catch (error: any) {
-      console.log("error", error.response);
+      console.log("error", error.response.data.data.success);
+      if (error.response && !error.response.data.success) {
+        showError(
+          "Atenção",
+          error.response?.data?.data?.message || "Erro inesperado"
+        );
+        return;
+      }
       showError("Atenção", error.response?.data?.message || "Erro inesperado");
     } finally {
       setIsLoading(false);

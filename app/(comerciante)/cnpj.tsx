@@ -4,19 +4,20 @@ import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
 import { Etapas } from "@/utils";
+import { validateCNPJ } from "@/utils/validation";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 
 const InformandoCNPJ: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
-  const [businessType, setBusinessType] = React.useState("");
+  const [CNPJ, setCNPJ] = React.useState("");
 
   const submit = () => {
     mutate({
       request: {
-        cnpj: businessType,
-        etapa: Etapas.COMERCIANTE_ENVIANDO_EXTRATO,
+        cnpj: CNPJ,
+        etapa: Etapas.COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL,
       },
     });
   };
@@ -29,19 +30,23 @@ const InformandoCNPJ: React.FC = () => {
       <InputComponent
         label="CNPJ"
         placeholder="00.000.000/0000-00"
-        value={businessType}
-        onChangeText={setBusinessType}
+        value={CNPJ}
+        onChangeText={setCNPJ}
         icon={
           <FontAwesome name="building" size={20} color={Colors.gray.primary} />
         }
         maskType="cnpj"
+        returnKeyType="done"
+        onSubmitEditing={submit}
+        autoCapitalize="none"
+        error={CNPJ ? validateCNPJ(CNPJ) : ""}
       />
 
       <ButtonComponent
         title="Continuar"
         iconLeft={null}
         loading={isPending}
-        disabled={isPending || !businessType}
+        disabled={isPending || !CNPJ || !!validateCNPJ(CNPJ)}
         onPress={submit}
       />
     </LayoutRegister>

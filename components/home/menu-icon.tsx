@@ -27,7 +27,7 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
       icon: <FontAwesome name="whatsapp" size={28} color="#fff" />,
       available: false,
       onPress: async () => {
-        const phoneNumber = "5519981763585";
+        const phoneNumber = "5511952133321";
         const message = "Olá! Estou com problemas com o app. Quero saber mais.";
 
         const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;

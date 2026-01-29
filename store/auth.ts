@@ -60,8 +60,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const token = await getToken();
       const user = await getUser();
-      console.log("token", token);
-      console.log("user", user);
       set({ token, user, isLoading: false });
     } catch (error: any) {
       set({ token: null, user: null, isLoading: false });

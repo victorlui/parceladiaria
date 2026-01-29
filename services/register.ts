@@ -8,7 +8,7 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 export async function registerService(
   cpf: string,
   phone: string,
-  password: string
+  password: string,
 ): Promise<{ data: { token: string }; success: boolean } | undefined> {
   if (phone.length !== 11) {
     throw {
@@ -71,7 +71,7 @@ export async function updateUserService({ request }: RequestProps): Promise<{
 }> {
   try {
     const token = useAuthStore.getState().tokenRegister;
-    console.log("token", token);
+
     if (!token) {
       throw new Error("Token não encontrado");
     }
@@ -84,7 +84,7 @@ export async function updateUserService({ request }: RequestProps): Promise<{
 
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
-    console.log("error update service", error.response);
+    console.log("error update service", error);
     if (error.response) {
       throw {
         status: error.response.status,

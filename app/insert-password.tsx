@@ -28,11 +28,13 @@ import {
 } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
 import { useRegisterAuthStore } from "@/store/register";
+import { useAuthStore } from "@/store/auth";
 
 const InsertPassword: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
   const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
+  const { logout } = useAuthStore();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -51,6 +53,7 @@ const InsertPassword: React.FC = () => {
 
   const onSubmit = () => {
     Keyboard.dismiss();
+    logout();
     if (!password) {
       showWarning("Atenção", "Preencha todos os campos");
       return;

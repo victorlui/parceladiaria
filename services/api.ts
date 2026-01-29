@@ -4,11 +4,12 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 import { Alert } from "react-native";
+import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
 
 // Tipos para melhor tipagem
 interface ApiConfig {
   baseURL: string;
-  uuid: string;
   secret: string;
 }
 
@@ -25,22 +26,37 @@ interface ApiHeaders {
 // Configuração da API
 const apiConfig: ApiConfig = {
   baseURL: process.env.EXPO_PUBLIC_API_URL || "",
-  uuid: process.env.EXPO_PUBLIC_UUID || "",
   secret: process.env.EXPO_PUBLIC_SECRET || "",
 };
 
 // Validação das variáveis de ambiente
-if (!apiConfig.baseURL || !apiConfig.uuid || !apiConfig.secret) {
+if (!apiConfig.baseURL || !apiConfig.secret) {
   throw new Error("Variáveis de ambiente da API não configuradas corretamente");
 }
+
+// Função para obter ou gerar UUID único do dispositivo
+const getDeviceUUID = async (): Promise<string> => {
+  try {
+    let uuid = await SecureStore.getItemAsync("device_uuid");
+    if (!uuid) {
+      uuid = Crypto.randomUUID();
+      await SecureStore.setItemAsync("device_uuid", uuid);
+    }
+    return uuid;
+  } catch (error) {
+    console.error("Erro ao gerenciar UUID do dispositivo:", error);
+    return Crypto.randomUUID();
+  }
+};
 
 // Função para gerar headers dinâmicos
 const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
   const timestamp = Math.floor(Date.now() / 1000).toString();
 
   try {
+    const uuid = await getDeviceUUID();
     const signature = await generateSignature(
-      apiConfig.uuid,
+      uuid,
       apiConfig.secret,
       timestamp
     );
@@ -48,7 +64,7 @@ const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
     return {
       "Content-Type": "application/json",
       "X-Signature": signature,
-      "X-UUID": apiConfig.uuid,
+      "X-UUID": uuid,
       "X-Timestamp": timestamp,
       "X-UserAgent": "mobile",
       "X-Version-app": Constants.expoConfig?.version ?? "1.0.0",
@@ -79,7 +95,9 @@ api.interceptors.request.use(
       };
 
       // Adiciona token de autenticação se disponível
-      const token = useAuthStore.getState().token;
+      const token =
+        useAuthStore.getState().token || useAuthStore.getState().tokenRegister;
+      console.log("token api", token);
       if (token) {
         (config.headers as any).Authorization = `Bearer ${token}`;
       }

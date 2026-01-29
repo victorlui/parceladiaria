@@ -62,7 +62,13 @@ const RegisterPhone: React.FC = () => {
       setTimer(60);
       console.log("response", response.data);
     } catch (error: any) {
-      console.log("error", error.response);
+      if (error.response && error.response.status === 403) {
+        showWarning(
+          "Atenção",
+          "Você fez muitas requisições, aguarde um momento e tente novamente."
+        );
+        return;
+      }
       showWarning(
         "Erro ao enviar código",
         error.response?.data?.data || "Erro ao enviar código"
@@ -165,17 +171,18 @@ const RegisterPhone: React.FC = () => {
         loading={isLoading}
         iconLeft={null}
       />
-      {isSuccess && (
-        timer > 0 ? (
+      {isSuccess &&
+        (timer > 0 ? (
           <View style={styles.sendCodeContainer}>
             <Text style={styles.sendCodeText}>Reenviar código em {timer}s</Text>
           </View>
         ) : (
           <TouchableOpacity style={styles.sendCodeContainer} onPress={sendCode}>
-            <Text style={styles.sendCodeText}>Não recebeu? Reenviar código</Text>
+            <Text style={styles.sendCodeText}>
+              Não recebeu? Reenviar código
+            </Text>
           </TouchableOpacity>
-        )
-      )}
+        ))}
     </LayoutRegister>
   );
 };

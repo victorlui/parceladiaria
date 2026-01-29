@@ -25,6 +25,14 @@ export function useAlerts() {
     setAlert({ type: "warning", title, message, onPress: () => hideAlert() });
   };
 
+  const showWarningPress = (
+    title: string,
+    message: string,
+    onOkPress?: () => void
+  ) => {
+    setAlert({ type: "warning", title, message, onPress: onOkPress });
+  };
+
   const showInfo = (title: string, message: string) => {
     setAlert({ type: "info", title, message, onPress: () => hideAlert() });
   };
@@ -56,6 +64,7 @@ export function useAlerts() {
     showSuccess,
     showError,
     showWarning,
+    showWarningPress,
     showInfo,
     AlertDisplay,
     hideAlert,

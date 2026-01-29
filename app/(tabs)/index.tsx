@@ -51,7 +51,7 @@ const HomeScreen: React.FC = () => {
             pixKey: user?.pixKey ?? null,
           });
         } catch (error: any) {
-          console.log("error de status renovação", error.response);
+          return error.response;
         } finally {
           setLoading(false);
         }

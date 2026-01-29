@@ -4,27 +4,22 @@ import {
   Text,
   StyleSheet,
   Alert,
-  Linking,
   Image,
   ActivityIndicator,
 } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { Ionicons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
+import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Network from "expo-network";
 import { Camera } from "react-native-vision-camera";
-import {
-  useLoginDataMutation,
-  useUpdateUserMutation,
-} from "@/hooks/useRegisterMutation";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
-import { router } from "expo-router";
-import { useRegisterNewStore } from "@/store/register_new";
-import { useRegisterAuthStore } from "@/store/register";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
+import { useRegisterAuthStore } from "@/store/register";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -59,8 +54,9 @@ const LoadingScreen: React.FC = () => (
 );
 
 const TimelessFace: React.FC = () => {
-  const { mutate } = useUpdateUserMutation();
-  const { mutate: loginMutate, isPending } = useLoginMutation();
+  const { mutateAsync: updateUser } = useUpdateUserMutation();
+  const { etapa } = useRegisterAuthStore();
+  const { isPending } = useLoginMutation();
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -70,7 +66,7 @@ const TimelessFace: React.FC = () => {
       Alert.alert(
         "Permissão necessária",
         "Você negou o acesso à câmera. Para usar esta função, ative a câmera nas Configurações.",
-        [{ text: "OK", style: "cancel" }]
+        [{ text: "OK", style: "cancel" }],
       );
     }
 
@@ -78,26 +74,54 @@ const TimelessFace: React.FC = () => {
   };
 
   const sendPhoto = async (photo: string) => {
+    const { isInternetReachable } = await Network.getNetworkStateAsync();
+    if (isInternetReachable === false) {
+      Alert.alert(
+        "Sem conexão",
+        "Verifique sua conexão com a internet e tente novamente.",
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const finalUrl = await uploadFileToS3({
-        file: {
-          uri: `file://${photo}`,
-          name: `selfie-${Date.now()}.jpg`,
-          mimeType: "image/jpeg",
-        },
+      const finalUrl = await uploadRawFile({
+        uri: `file://${photo}`,
+        name: `selfie-${Date.now()}.jpg`,
+        mimeType: "image/jpeg",
       });
-      mutate({
+
+      if (!finalUrl) {
+        setIsLoading(false);
+        return;
+      }
+
+      await updateUser({
         request: {
-          etapa: Etapas.ACEITANDO_TERMOS,
+          etapa:
+            etapa === Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL
+              ? Etapas.ACEITANDO_TERMOS
+              : Etapas.OPEN_FINANCE,
           face: finalUrl,
         },
       });
-      router.push("/(register_new)/register-finish");
+
+      //Etapas.ACEITANDO_TERMOS,
+      // router.push("/(register_new)/register-finish");
     } catch (error) {
       console.error("Erro ao enviar foto:", error);
-      Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
+      const { isInternetReachable } = await Network.getNetworkStateAsync();
+      if (isInternetReachable === false) {
+        Alert.alert(
+          "Conexão perdida",
+          "Sua internet caiu durante o envio. Verifique a conexão e tente novamente."
+        );
+      } else {
+        // Se não for erro de rede, o hook useUpdateUserMutation ou uploadRawFile já devem ter mostrado alerta
+        // Mas para garantir, podemos mostrar um genérico se não tiver sido tratado
+        // Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
+      }
       setIsLoading(false);
     } finally {
       setIsLoading(false);

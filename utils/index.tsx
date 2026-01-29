@@ -90,6 +90,9 @@ export enum Etapas {
   COMERCIANTE_ENVIANDO_VIDEO_INTERIOR = "Enviando video interior",
   COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL = "Enviando frente documento pessoal",
   COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL = "Enviando verso documento pessoal",
+
+  // OpenFinance
+  OPEN_FINANCE = "Openfinance",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -128,6 +131,9 @@ const routeMap: Record<Etapas, string> = {
 
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
+
+  // OpenFinance
+  [Etapas.OPEN_FINANCE]: "/(register_new)/register-openfinance",
 
   [Etapas.FINALIZADO]: "/login",
 };

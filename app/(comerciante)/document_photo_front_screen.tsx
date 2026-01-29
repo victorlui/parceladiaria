@@ -1,7 +1,7 @@
 import React from "react";
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { Etapas } from "@/utils";
@@ -11,17 +11,12 @@ export default function DocumentFrontScreen() {
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
 
-  const sendFileFront = async (file: File) => {
+  const sendFileFront = async (file: any) => {
     setLoading(true);
+
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const finalUrl = await uploadFileToS3({
-        file: {
-          uri: (file as any).uri || (file as any).path,
-          name: file.name,
-          mimeType: file.type,
-        },
-      });
+      const finalUrl = await uploadRawFile(file);
 
       if (!finalUrl) return;
 
@@ -31,7 +26,7 @@ export default function DocumentFrontScreen() {
         (file.name && file.name.toLowerCase().endsWith(".pdf"));
 
       const nextEtapa = isPdf
-        ? Etapas.COMERCIANTE_ENVIANDO_VIDEO_FACHADA
+        ? Etapas.REGISTRANDO_TIMELESS_FACE
         : Etapas.COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL;
 
       mutate({

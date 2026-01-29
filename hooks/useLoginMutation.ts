@@ -38,6 +38,7 @@ export const useLoginMutation = () => {
       const { token } = data;
 
       if (type === "lead") {
+        console.log("lead", data.data);
         useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
@@ -45,7 +46,7 @@ export const useLoginMutation = () => {
           router.replace("/divergencia_screen");
         } else if (status === StatusCadastro.PRE_APROVADO) {
           router.replace("/pre_aprovado_screen");
-        } else if (status === StatusCadastro.RECUSADO) {
+        } else if (etapa === Etapas.FINALIZADO) {
           router.replace("/recusado_screen");
         } else if (status === StatusCadastro.REANALISE) {
           router.replace("/reanalise_screen");

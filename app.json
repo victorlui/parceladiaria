@@ -2,10 +2,10 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.0.6",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
-    "scheme": "expotemplatebase",
+    "scheme": "parceladiaria",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "jsEngine": "hermes",
@@ -34,10 +34,11 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "3"
+      "buildNumber": "4",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "versionCode": 7,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -139,7 +140,8 @@
             "minSdkVersion": 26
           },
           "ios": {
-            "deploymentTarget": "16.0"
+            "deploymentTarget": "16.0",
+            "useModularHeaders": true
           }
         }
       ]
@@ -153,7 +155,7 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.0.6",
+    "runtimeVersion": "1.0.9",
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557"
     }

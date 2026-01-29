@@ -40,7 +40,7 @@ const RegisterCPF: React.FC = () => {
       const formattedBirthDate = formatarData(birthDate);
 
       const { data } = await api.get(
-        `/auth/search/cpf/${cpf}/${formattedBirthDate}`
+        `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
       );
 
       if (data?.data?.status === "recusado") {
@@ -52,15 +52,23 @@ const RegisterCPF: React.FC = () => {
 
       if (response.message === "Cadastro Localizado") {
         showWarning("Alerta!", "O CPF informado já está cadastrado. ");
+        return;
       } else {
         setData({
           ...data,
           cpf,
         });
         router.push("/(register_new)/register-password");
+        return;
       }
     } catch (error: any) {
-      console.log("error", error.response);
+      if (error.response && error.response.status === 403) {
+        showWarning(
+          "Atenção",
+          "Você fez muitas requisições, aguarde um momento e tente novamente.",
+        );
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
