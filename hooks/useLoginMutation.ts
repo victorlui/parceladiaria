@@ -38,7 +38,6 @@ export const useLoginMutation = () => {
       const { token } = data;
 
       if (type === "lead") {
-        console.log("lead", data.data);
         useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
@@ -61,6 +60,9 @@ export const useLoginMutation = () => {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         const response = await api.get(`/v1/client/data/info`);
 
+        console.log("data info", response.data.data);
+        console.log("login", data);
+        const responseClient = await api.get("/v1/client");
         const user: ApiUserData = {
           nome: response.data.data.name,
           email: response.data.data.email,
@@ -75,11 +77,20 @@ export const useLoginMutation = () => {
           lastLoan: data.data.lastLoan,
           zip_code: response.data.data.zip_code,
           phone: response.data.data.phone,
-          pixKey: "",
+          pixKey: responseClient.data.data.data.pixKey ?? "",
+          status_doc: response.data.data.status_doc,
           isLoggedIn: true,
         };
 
         useAuthStore.getState().login(data.token, user);
+
+        if (
+          response.data.data.status_doc === "Divergente" &&
+          response.data.data.status !== "Regular"
+        ) {
+          router.replace("/divergencia_old_docs_screen");
+          return;
+        }
         router.push("/(tabs)");
         //router.replace("/analise_screen");
       }

@@ -21,7 +21,7 @@ const VideoPerfil: React.FC = () => {
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE,
           video_perfil_app: finalUrl,
         },
       });

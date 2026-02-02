@@ -12,7 +12,8 @@ type UploadFileParams = {
 };
 
 export async function uploadFileToS3({ file }: UploadFileParams) {
-  const tokenRegister = useAuthStore.getState().tokenRegister;
+  const tokenRegister =
+    useAuthStore.getState().tokenRegister ?? useAuthStore.getState().token;
 
   try {
     const mimeType = file.mimeType || "image/jpeg";
@@ -41,12 +42,12 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
       return null;
     }
 
-    console.log("fileSize", filename, mimeType, tokenRegister);
+    console.log("fileSize", tokenRegister);
 
     const { upload_url, final_url } = await solicitarLinkS3(
       filename,
       mimeType,
-      tokenRegister
+      tokenRegister,
     );
 
     const uploadResult = await fetch(upload_url, {

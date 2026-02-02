@@ -193,6 +193,7 @@ export default function RootLayout() {
 
         <Stack.Screen name="recusado_screen" />
         <Stack.Screen name="divergencia_screen" />
+        <Stack.Screen name="divergencia_old_docs_screen" />
         <Stack.Screen name="reanalise_screen" />
         <Stack.Screen name="pre_aprovado_screen" />
         <Stack.Screen name="analise_screen" />

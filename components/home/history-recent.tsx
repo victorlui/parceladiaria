@@ -26,6 +26,7 @@ const HistoryRecent: React.FC<Props> = ({
   loading,
   loan,
 }) => {
+  console.log("installments", installments);
   return (
     <View>
       <View style={styles.header}>
@@ -65,7 +66,7 @@ const HistoryRecent: React.FC<Props> = ({
                 installment={item.installment}
                 totalInstallments={totalInstallments}
                 isLast={index === installments.length - 1}
-                date_due={item.due_date}
+                date_due={item.payment_date || ""}
                 loan={loan}
               />
             ))}

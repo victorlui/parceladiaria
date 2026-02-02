@@ -15,9 +15,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import StatusBar from "@/components/ui/StatusBar";
 import { useRenewStore } from "@/store/renew";
 import { ApiUserData } from "@/interfaces/login_inteface";
+import StatusDocModal from "@/components/home/StatusDocModal";
+import { router } from "expo-router";
 
 const HomeScreen: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, token, register } = useAuthStore();
   const { setRenew } = useRenewStore();
 
   const [available, setAvailable] = useState(false);
@@ -25,6 +27,21 @@ const HomeScreen: React.FC = () => {
   const [totalInstallments, setTotalInstallments] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState<ApiUserData | null>(null);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (userData?.status_doc === "divergente") {
+      setStatusModalVisible(true);
+    }
+  }, [userData]);
+
+  const handleUpdateDocs = () => {
+    if (userData && token) {
+      register(token, userData);
+      setStatusModalVisible(false);
+      router.push("/divergencia_old_docs_screen");
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -33,7 +50,7 @@ const HomeScreen: React.FC = () => {
         try {
           const response = await renewStatus();
           const responseClient = await api.get("/v1/client");
-          console.log("responseClient", responseClient.data.data.data);
+
           const sorted = responseClient.data.data.data.lastLoan.installments
             .filter((i: any) => i.paid === "Sim")
             .slice()
@@ -41,14 +58,17 @@ const HomeScreen: React.FC = () => {
           setInstallments(sorted);
 
           setTotalInstallments(
-            responseClient.data.data.data.lastLoan.installments.length
+            responseClient.data.data.data.lastLoan.installments.length,
           );
+
           setAvailable(response.data.data.can_renew);
           setRenew(response.data.data);
+
           setUserData({
             ...user,
             lastLoan: responseClient.data.data.data.lastLoan,
-            pixKey: user?.pixKey ?? null,
+            pixKey:
+              user?.pixKey ?? responseClient.data.data.data.pixKey ?? null,
           });
         } catch (error: any) {
           return error.response;
@@ -58,8 +78,16 @@ const HomeScreen: React.FC = () => {
       };
 
       getRenew();
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
   );
+
+  useEffect(() => {
+    if (userData?.status_doc === "Divergente") {
+      setStatusModalVisible(true);
+    }
+  }, [userData]);
+
+  console.log("user login", user);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
@@ -83,6 +111,11 @@ const HomeScreen: React.FC = () => {
           installments={installments}
           loading={loading}
           loan={userData?.lastLoan}
+        />
+        <StatusDocModal
+          visible={statusModalVisible}
+          onUpdate={handleUpdateDocs}
+          onClose={() => setStatusModalVisible(false)}
         />
       </ScrollView>
     </SafeAreaView>

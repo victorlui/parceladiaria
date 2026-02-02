@@ -89,6 +89,7 @@ const OpenFinance: React.FC = () => {
       });
 
       console.log("/v1/klavi", data);
+      setAttempts(data?.r_attempts);
 
       if (data?.status === "aprovado") {
         await api.put(
@@ -157,10 +158,8 @@ const OpenFinance: React.FC = () => {
       console.log("/v1/cliente/check-status:", data);
 
       const status = data?.status;
-      // Check for attempts or r_attempts
-      const attemptsLeft = data?.r_attempts !== undefined ? data.r_attempts : 0;
 
-      setAttempts(attemptsLeft);
+      setAttempts(data?.r_attempts);
 
       if (status === "aprovado") {
         await api.put(
@@ -180,7 +179,7 @@ const OpenFinance: React.FC = () => {
       } else if (status === "completed") {
         return;
       } else {
-        if (attemptsLeft > 0) {
+        if (data?.r_attempts > 0) {
           setFlowState("retry");
           return;
         } else {
@@ -239,7 +238,11 @@ const OpenFinance: React.FC = () => {
             </View>
 
             <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
-              Empréstimo negado
+              Cadastro recusado
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Voce tem {attempts} tentativas restantes.
             </Text>
 
             <Text className="mb-6 text-center text-base leading-6 text-gray-500">
@@ -247,9 +250,9 @@ const OpenFinance: React.FC = () => {
               momento.
             </Text>
 
-            <Text className="mb-10 text-center text-sm font-semibold text-gray-500">
+            {/* <Text className="mb-10 text-center text-sm font-semibold text-gray-500">
               Você pode tentar novamente em 60 dias.
-            </Text>
+            </Text> */}
 
             <TouchableOpacity
               className="w-full flex-row items-center justify-center rounded-xl border border-teal-800 bg-white py-4"
@@ -257,9 +260,7 @@ const OpenFinance: React.FC = () => {
                 router.replace("/login");
               }}
             >
-              <Text className="text-lg font-semibold text-teal-800">
-                Voltar ao início
-              </Text>
+              <Text className="text-lg font-semibold text-teal-800">Sair</Text>
             </TouchableOpacity>
           </View>
         );
@@ -273,6 +274,10 @@ const OpenFinance: React.FC = () => {
 
             <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
               Tentar novamente
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Voce tem {attempts} tentativas restantes.
             </Text>
 
             <Text className="mb-6 text-center text-base leading-6 text-gray-500">
@@ -305,6 +310,10 @@ const OpenFinance: React.FC = () => {
 
             <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
               Conecte sua conta
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Voce tem {attempts} tentativas restantes.
             </Text>
 
             <Text className="mb-10 text-center text-base leading-6 text-gray-500">

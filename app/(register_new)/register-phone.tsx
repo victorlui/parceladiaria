@@ -60,20 +60,19 @@ const RegisterPhone: React.FC = () => {
       setIsSuccess(true);
       setShowOtpError(false);
       setTimer(60);
-      console.log("response", response.data);
+      setData({ ...data, phone: phone.replace(/\D/g, "") });
     } catch (error: any) {
       if (error.response && error.response.status === 403) {
         showWarning(
           "Atenção",
-          "Você fez muitas requisições, aguarde um momento e tente novamente."
+          "Você fez muitas requisições, aguarde um momento e tente novamente.",
         );
         return;
       }
       showWarning(
         "Erro ao enviar código",
-        error.response?.data?.data || "Erro ao enviar código"
+        error.response?.data?.data || "Erro ao enviar código",
       );
-      console.log("error", error.response);
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +101,7 @@ const RegisterPhone: React.FC = () => {
       };
 
       const response = await api.post("/auth/register", registerData);
+      console.log("response register", response.data);
       register(response.data.data.token, {
         ...userRegister,
         phone: phone.replace(/\D/g, ""),
@@ -117,7 +117,7 @@ const RegisterPhone: React.FC = () => {
       console.log("error", error.response);
       showWarning(
         "Erro ao verificar código",
-        error.response?.data?.message || "Erro ao verificar código"
+        error.response?.data?.message || "Erro ao verificar código",
       );
     } finally {
       setIsLoading(false);

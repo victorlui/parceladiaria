@@ -2,6 +2,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useAuthStore } from "@/store/auth";
+import { formatDateToBR } from "@/utils/formats";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -10,14 +11,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const RecusadoScreen: React.FC = () => {
   useDisableBackHandler();
-  const { logout } = useAuthStore();
+  const { logout, userRegister } = useAuthStore();
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar />
-      <Image
-        source={require("@/assets/images/logo-verde.png")}
-        style={styles.logo}
-      />
+
       <View style={styles.card}>
         <FontAwesome name="times-circle" size={80} color="red" />
         <Text style={styles.title}>Recusado</Text>
@@ -25,6 +24,25 @@ const RecusadoScreen: React.FC = () => {
           Infelizmente, não foi posívvel aprovar seu cadastro no momento.
         </Text>
       </View>
+
+      <View style={styles.motivoRecusa}>
+        <Text style={styles.titleMotivoRecusa}>Motivo da Recusa</Text>
+        <Text style={styles.textMotivoRecusa}>
+          {userRegister?.motivo_recusa}
+        </Text>
+      </View>
+
+      {userRegister?.data_retentativa && (
+        <View style={styles.motivoRecusa}>
+          <Text style={styles.titleMotivoRecusa}>Nova tentativa</Text>
+          <Text style={styles.textMotivoRecusa}>
+            Você poderá solicitar novamente a partir de{" "}
+            <Text style={{ fontWeight: "600" }}>
+              {formatDateToBR(userRegister?.data_retentativa)}
+            </Text>
+          </Text>
+        </View>
+      )}
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -32,7 +50,7 @@ const RecusadoScreen: React.FC = () => {
           router.replace("/login");
         }}
       >
-        <Text style={styles.buttonText}>Voltar para login</Text>
+        <Text style={styles.buttonText}>Sair</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -89,6 +107,28 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.black,
     textAlign: "center",
+  },
+  motivoRecusa: {
+    margin: 20,
+    width: "100%",
+    backgroundColor: "#EFF7F9",
+    padding: 10,
+    borderRadius: 10,
+    elevation: 5,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  titleMotivoRecusa: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.black,
+  },
+  textMotivoRecusa: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.gray.text,
   },
 });
 

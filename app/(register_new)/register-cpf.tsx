@@ -16,7 +16,7 @@ import { formatarData } from "@/utils/formats";
 
 const RegisterCPF: React.FC = () => {
   const { showWarning, AlertDisplay, showError } = useAlerts();
-  const { data, setData } = useRegisterNewStore();
+  const { setData } = useRegisterNewStore();
   const { cpf: cpfAuth } = useRegisterAuthStore();
   const cpfRef = useRef<TextInput>(null);
   const birthDateRef = useRef<TextInput>(null);
@@ -42,6 +42,8 @@ const RegisterCPF: React.FC = () => {
       const { data } = await api.get(
         `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
       );
+
+      console.log("data cpf", data);
 
       if (data?.data?.status === "recusado") {
         showError("Atenção", "Data de Nascimento inválida");

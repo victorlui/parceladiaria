@@ -70,7 +70,8 @@ export async function updateUserService({ request }: RequestProps): Promise<{
   etapa: Etapas;
 }> {
   try {
-    const token = useAuthStore.getState().tokenRegister;
+    const token =
+      useAuthStore.getState().tokenRegister ?? useAuthStore.getState().token;
 
     if (!token) {
       throw new Error("Token não encontrado");

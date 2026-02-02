@@ -315,6 +315,7 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={estadoRef}
           placeholder="Informe seu Estado"
+          editable={false}
           icon={
             <MaterialCommunityIcons
               name="map-marker"

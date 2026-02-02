@@ -33,7 +33,7 @@ const RenewList: React.FC = () => {
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
   const [selectedItem, setSelectedItem] = React.useState<RenewListProps | null>(
-    null
+    null,
   );
   const [pixKey, setPixKey] = React.useState<string | null>(null);
   const [step, setStep] = React.useState<"confirm" | "change">("confirm");
@@ -41,6 +41,7 @@ const RenewList: React.FC = () => {
   // Evita refetch quando o modal for aberto/fechado
   const preventRefetch = React.useRef<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+
   console.log("user", user);
 
   const outstandingBalance = useMemo(() => {
@@ -55,7 +56,7 @@ const RenewList: React.FC = () => {
       setLoading(true);
       const response = await renewList();
       const responseClient = await api.get("/v1/client");
-      console.log("responseClient", response);
+
       setPixKey(responseClient.data?.data.data.pixKey || null);
       // Preserva seleção ao recarregar
       const renewWithSelection = response.map((item) => ({
@@ -78,7 +79,7 @@ const RenewList: React.FC = () => {
         return;
       }
       fetchRenewList();
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const handleSelect = (item: RenewListProps) => {
@@ -88,7 +89,7 @@ const RenewList: React.FC = () => {
       prev.map((i) => ({
         ...i,
         selected: i.id === item.id,
-      }))
+      })),
     );
   };
 
@@ -98,12 +99,13 @@ const RenewList: React.FC = () => {
       const ip = await Network.getIpAddressAsync();
 
       const fromIP = await getFromGPS();
+      console.log("fromIP", fromIP);
 
       const termsData = {
         id: selectedId,
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
-        sign_info_city: fromIP?.city ? user?.cidade || "São Paulo" : "",
+        sign_info_city: fromIP?.city || user?.cidade || "São Paulo",
         sign_info_state: fromIP?.region
           ? fromIP.region === "São Paulo"
             ? "SP"
@@ -111,13 +113,16 @@ const RenewList: React.FC = () => {
           : user?.estado || "SP",
         sign_info_country: "BR",
       };
-      await api.post("/v1/renew", termsData);
+
+      console.log("termsData", termsData);
+      const res = await api.post("/v1/renew", termsData);
       showSuccess("Sucesso", `Renovação concluida com sucesso`, () => {
         router.replace("/");
       });
+      console.log("sucesso res", res);
     } catch (error: any) {
-      console.log("error", error.response);
-      showError("Error", error.response.data.error || "Erro ao renovar");
+      console.log("error  renovação", error.response);
+      showError("Atenção", error.response.data.error || "Erro ao renovar");
     } finally {
       setIsLoading(false);
       setModalVisible(false);

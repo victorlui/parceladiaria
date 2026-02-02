@@ -53,7 +53,7 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
       icon: <Ionicons name="logo-instagram" size={28} color="#fff" />,
       available: false,
       onPress: async () => {
-        const url = "https://www.instagram.com/parcela.diaria";
+        const url = "https://www.instagram.com/parceladiaria";
         const supported = await Linking.canOpenURL(url);
         if (supported) {
           await Linking.openURL(url);

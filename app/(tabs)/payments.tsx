@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth";
 import { useQRCodeStore } from "@/store/qrcode";
 import { formatCurrency } from "@/utils/formats";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { format, parse, parseISO } from "date-fns";
+import { format, parse, parseISO, isBefore, startOfDay } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 
@@ -33,6 +33,7 @@ const COLORS = {
   BUTTON_TEXT: "#28a999",
   EMOJI_COLOR: "#ffcc66",
   BADGE_COLOR: "#38B77F",
+  ERROR: "#ff3b30",
 };
 
 const PaymentsTab: React.FC = () => {
@@ -207,101 +208,136 @@ const PaymentsTab: React.FC = () => {
             { paddingBottom: selectedInstallments.length > 0 ? 150 : 80 },
           ]}
         >
-          {!loading && (
+          {!loading && installments.length > 0 && (
             <Text style={styles.infoText}>
               Selecione as parcelas para pagar
             </Text>
           )}
 
-          {loading
-            ? Array.from({ length: 6 }).map((_, idx) => (
-                <Animated.View key={idx} style={{ opacity: skeletonOpacity }}>
-                  <View style={styles.unpaidContainer}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        { borderColor: "#E5E7EB", backgroundColor: "#E5E7EB" },
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.installment,
-                        { backgroundColor: "#E5E7EB" },
-                      ]}
-                    />
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <View
-                        style={{
-                          height: 16,
-                          backgroundColor: "#E5E7EB",
-                          borderRadius: 6,
-                          width: "50%",
-                        }}
-                      />
-                      <View
-                        style={{
-                          height: 14,
-                          backgroundColor: "#E5E7EB",
-                          borderRadius: 6,
-                          width: "35%",
-                        }}
-                      />
-                    </View>
-                  </View>
-                </Animated.View>
-              ))
-            : installments?.map((item) => {
-                const isSelected = selectedInstallments.includes(item.id);
-
-                return (
-                  <TouchableOpacity
-                    key={item.id}
+          {loading ? (
+            Array.from({ length: 6 }).map((_, idx) => (
+              <Animated.View key={idx} style={{ opacity: skeletonOpacity }}>
+                <View style={styles.unpaidContainer}>
+                  <View
                     style={[
-                      styles.unpaidContainer,
-                      isSelected && styles.unpaidSelected,
+                      styles.checkbox,
+                      { borderColor: "#E5E7EB", backgroundColor: "#E5E7EB" },
                     ]}
-                    onPress={() => toggleSelect(item.id)}
-                    activeOpacity={0.8}
-                  >
+                  />
+                  <View
+                    style={[
+                      styles.installment,
+                      { backgroundColor: "#E5E7EB" },
+                    ]}
+                  />
+                  <View style={{ flex: 1, gap: 6 }}>
                     <View
+                      style={{
+                        height: 16,
+                        backgroundColor: "#E5E7EB",
+                        borderRadius: 6,
+                        width: "50%",
+                      }}
+                    />
+                    <View
+                      style={{
+                        height: 14,
+                        backgroundColor: "#E5E7EB",
+                        borderRadius: 6,
+                        width: "35%",
+                      }}
+                    />
+                  </View>
+                </View>
+              </Animated.View>
+            ))
+          ) : installments.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <FontAwesome5
+                name="clipboard-check"
+                size={64}
+                color={Colors.gray.primary}
+              />
+              <Text style={styles.emptyTitle}>Tudo certo por aqui!</Text>
+              <Text style={styles.emptySubtitle}>
+                Você não possui parcelas pendentes no momento.
+              </Text>
+            </View>
+          ) : (
+            installments?.map((item) => {
+              const isSelected = selectedInstallments.includes(item.id);
+
+              const base =
+                item.due_date.length >= 10
+                  ? item.due_date.slice(0, 10)
+                  : item.due_date;
+              const localParsed = parse(base, "yyyy-MM-dd", new Date());
+              const dt = isNaN(localParsed.getTime())
+                ? parseISO(item.due_date)
+                : localParsed;
+
+              const isOverdue = isBefore(dt, startOfDay(new Date()));
+
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.unpaidContainer,
+                    isSelected && styles.unpaidSelected,
+                  ]}
+                  onPress={() => toggleSelect(item.id)}
+                  activeOpacity={0.8}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      {
+                        borderColor: isSelected
+                          ? Colors.green.primary
+                          : Colors.borderColor,
+                        backgroundColor: isSelected
+                          ? Colors.green.primary
+                          : Colors.white,
+                      },
+                    ]}
+                  >
+                    {isSelected && (
+                      <FontAwesome5 name="check" size={14} color="white" />
+                    )}
+                  </View>
+                  <LinearGradient
+                    colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.installment}
+                  >
+                    <Text style={styles.textInstallment}>
+                      {item.installment}
+                    </Text>
+                  </LinearGradient>
+
+                  <View style={{ flex: 1 }}>
+                    <Text
                       style={[
-                        styles.checkbox,
-                        {
-                          borderColor: isSelected
-                            ? Colors.green.primary
-                            : Colors.borderColor,
-                          backgroundColor: isSelected
-                            ? Colors.green.primary
-                            : Colors.white,
-                        },
+                        styles.textAmount,
+                        isOverdue && { color: COLORS.ERROR },
                       ]}
                     >
-                      {isSelected && (
-                        <FontAwesome5 name="check" size={14} color="white" />
-                      )}
-                    </View>
-                    <LinearGradient
-                      colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.installment}
+                      {formatCurrency(Number(item.amount))}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.textDate,
+                        isOverdue && { color: COLORS.ERROR },
+                      ]}
                     >
-                      <Text style={styles.textInstallment}>
-                        {item.installment}
-                      </Text>
-                    </LinearGradient>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.textAmount}>
-                        {formatCurrency(Number(item.amount))}
-                      </Text>
-                      <Text style={styles.textDate}>
-                        Vencimento: {formatDateBR(item.due_date)}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                      Vencimento: {formatDateBR(item.due_date)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
 
           {/* Botão Selecionar Todas / Limpar Seleção */}
           {!loading && installments.length > 0 && (
@@ -474,6 +510,23 @@ const styles = StyleSheet.create({
     color: Colors.green.primary,
     fontWeight: "bold",
     fontSize: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.black,
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: Colors.gray.primary,
+    textAlign: "center",
   },
 });
 
