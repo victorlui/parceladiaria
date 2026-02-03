@@ -37,7 +37,7 @@ const HomeScreen: React.FC = () => {
 
   const handleUpdateDocs = () => {
     if (userData && token) {
-      register(token, userData);
+      //   register(token, userData);
       setStatusModalVisible(false);
       router.push("/divergencia_old_docs_screen");
     }

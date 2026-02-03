@@ -14,7 +14,8 @@ type UploadFileParams = {
 export async function uploadFileToS3({ file }: UploadFileParams) {
   const tokenRegister =
     useAuthStore.getState().tokenRegister ?? useAuthStore.getState().token;
-
+  console.log("tokenRegister", useAuthStore.getState().tokenRegister);
+  console.log("token", useAuthStore.getState().token);
   try {
     const mimeType = file.mimeType || "image/jpeg";
     const isVideo = mimeType.startsWith("video/");

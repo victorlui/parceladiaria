@@ -1,21 +1,18 @@
-import ItemsDivergentes, {
-  documentDisplayNames,
-} from "@/components/divergente/items-divergentes";
+import ItemsDivergentes from "@/components/divergente/items-divergentes";
 import LoadingDots from "@/components/ui/LoadingDots";
-import StatusBar from "@/components/ui/StatusBar";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import { uploadFileToS3, uploadRawFile } from "@/hooks/useUploadDocument";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import { updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
-import { Etapas } from "@/utils";
-import { AntDesign, Entypo, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Etapas, formatDateToISO } from "@/utils";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Image,
   ScrollView,
   StyleSheet,
@@ -26,13 +23,43 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
-  useDisableBackHandler();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { AlertDisplay, showWarning } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { uri: string; nameImage: string }>
   >({});
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (isLoading) {
+        Alert.alert(
+          "Atenção",
+          "O envio está em andamento. Se sair agora, os dados serão perdidos. Deseja realmente sair?",
+          [
+            {
+              text: "Não",
+              onPress: () => null,
+              style: "cancel",
+            },
+            {
+              text: "Sim",
+              onPress: () => router.back(),
+            },
+          ],
+        );
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [isLoading]);
 
   const divergenciasArray = ["foto_frente_doc", "foto_verso_doc", "face"];
 
@@ -49,7 +76,6 @@ const DivergenciaScreen: React.FC = () => {
       for (const [key, item] of Object.entries(selectedFiles)) {
         const mimeType = "image/jpeg";
         const extension = "jpg";
-        // Gera nome único baseado no tipo de documento e timestamp
         const timestamp = Date.now();
         const fileName = `${key}_${timestamp}.${extension}`;
 
@@ -60,16 +86,23 @@ const DivergenciaScreen: React.FC = () => {
         };
 
         const finalUrl = await uploadRawFile(file);
-        console.log("finalUrl", finalUrl);
-        // Envia a URL do arquivo imediatamente após o upload
         const response = await updateUserService({
           request: { [key]: finalUrl },
         });
 
         console.log("response", response);
       }
-
-      await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
+      if (user?.status_doc === "Divergente" && user.status !== "Regular") {
+        await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
+      } else {
+        await updateUserService({
+          request: {
+            etapa: Etapas.FINALIZADO,
+            status: "atualizado",
+            data_finalizado: formatDateToISO(new Date()),
+          },
+        });
+      }
       Alert.alert(
         "Sucesso",
         "Os documentos foram enviados com sucesso para reanalise",
