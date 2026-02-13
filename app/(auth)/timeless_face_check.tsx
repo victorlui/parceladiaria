@@ -12,13 +12,15 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Network from "expo-network";
+import { File } from "expo-file-system";
 import { Camera } from "react-native-vision-camera";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadRawFile } from "@/hooks/useUploadDocument";
-import { Etapas } from "@/utils";
+
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { router } from "expo-router";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -53,10 +55,8 @@ const LoadingScreen: React.FC = () => (
 );
 
 const TimelessFace: React.FC = () => {
-  const { mutateAsync: updateUser } = useUpdateUserMutation();
-
   const { isPending } = useLoginMutation();
-
+  const { cpf_valid, register } = useAuthStore((state) => state);
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -86,39 +86,43 @@ const TimelessFace: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const finalUrl = await uploadRawFile({
-        uri: `file://${photo}`,
-        name: `selfie-${Date.now()}.jpg`,
-        mimeType: "image/jpeg",
+      // garante que tenha file://
+      const formattedUri = photo.startsWith("file://")
+        ? photo
+        : `file://${photo}`;
+
+      const file = new File(formattedUri);
+
+      const base64 = await file.base64();
+      const base64WithPrefix = `data:image/jpeg;base64,${base64}`;
+
+      const data = {
+        cpf: cpf_valid,
+        selfie: base64WithPrefix,
+      };
+
+      const response = await api.post("auth/verify-identity", data);
+      register(response.data.data.token, {
+        cpf: response.data.data.cpf,
+        nome: response.data.data.nome,
+        pixKey: "",
       });
-
-      if (!finalUrl) {
-        setIsLoading(false);
-        return;
-      }
-
-      await updateUser({
-        request: {
-          etapa: Etapas.OPEN_FINANCE,
-          face: finalUrl,
-        },
-      });
-
-      //Etapas.ACEITANDO_TERMOS,
-      // router.push("/(register_new)/register-finish");
-    } catch (error) {
+      router.push("/(auth)/change-password-screen");
+    } catch (error: any) {
       const { isInternetReachable } = await Network.getNetworkStateAsync();
       if (isInternetReachable === false) {
         Alert.alert(
           "Conexão perdida",
           "Sua internet caiu durante o envio. Verifique a conexão e tente novamente.",
         );
+      } else if (
+        error.response &&
+        error.response.data.message === "Biometria facial não confirmada."
+      ) {
+        Alert.alert("Erro", "Biometria facial não confirmada.");
       } else {
-        // Se não for erro de rede, o hook useUpdateUserMutation ou uploadRawFile já devem ter mostrado alerta
-        // Mas para garantir, podemos mostrar um genérico se não tiver sido tratado
-        // Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
+        Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
       }
-      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

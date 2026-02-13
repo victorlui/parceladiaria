@@ -51,7 +51,7 @@ const RegisterCPF: React.FC = () => {
       }
 
       const response: any = await checkCPF(cpf, formattedBirthDate!);
-
+      console.log("response cpf", response);
       if (response.message === "Cadastro Localizado") {
         showWarning("Alerta!", "O CPF informado já está cadastrado. ");
         return;

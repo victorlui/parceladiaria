@@ -101,7 +101,6 @@ const RegisterPhone: React.FC = () => {
       };
 
       const response = await api.post("/auth/register", registerData);
-      console.log("response register", response.data);
       register(response.data.data.token, {
         ...userRegister,
         phone: phone.replace(/\D/g, ""),

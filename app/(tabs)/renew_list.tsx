@@ -98,24 +98,20 @@ const RenewList: React.FC = () => {
     try {
       const ip = await Network.getIpAddressAsync();
 
-      const fromIP = await getFromGPS();
-      console.log("fromIP", fromIP);
+      //   const fromIP = await getFromGPS();
+      //   console.log("fromIP", fromIP);
 
-      const termsData = {
+      const data = {
         id: selectedId,
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
-        sign_info_city: fromIP?.city || user?.cidade || "São Paulo",
-        sign_info_state: fromIP?.region
-          ? fromIP.region === "São Paulo"
-            ? "SP"
-            : fromIP.region
-          : user?.estado || "SP",
+        sign_info_city: user?.cidade ?? "São Paulo",
+        sign_info_state: user?.estado ?? "SP",
         sign_info_country: "BR",
       };
 
-      console.log("termsData", termsData);
-      const res = await api.post("/v1/renew", termsData);
+      console.log("data", data);
+      const res = await api.post("/v1/renew", data);
       showSuccess("Sucesso", `Renovação concluida com sucesso`, () => {
         router.replace("/");
       });

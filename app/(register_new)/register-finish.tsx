@@ -155,15 +155,15 @@ const RegisterFinish: React.FC = () => {
 
   return (
     <LayoutRegister
-      title="Empréstimo Aprovado!"
-      subtitle="Após clicar em aceitar e finalizar o valor estará disponível na sua conta em até 30 minutos."
+      title="Quase Lá!"
+      subtitle="Para finalizar, confira os detalhes e aceite o contrato"
     >
       <View style={styles.propostaContainer}>
         <Text style={[styles.propostaTitle, { marginBottom: 0 }]}>
           Proposta para
         </Text>
         <Text style={styles.propostaTitle}>
-          {userRegister?.nome
+          {(user?.nome || userRegister?.nome)
             ?.split(" ")
             .map((part, index) =>
               index === 0 ? part : part.charAt(0).toUpperCase() + ".",

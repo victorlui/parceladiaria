@@ -67,7 +67,7 @@ const InsertPassword: React.FC = () => {
   };
 
   const navigationForgotPassword = () => {
-    router.push("/(auth)/cpf-otp-screen");
+    router.push("/(auth)/validity");
   };
 
   const navigationRegister = () => {

@@ -1,10 +1,10 @@
 import { Stack, router, usePathname } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import "../global.css";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { StatusCadastro } from "@/utils";
 import { useAlerts } from "@/components/useAlert";
 import * as Updates from "expo-updates";
@@ -12,16 +12,6 @@ import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
 import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
-
-// 🔔 Configuração global de notificações
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 // 👉 Rotas públicas (deep link permitido)
 const PUBLIC_ROUTES = [
@@ -62,13 +52,26 @@ const PUBLIC_ROUTES = [
 ];
 
 export default function RootLayout() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
+  const hasRedirected = useRef(false);
 
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
-  AnalyticsBootstrap();
+  //AnalyticsBootstrap();
+
+  // 🔔 Configuração global de notificações
+  useEffect(() => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }, []);
 
   // 🔔 Push notifications (função normal)
   useEffect(() => {
@@ -88,18 +91,21 @@ export default function RootLayout() {
 
   // 🔊 Canal Android
   useEffect(() => {
-    Notifications.setNotificationChannelAsync("default", {
-      name: "Notificações",
-      importance: Notifications.AndroidImportance.MAX,
-      sound: "default",
-      vibrationPattern: [0, 250, 250, 250],
-    });
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "Notificações",
+        importance: Notifications.AndroidImportance.MAX,
+        sound: "default",
+        vibrationPattern: [0, 250, 250, 250],
+      });
+    }
   }, []);
 
   // 🔄 OTA updates
   useEffect(() => {
     async function checkUpdate() {
       try {
+        if (!Updates.isEnabled) return;
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
@@ -142,27 +148,27 @@ export default function RootLayout() {
 
   // 🚦 Auth Guard (deep link SAFE)
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || hasRedirected.current) return;
+    if (!pathname) return;
 
-    // 👉 Se for rota pública, respeita o deep link
     if (PUBLIC_ROUTES.includes(pathname)) return;
 
-    // 👉 Não autenticado
     if (!token && !user) {
+      hasRedirected.current = true;
       router.replace("/login");
       return;
     }
 
-    // 👉 Autenticado
     if (user?.isLoggedIn) {
       const route =
         !user.status || !(user.status in statusRedirectMap)
           ? "/(tabs)"
           : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
-      router.replace(route as Parameters<typeof router.replace>[0]);
-      return;
+
+      hasRedirected.current = true;
+      router.replace(route as any);
     }
-  }, [isLoading, token, user]);
+  }, [isLoading, token, user, pathname]);
 
   // ⏳ Loading inicial (evita splash travada)
   if (isLoading) {
