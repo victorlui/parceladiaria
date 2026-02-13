@@ -53,12 +53,13 @@ const PUBLIC_ROUTES = [
 
 export default function RootLayout() {
   const pathname = usePathname() ?? "";
+  console.log("pathname", pathname);
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
   const hasRedirected = useRef(false);
 
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
-  useForceInAppUpdate();
+  //useForceInAppUpdate();
   //AnalyticsBootstrap();
 
   // 🔔 Configuração global de notificações
@@ -164,7 +165,7 @@ export default function RootLayout() {
         !user.status || !(user.status in statusRedirectMap)
           ? "/(tabs)"
           : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
-
+      console.log("route", route);
       hasRedirected.current = true;
       router.replace(route as any);
     }
