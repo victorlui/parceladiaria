@@ -2,7 +2,7 @@ import React from "react";
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { Etapas } from "@/utils";
 import { StyleSheet, Text, View } from "react-native";
@@ -11,17 +11,11 @@ const CNF: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
 
-  const sendFileFront = async (file: File) => {
+  const sendFileFront = async (file: any) => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const finalUrl = await uploadFileToS3({
-        file: {
-          uri: (file as any).uri || (file as any).path,
-          name: file.name,
-          mimeType: file.type,
-        },
-      });
+      const finalUrl = await uploadRawFile(file);
 
       if (!finalUrl) return;
 

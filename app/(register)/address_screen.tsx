@@ -20,6 +20,77 @@ import {
   View,
 } from "react-native";
 
+const getStateAbbreviation = (state: string) => {
+  const map: { [key: string]: string } = {
+    acre: "AC",
+    ac: "AC",
+    amapá: "AP",
+    amapa: "AP",
+    ap: "AP",
+    amazonas: "AM",
+    am: "AM",
+    pará: "PA",
+    para: "PA",
+    pa: "PA",
+    rondônia: "RO",
+    rondonia: "RO",
+    ro: "RO",
+    roraima: "RR",
+    rr: "RR",
+    tocantins: "TO",
+    to: "TO",
+    alagoas: "AL",
+    al: "AL",
+    bahia: "BA",
+    ba: "BA",
+    ceará: "CE",
+    ceara: "CE",
+    ce: "CE",
+    maranhão: "MA",
+    maranhao: "MA",
+    ma: "MA",
+    paraíba: "PB",
+    paraiba: "PB",
+    pb: "PB",
+    pernambuco: "PE",
+    pe: "PE",
+    piauí: "PI",
+    piaui: "PI",
+    pi: "PI",
+    "rio grande do norte": "RN",
+    rn: "RN",
+    sergipe: "SE",
+    se: "SE",
+    "distrito federal": "DF",
+    df: "DF",
+    goiás: "GO",
+    goias: "GO",
+    go: "GO",
+    "mato grosso": "MT",
+    mt: "MT",
+    "mato grosso do sul": "MS",
+    ms: "MS",
+    "espírito santo": "ES",
+    "espirito santo": "ES",
+    es: "ES",
+    "minas gerais": "MG",
+    mg: "MG",
+    "rio de janeiro": "RJ",
+    rj: "RJ",
+    "são paulo": "SP",
+    "sao paulo": "SP",
+    sp: "SP",
+    paraná: "PR",
+    parana: "PR",
+    pr: "PR",
+    "rio grande do sul": "RS",
+    rs: "RS",
+    "santa catarina": "SC",
+    sc: "SC",
+  };
+  return map[state.toLowerCase().trim()] || state;
+};
+
 const AddressScreen: React.FC = () => {
   const { AlertDisplay, showWarning } = useAlerts();
   const { mutate, isPending } = useUpdateUserMutation();
@@ -244,6 +315,7 @@ const AddressScreen: React.FC = () => {
         <InputComponent
           ref={estadoRef}
           placeholder="Informe seu Estado"
+          editable={false}
           icon={
             <MaterialCommunityIcons
               name="map-marker"

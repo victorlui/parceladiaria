@@ -4,12 +4,11 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
-import { formatarData } from "@/utils/formats";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -18,7 +17,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,13 +24,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const CPFOTPScreen: React.FC = () => {
   const { AlertDisplay, showError } = useAlerts();
   const { register } = useAuthStore();
-  const cpfRef = useRef<TextInput>(null);
-  const dateRef = useRef<TextInput>(null);
+  const { cpfValid } = useAuthStore();
   const otpRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("");
-  const [date, setDate] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [otp, setOtp] = useState("");
 
   const [canResend, setCanResend] = useState(false);
@@ -68,46 +63,6 @@ const CPFOTPScreen: React.FC = () => {
     }, 1000);
   };
 
-  const onSubmit = async (method: string) => {
-    Keyboard.dismiss();
-    if (!cpf) {
-      showError("Atenção", "CPF obrigatório");
-      return;
-    }
-
-    if (!cpf) {
-      showError("Atenção", "CPF inválido");
-      return;
-    }
-    if (!date) {
-      showError("Atenção", "Data de Nascimento obrigatória");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const formattedDate = formatarData(date);
-
-      const { data } = await api.get(
-        `/auth/search/cpf/${cpf}/${formattedDate}`
-      );
-
-      if (data?.data?.status === "recusado") {
-        showError("Atenção", "Data de Nascimento inválida");
-        return;
-      }
-
-      await api.post("/auth/otp", { cpf, method });
-      setIsSuccess(true);
-      startResendTimer();
-    } catch (error: any) {
-      console.log("error", error.response);
-      showError("Atenção", error.response?.data?.message || "Erro inesperado");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const confirmOTP = async () => {
     Keyboard.dismiss();
     if (!otp) {
@@ -116,23 +71,22 @@ const CPFOTPScreen: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const res = await api.post("/auth/login-otp", {
-        cpf,
+      const data = {
+        cpf: cpfValid,
         otp,
-      });
+      };
+
+      const res = await api.post("auth/verify-identity", data);
 
       register(res.data.data.token, {
         cpf: res.data.data.cpf,
         nome: res.data.data.nome,
         pixKey: "",
       });
-      setIsSuccess(false);
-      setCpf("");
-      setOtp("");
-      setRemainingSeconds(0);
+
       router.push("/(auth)/change-password-screen");
     } catch (error) {
-      showError("Atenção", "Código OTP inválido ou expirado.");
+      showError("Atenção", "Código OTP inválido ou expirado.", false);
     } finally {
       setIsLoading(false);
     }
@@ -158,94 +112,39 @@ const CPFOTPScreen: React.FC = () => {
           </View>
 
           <Text style={styles.title}>Parcela Diária</Text>
-          {isSuccess && (
-            <Text style={styles.subtitle}>
-              Enviamos um código de verificação via WhatsApp. Insira-o abaixo.
-            </Text>
-          )}
-
-          {!isSuccess && (
-            <Text style={styles.subtitle}>
-              Digite seu CPF para recuperar a senha
-            </Text>
-          )}
+          <Text style={styles.subtitle}>
+            Enviamos um código de verificação para o seu número. Insira-o
+            abaixo.
+          </Text>
 
           <View style={styles.formContainer}>
-            {!isSuccess && (
-              <>
-                <InputComponent
-                  ref={cpfRef}
-                  placeholder="Seu CPF"
-                  keyboardType="numeric"
-                  maxLength={11}
-                  value={cpf}
-                  maskType="cpf"
-                  icon={
-                    <FontAwesome
-                      name="vcard"
-                      size={20}
-                      color={Colors.gray.primary}
-                    />
-                  }
-                  onChangeText={setCpf}
-                  returnKeyType="next"
-                  onSubmitEditing={() => dateRef.current?.focus()}
+            <InputComponent
+              ref={otpRef}
+              placeholder="Código OTP"
+              keyboardType="numeric"
+              maxLength={6}
+              value={otp}
+              icon={
+                <Ionicons
+                  name="key-sharp"
+                  size={20}
+                  color={Colors.gray.primary}
                 />
-                <InputComponent
-                  ref={dateRef}
-                  placeholder="Data de Nascimento"
-                  keyboardType="numeric"
-                  maxLength={10}
-                  value={date}
-                  maskType="date"
-                  icon={
-                    <FontAwesome
-                      name="calendar"
-                      size={20}
-                      color={Colors.gray.primary}
-                    />
-                  }
-                  onChangeText={setDate}
-                  returnKeyType="done"
-                  onSubmitEditing={() => onSubmit("sms")}
-                />
-              </>
-            )}
-
-            {isSuccess && (
-              <InputComponent
-                ref={otpRef}
-                placeholder="Código OTP"
-                keyboardType="numeric"
-                maxLength={6}
-                value={otp}
-                icon={
-                  <Ionicons
-                    name="key-sharp"
-                    size={20}
-                    color={Colors.gray.primary}
-                  />
-                }
-                onChangeText={setOtp}
-                returnKeyType="done"
-                onSubmitEditing={confirmOTP}
-              />
-            )}
+              }
+              onChangeText={setOtp}
+              returnKeyType="done"
+              onSubmitEditing={confirmOTP}
+            />
           </View>
           <View style={styles.footerContainer}>
-            {isLoading && (
-              <ActivityIndicator size={30} color={Colors.green.primary} />
-            )}
+            <ButtonComponent
+              title={"Confirmar código"}
+              onPress={() => confirmOTP()}
+              iconLeft={null}
+              loading={isLoading}
+            />
 
-            {!isLoading && (
-              <ButtonComponent
-                title={isSuccess ? "Confirmar código" : "Enviar Código"}
-                onPress={isSuccess ? confirmOTP : () => onSubmit("sms")}
-                iconLeft={null}
-              />
-            )}
-
-            {isSuccess && !canResend && (
+            {/* {!isLoading && !canResend && (
               <View style={styles.resendTimerContainer}>
                 <Ionicons
                   name="time-outline"
@@ -258,9 +157,9 @@ const CPFOTPScreen: React.FC = () => {
                   {String(remainingSeconds % 60).padStart(2, "0")}
                 </Text>
               </View>
-            )}
+            )} */}
 
-            {isSuccess && canResend && !isLoading && (
+            {/* {isSuccess && canResend && !isLoading && (
               <TouchableOpacity
                 style={styles.sendCodeContainer}
                 onPress={() => onSubmit("sms")}
@@ -269,7 +168,7 @@ const CPFOTPScreen: React.FC = () => {
                   Não recebeu? Reenviar código
                 </Text>
               </TouchableOpacity>
-            )}
+            )} */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

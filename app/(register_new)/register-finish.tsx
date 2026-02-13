@@ -3,6 +3,7 @@ import { Colors } from "@/constants/Colors";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
+import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
 import { useRegisterNewStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
@@ -19,6 +20,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+const maskCpf = (cpf: string | undefined) => {
+  if (!cpf) return "";
+  const cleanCpf = cpf.replace(/\D/g, "");
+  if (cleanCpf.length !== 11) return cpf;
+  return `***.***.${cleanCpf.slice(6, 9)}-**`;
+};
+
+const maskPhone = (phone: string | undefined) => {
+  if (!phone) return "";
+  const cleanPhone = phone.replace(/\D/g, "");
+  if (cleanPhone.length < 4) return phone;
+  const last4 = cleanPhone.slice(-4);
+  return `(**) *****-${last4}`;
+};
 
 const LoadingScreen = (text: string) => (
   <View style={styles.loadingContainer}>
@@ -37,7 +53,8 @@ const LoadingScreen = (text: string) => (
 
 const RegisterFinish: React.FC = () => {
   const { data } = useRegisterNewStore();
-  const { cpf, password } = useRegisterAuthStore();
+  const { userRegister, user } = useAuthStore();
+  const { cpf, phone, password } = useRegisterAuthStore();
   const {
     mutate,
     isPending: isRegistering,
@@ -55,10 +72,10 @@ const RegisterFinish: React.FC = () => {
       if (isError) {
         Alert.alert(
           "Erro",
-          error?.message || "Ocorreu um erro ao finalizar o cadastro."
+          error?.message || "Ocorreu um erro ao finalizar o cadastro.",
         );
       }
-    }, [isError])
+    }, [isError]),
   );
 
   useFocusEffect(
@@ -66,7 +83,7 @@ const RegisterFinish: React.FC = () => {
       if (isRegisterSuccess) {
         setIsSuccess(true);
       }
-    }, [isRegisterSuccess])
+    }, [isRegisterSuccess]),
   );
 
   const completeRegistration = () => {
@@ -138,9 +155,28 @@ const RegisterFinish: React.FC = () => {
 
   return (
     <LayoutRegister
-      title="Quase lá!"
+      title="Quase Lá!"
       subtitle="Para finalizar, confira os detalhes e aceite o contrato"
     >
+      <View style={styles.propostaContainer}>
+        <Text style={[styles.propostaTitle, { marginBottom: 0 }]}>
+          Proposta para
+        </Text>
+        <Text style={styles.propostaTitle}>
+          {(user?.nome || userRegister?.nome)
+            ?.split(" ")
+            .map((part, index) =>
+              index === 0 ? part : part.charAt(0).toUpperCase() + ".",
+            )
+            .join(" ")}
+        </Text>
+        <Text style={styles.propostaText}>
+          CPF: {maskCpf(data?.cpf! ?? userRegister?.cpf ?? "")}
+        </Text>
+        <Text style={styles.propostaText}>
+          Telefone: {maskPhone(data?.phone! ?? userRegister?.whatsapp ?? "")}
+        </Text>
+      </View>
       <ScrollView style={styles.card_termos}>
         <Text style={styles.text_strong}>DETALHES DO CONTRATO</Text>
         <Text style={styles.text_content}>
@@ -285,6 +321,24 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: Colors.gray.primary,
     textAlign: "center",
+  },
+  propostaContainer: {
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    width: "100%",
+  },
+  propostaTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: Colors.green.primary,
+  },
+  propostaText: {
+    fontSize: 12,
+    color: "#555",
+    marginBottom: 8,
   },
 });
 

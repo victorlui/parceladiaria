@@ -7,22 +7,43 @@ export function useAlerts() {
     title: string;
     message: string;
     onPress?: () => void; // Adicionamos a ação customizada aqui
+    sac?: boolean;
   } | null>(null);
 
   const showSuccess = (
     title: string,
     message: string,
-    onOkPress?: () => void
+    onOkPress?: () => void,
   ) => {
-    setAlert({ type: "success", title, message, onPress: onOkPress });
+    setAlert({
+      type: "success",
+      title,
+      message,
+      onPress: onOkPress,
+      sac: false,
+    });
   };
 
-  const showError = (title: string, message: string) => {
-    setAlert({ type: "error", title, message, onPress: () => hideAlert() });
+  const showError = (title: string, message: string, sac?: boolean) => {
+    setAlert({
+      type: "error",
+      title,
+      message,
+      onPress: () => hideAlert(),
+      sac,
+    });
   };
 
   const showWarning = (title: string, message: string) => {
     setAlert({ type: "warning", title, message, onPress: () => hideAlert() });
+  };
+
+  const showWarningPress = (
+    title: string,
+    message: string,
+    onOkPress?: () => void,
+  ) => {
+    setAlert({ type: "warning", title, message, onPress: onOkPress });
   };
 
   const showInfo = (title: string, message: string) => {
@@ -48,6 +69,7 @@ export function useAlerts() {
         message={alert.message}
         buttonText="Ok"
         onPress={handlePress}
+        sac={alert.sac}
       />
     );
   };
@@ -56,6 +78,7 @@ export function useAlerts() {
     showSuccess,
     showError,
     showWarning,
+    showWarningPress,
     showInfo,
     AlertDisplay,
     hideAlert,

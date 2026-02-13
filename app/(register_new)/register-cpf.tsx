@@ -16,7 +16,7 @@ import { formatarData } from "@/utils/formats";
 
 const RegisterCPF: React.FC = () => {
   const { showWarning, AlertDisplay, showError } = useAlerts();
-  const { data, setData } = useRegisterNewStore();
+  const { setData } = useRegisterNewStore();
   const { cpf: cpfAuth } = useRegisterAuthStore();
   const cpfRef = useRef<TextInput>(null);
   const birthDateRef = useRef<TextInput>(null);
@@ -40,7 +40,7 @@ const RegisterCPF: React.FC = () => {
       const formattedBirthDate = formatarData(birthDate);
 
       const { data } = await api.get(
-        `/auth/search/cpf/${cpf}/${formattedBirthDate}`
+        `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
       );
 
       if (data?.data?.status === "recusado") {
@@ -49,18 +49,27 @@ const RegisterCPF: React.FC = () => {
       }
 
       const response: any = await checkCPF(cpf, formattedBirthDate!);
-
+      console.log("response cpf", response);
       if (response.message === "Cadastro Localizado") {
         showWarning("Alerta!", "O CPF informado já está cadastrado. ");
+        return;
       } else {
         setData({
           ...data,
           cpf,
         });
         router.push("/(register_new)/register-password");
+        return;
       }
     } catch (error: any) {
-      console.log("error", error.response);
+      console.log("error cpf", error.response?.data);
+      if (error.response && error.response.status === 403) {
+        showWarning(
+          "Atenção",
+          "Você fez muitas requisições, aguarde um momento e tente novamente.",
+        );
+        return;
+      }
     } finally {
       setIsLoading(false);
     }

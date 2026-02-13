@@ -58,7 +58,7 @@ const ChangePassword: React.FC = () => {
     if (!passwordValid) {
       showError(
         "Erro",
-        "A senha não atende aos requisitos de segurança. Por favor, tente novamente."
+        "A senha não atende aos requisitos de segurança. Por favor, tente novamente.",
       );
       return;
     }
@@ -67,7 +67,7 @@ const ChangePassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post(
+      await api.post(
         "/v1/client/change-password",
         {
           password: password,
@@ -76,9 +76,8 @@ const ChangePassword: React.FC = () => {
           headers: {
             Authorization: `Bearer ${tokenRegister}`,
           },
-        }
+        },
       );
-      console.log("response", response);
 
       showSuccess("Sucesso", "Senha alterada com sucesso!", () => {
         hideAlert();

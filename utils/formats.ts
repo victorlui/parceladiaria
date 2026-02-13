@@ -75,3 +75,20 @@ export function formatarData(data: string) {
 
   return `${yyyy}-${mm}-${dd}`;
 }
+
+/**
+ * Formata uma data YYYY-MM-DD para DD/MM/YYYY
+ * @param {string | undefined} dateString - A data em formato YYYY-MM-DD
+ * @returns {string} A data formatada em DD/MM/YYYY
+ */
+export const formatDateToBR = (dateString: string | undefined): string => {
+  if (!dateString) return "";
+  const parts = dateString.split("-");
+  if (parts.length >= 3) {
+    const [year, month, day] = parts;
+    // Remove potential time part from day
+    const cleanDay = day.substring(0, 2);
+    return `${cleanDay}/${month}/${year}`;
+  }
+  return dateString;
+};

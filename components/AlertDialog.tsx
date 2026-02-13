@@ -1,6 +1,7 @@
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
+import { Link } from "expo-router";
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Modal } from "react-native";
 
 type AlertType = "info" | "error" | "warning" | "success";
 
@@ -10,6 +11,7 @@ interface AlertProps {
   message: string;
   buttonText: string;
   onPress: () => void;
+  sac?: boolean;
 }
 
 const icons = {
@@ -25,6 +27,7 @@ export function AlertComponent({
   message,
   buttonText,
   onPress,
+  sac = false,
 }: AlertProps) {
   // Define cores e ícones de acordo com o tipo
   useDisableBackHandler();
@@ -41,30 +44,58 @@ export function AlertComponent({
   const icon = icons[type];
 
   return (
-    <View className="z-10 absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center bg-black/50">
-      <View className={`p-6 rounded-xl shadow-md w-72 ${bgColor} items-center`}>
-        <Image source={icon} className="w-16 h-16 mb-4" resizeMode="contain" />
-        {title ? (
-          <>
-            <Text className={`text-xl font-bold ${!message ? "mb-6" : "mb-2"}`}>
-              {title}
-            </Text>
-            {message && (
-              <Text className="text-gray-600 mb-6 text-center">{message}</Text>
-            )}
-          </>
-        ) : (
-          <Text className="text-gray-600 mb-6 text-center">{message}</Text>
-        )}
-        <TouchableOpacity
-          onPress={onPress}
-          className={`px-6 py-3 rounded-lg ${buttonBg}`}
+    <Modal
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={() => {}}
+    >
+      <View className="flex-1 items-center justify-center bg-black/50">
+        <View
+          className={`p-6 rounded-xl shadow-md w-72 ${bgColor} items-center`}
         >
-          <Text className="text-white text-center font-semibold">
-            {buttonText}
-          </Text>
-        </TouchableOpacity>
+          <Image
+            source={icon}
+            className="w-16 h-16 mb-4"
+            resizeMode="contain"
+          />
+          {title ? (
+            <>
+              <Text
+                className={`text-xl font-bold ${!message ? "mb-6" : "mb-2"}`}
+              >
+                {title}
+              </Text>
+              {message && (
+                <Text
+                  className={`text-gray-600  text-center ${sac ? "mb-3" : "mb-6"}`}
+                >
+                  {message}
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text className="text-gray-600 mb-6 text-center">{message}</Text>
+          )}
+          {sac && (
+            <Link
+              href="https://www.parceladiaria.com.br/sac"
+              className="text-blue-500 text-center font-semibold mb-6"
+            >
+              Clicando aqui
+            </Link>
+          )}
+
+          <TouchableOpacity
+            onPress={onPress}
+            className={`px-6 py-3 rounded-lg ${buttonBg}`}
+          >
+            <Text className="text-white text-center font-semibold">
+              {buttonText}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }

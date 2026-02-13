@@ -12,30 +12,38 @@ const COLORS = {
 };
 
 const InfoBalance: React.FC<Props> = ({ user }) => {
+  const lastLoan = user?.lastLoan;
+
   const outstandingBalance = useMemo(() => {
-    return user?.lastLoan?.installments?.reduce((total, installment) => {
+    if (!lastLoan?.installments) return 0;
+    return lastLoan.installments.reduce((total, installment) => {
       if (installment.paid === "Sim") return total;
       return total + (parseFloat(String(installment.amount)) || 0);
     }, 0);
-  }, [user?.lastLoan]);
+  }, [lastLoan]);
 
   const remainingInstallments = useMemo(() => {
     return (
-      user?.lastLoan?.installments?.filter(
-        (installment) => installment.paid !== "Sim"
+      lastLoan?.installments?.filter(
+        (installment) => installment.paid !== "Sim",
       ).length ?? 0
     );
-  }, [user?.lastLoan]);
+  }, [lastLoan]);
+
+  if (!user || !lastLoan) return null;
+
   return (
     <View style={styles.body}>
       <Text style={styles.bodyText}>Saldo devedor</Text>
       <Text style={styles.bodyValue}>
-        {formatCurrency(Number(outstandingBalance))}
+        {formatCurrency(outstandingBalance)}
       </Text>
-      <Text style={[styles.bodyText, { textTransform: "none" }]}>
-        {remainingInstallments}x de{" "}
-        {formatCurrency(Number(user?.lastLoan?.installment_amount))} restantes
-      </Text>
+      {outstandingBalance > 0 && (
+        <Text style={[styles.bodyText, { textTransform: "none" }]}>
+          {remainingInstallments}x de{" "}
+          {formatCurrency(Number(lastLoan.installment_amount))} restantes
+        </Text>
+      )}
     </View>
   );
 };

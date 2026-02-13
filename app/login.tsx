@@ -28,15 +28,27 @@ const Login: React.FC = () => {
   useDisableBackHandler();
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { setCpf: setCPF } = useRegisterAuthStore();
-  const { mutate, isError, isPending } = useCheckCPFMutation();
-  const [cpf, setCpf] = useState("");
+  const { mutate, isError, isPending, error } = useCheckCPFMutation();
+  const [cpf, setCpf] = useState("41490671803");
   const cpfRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
+  const [sac, setSac] = useState(false);
 
   useEffect(() => {
     if (isError && !hasShownError.current) {
       hasShownError.current = true;
-      showError("Atenção", "Login ou senha inválida.");
+      if (
+        error.response &&
+        error.response?.data?.message ===
+          "CPF não disponível. Entre em contato com o suporte."
+      ) {
+        setSac(true);
+      }
+      showError(
+        "Atenção",
+        error.response?.data?.message || "Login ou senha inválida.",
+        sac,
+      );
     }
     if (!isError) {
       hasShownError.current = false;

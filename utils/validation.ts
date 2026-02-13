@@ -107,3 +107,35 @@ export function validateBirthDate18Plus(input: string): string {
   if (date > eighteen) return "Você deve ter pelo menos 18 anos";
   return "";
 }
+
+export function validateCNPJ(cnpj: string): string {
+  const raw = (cnpj ?? "").trim();
+  const digits = raw.replace(/\D/g, "");
+
+  if (!raw) return "CNPJ é obrigatório";
+  if (digits.length !== 14) return "CNPJ deve conter 14 dígitos";
+
+  // Elimina CNPJs com todos os dígitos iguais (ex: 11.111.111/1111-11)
+  if (/^(\d)\1{13}$/.test(digits)) return "CNPJ inválido";
+
+  const calculateDigit = (slice: string, weights: number[]): number => {
+    const sum = slice
+      .split("")
+      .reduce((acc, digit, idx) => acc + parseInt(digit) * weights[idx], 0);
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+
+  // Pesos oficiais do CNPJ
+  const weight1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const weight2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+  const digit1 = calculateDigit(digits.substring(0, 12), weight1);
+  const digit2 = calculateDigit(digits.substring(0, 13), weight2);
+
+  if (digit1 !== parseInt(digits[12]) || digit2 !== parseInt(digits[13])) {
+    return "CNPJ inválido";
+  }
+
+  return "";
+}

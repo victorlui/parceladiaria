@@ -10,6 +10,7 @@ export interface ApiUserData {
   criado?: string;
   data_divergencia?: string | null;
   data_finalizado?: string | null;
+  data_retentativa?: string | null;
   descricao_comercio?: string | null;
   divergencias?: string | null;
   email?: string | null;
@@ -41,6 +42,7 @@ export interface ApiUserData {
   repescagem?: string | null;
   signature?: string | null;
   status?: string;
+  status_doc?: string | null;
   termos?: number;
   tipo_comercio?: string | null;
   type?: string;

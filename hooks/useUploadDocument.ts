@@ -12,8 +12,10 @@ type UploadFileParams = {
 };
 
 export async function uploadFileToS3({ file }: UploadFileParams) {
-  const tokenRegister = useAuthStore.getState().tokenRegister;
-
+  const tokenRegister =
+    useAuthStore.getState().tokenRegister ?? useAuthStore.getState().token;
+  console.log("tokenRegister", useAuthStore.getState().tokenRegister);
+  console.log("token", useAuthStore.getState().token);
   try {
     const mimeType = file.mimeType || "image/jpeg";
     const isVideo = mimeType.startsWith("video/");
@@ -41,10 +43,12 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
       return null;
     }
 
+    console.log("fileSize", tokenRegister);
+
     const { upload_url, final_url } = await solicitarLinkS3(
       filename,
       mimeType,
-      tokenRegister
+      tokenRegister,
     );
 
     const uploadResult = await fetch(upload_url, {
@@ -58,8 +62,19 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
     }
 
     return final_url;
-  } catch (error) {
+  } catch (error: any) {
+    console.log("error", error);
     Alert.alert("Erro no upload", "Não foi possível enviar o arquivo.");
     return null;
   }
+}
+
+export async function uploadRawFile(file: any) {
+  return uploadFileToS3({
+    file: {
+      uri: file.uri || file.path,
+      name: file.name,
+      mimeType: file.mimeType || file.type,
+    },
+  });
 }

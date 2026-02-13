@@ -15,9 +15,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import StatusBar from "@/components/ui/StatusBar";
 import { useRenewStore } from "@/store/renew";
 import { ApiUserData } from "@/interfaces/login_inteface";
+import StatusDocModal from "@/components/home/StatusDocModal";
+import { router } from "expo-router";
+import RefinancingModal from "@/components/home/RefinancingModal";
+import { getFromGPS } from "@/services/fromIP";
 
 const HomeScreen: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, token, register } = useAuthStore();
   const { setRenew } = useRenewStore();
 
   const [available, setAvailable] = useState(false);
@@ -25,6 +29,31 @@ const HomeScreen: React.FC = () => {
   const [totalInstallments, setTotalInstallments] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState<ApiUserData | null>(null);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (userData?.status_doc?.toLowerCase() === "divergente") {
+      setStatusModalVisible(true);
+    }
+  }, [userData]);
+
+  const handleUpdateDocs = () => {
+    if (userData && token) {
+      //   register(token, userData);
+      setStatusModalVisible(false);
+      router.push("/divergencia_old_docs_screen");
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+        if (typeof user?.refinanciamento === "string") {
+          setModalVisible(true);
+        }
+     
+    }, [user]),
+  );
 
   useFocusEffect(
     React.useCallback(() => {
@@ -33,32 +62,40 @@ const HomeScreen: React.FC = () => {
         try {
           const response = await renewStatus();
           const responseClient = await api.get("/v1/client");
-          console.log("responseClient", responseClient.data.data.data);
-          const sorted = responseClient.data.data.data.lastLoan.installments
-            .filter((i: any) => i.paid === "Sim")
-            .slice()
-            .sort((a: any, b: any) => b.id - a.id);
-          setInstallments(sorted);
 
-          setTotalInstallments(
-            responseClient.data.data.data.lastLoan.installments.length
-          );
+          const installmentsData =
+            responseClient.data?.data?.data?.lastLoan?.installments;
+
+          if (installmentsData && Array.isArray(installmentsData)) {
+            const sorted = installmentsData
+              .filter((i: any) => i.paid === "Sim")
+              .slice()
+              .sort((a: any, b: any) => b.id - a.id);
+            setInstallments(sorted);
+            setTotalInstallments(installmentsData.length);
+          } else {
+            setInstallments([]);
+            setTotalInstallments(0);
+          }
+
           setAvailable(response.data.data.can_renew);
           setRenew(response.data.data);
+
           setUserData({
             ...user,
             lastLoan: responseClient.data.data.data.lastLoan,
-            pixKey: user?.pixKey ?? null,
+            pixKey:
+              user?.pixKey ?? responseClient.data.data.data.pixKey ?? null,
           });
         } catch (error: any) {
-          console.log("error de status renovação", error.response);
+          return error.response;
         } finally {
           setLoading(false);
         }
       };
 
       getRenew();
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
@@ -83,6 +120,18 @@ const HomeScreen: React.FC = () => {
           installments={installments}
           loading={loading}
           loan={userData?.lastLoan}
+        />
+        <StatusDocModal
+          visible={statusModalVisible}
+          onUpdate={handleUpdateDocs}
+          onClose={() => setStatusModalVisible(false)}
+        />
+
+        <RefinancingModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          amount={user?.lastLoan?.installment_amount ?? 0}
+          installments={1}
         />
       </ScrollView>
     </SafeAreaView>

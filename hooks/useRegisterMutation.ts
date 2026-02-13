@@ -112,8 +112,6 @@ export function useUpdateUserMutation() {
         return data;
       }
 
-      console.log("data update user", data);
-
       const registerStore = useRegisterAuthStore.getState();
       const { setEtapa } = registerStore;
       setEtapa(data.etapa);

@@ -11,7 +11,6 @@ import { Keyboard } from "react-native";
 
 const BusinessTypeScreen: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
-  const { hasCompany } = useRegisterAuthStore();
   const [businessType, setBusinessType] = React.useState("");
 
   const submit = () => {
@@ -19,9 +18,7 @@ const BusinessTypeScreen: React.FC = () => {
     mutate({
       request: {
         tipo_comercio: businessType,
-        etapa: hasCompany
-          ? Etapas.COMERCIANTE_INFORMANDO_CNPJ
-          : Etapas.COMERCIANTE_ENVIANDO_EXTRATO,
+        etapa: Etapas.COMERCIANTE_INFORMANDO_CNPJ,
       },
     });
   };
@@ -38,6 +35,7 @@ const BusinessTypeScreen: React.FC = () => {
         onChangeText={setBusinessType}
         returnKeyType="done"
         onSubmitEditing={submit}
+        autoCapitalize="words"
         icon={
           <MaterialIcons
             name="business-center"

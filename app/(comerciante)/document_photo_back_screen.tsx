@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
@@ -10,23 +10,17 @@ import React from "react";
 export default function DocumentBackScreen() {
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
-  const sendFileFront = async (file: File) => {
+  const sendFileFront = async (file: any) => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const finalUrl = await uploadFileToS3({
-        file: {
-          uri: (file as any).uri || (file as any).path,
-          name: file.name,
-          mimeType: file.type,
-        },
-      });
+      const finalUrl = await uploadRawFile(file);
 
       if (!finalUrl) return;
 
       mutate({
         request: {
-          etapa: Etapas.COMERCIANTE_ENVIANDO_VIDEO_INTERIOR,
+          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
           foto_verso_doc: finalUrl,
         },
       });
@@ -42,7 +36,7 @@ export default function DocumentBackScreen() {
       title="Documento (Verso)"
       subtitle="Agora, uma foto do VERSO do documento."
     >
-      {loading || (isPending && <Spinner text="Enviando arquivo" />)}
+      {(loading || isPending) && <Spinner text="Enviando arquivo" />}
       <View>
         <View style={style.infoContainer}>
           <Text style={style.infoIcon}>✓</Text>

@@ -17,7 +17,6 @@ import { Asset } from "expo-asset";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
 import { changePassword } from "@/services/loans";
-import * as FileSystem from "expo-file-system";
 
 const ConfigTab: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -34,21 +33,21 @@ const ConfigTab: React.FC = () => {
     if (!newPassword || !confirmPassword) {
       Alert.alert(
         "Campos obrigatórios",
-        "Informe a nova senha e a confirmação."
+        "Informe a nova senha e a confirmação.",
       );
       return;
     }
     if (newPassword.length < 6) {
       Alert.alert(
         "Senha inválida",
-        "A senha deve ter pelo menos 6 caracteres."
+        "A senha deve ter pelo menos 6 caracteres.",
       );
       return;
     }
     if (newPassword !== confirmPassword) {
       Alert.alert(
         "Senhas diferentes",
-        "A confirmação deve ser igual à nova senha."
+        "A confirmação deve ser igual à nova senha.",
       );
       return;
     }
@@ -61,7 +60,7 @@ const ConfigTab: React.FC = () => {
     } catch (error: any) {
       Alert.alert(
         "Erro",
-        error?.message || "Não foi possível alterar a senha."
+        error?.message || "Não foi possível alterar a senha.",
       );
     } finally {
       setIsSaving(false);
@@ -91,7 +90,7 @@ const ConfigTab: React.FC = () => {
       setTermsVisible(true);
     } catch (err) {
       setTermsHtml(
-        "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>"
+        "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>",
       );
       setTermsVisible(true);
     }

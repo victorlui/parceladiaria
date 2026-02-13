@@ -1,7 +1,7 @@
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { Etapas } from "@/utils";
 import React from "react";
@@ -12,22 +12,16 @@ const VideoPerfil: React.FC = () => {
 
   const [loading, setLoading] = React.useState(false);
 
-  const sendFile = async (file: File) => {
+  const sendFile = async (file: any) => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const finalUrl = await uploadFileToS3({
-        file: {
-          uri: (file as any).uri || (file as any).path,
-          mimeType: file.type,
-          name: file.name,
-        },
-      });
+      const finalUrl = await uploadRawFile(file);
       if (!finalUrl) return;
 
       mutate({
         request: {
-          etapa: Etapas.REGISTRANDO_TIMELESS_FACE,
+          etapa: Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE,
           video_perfil_app: finalUrl,
         },
       });

@@ -45,12 +45,13 @@ export const useLoginMutation = () => {
           router.replace("/divergencia_screen");
         } else if (status === StatusCadastro.PRE_APROVADO) {
           router.replace("/pre_aprovado_screen");
-        } else if (status === StatusCadastro.RECUSADO) {
+        } else if (etapa === Etapas.FINALIZADO) {
           router.replace("/recusado_screen");
         } else if (status === StatusCadastro.REANALISE) {
           router.replace("/reanalise_screen");
         } else {
           const rota = getRouteByEtapa(etapa as Etapas);
+
           if (rota) {
             router.push(rota as any);
             //router.push("/(register_new)/timeless_face");
@@ -60,6 +61,7 @@ export const useLoginMutation = () => {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         const response = await api.get(`/v1/client/data/info`);
 
+        const responseClient = await api.get("/v1/client");
         const user: ApiUserData = {
           nome: response.data.data.name,
           email: response.data.data.email,
@@ -74,12 +76,21 @@ export const useLoginMutation = () => {
           lastLoan: data.data.lastLoan,
           zip_code: response.data.data.zip_code,
           phone: response.data.data.phone,
-          pixKey: "",
+          pixKey: responseClient.data.data.data.pixKey ?? "",
+          status_doc: response.data.data.status_doc,
           isLoggedIn: true,
         };
 
         useAuthStore.getState().login(data.token, user);
-        router.push("/(tabs)");
+
+        if (
+          response.data.data.status_doc === "Divergente" &&
+          response.data.data.status !== "Regular"
+        ) {
+          router.replace("/divergencia_old_docs_screen");
+          return;
+        }
+        router.push("/(tabs)/home");
         //router.replace("/analise_screen");
       }
 

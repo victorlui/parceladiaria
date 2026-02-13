@@ -28,12 +28,14 @@ import {
 } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
 import { useRegisterAuthStore } from "@/store/register";
+import { useAuthStore } from "@/store/auth";
 
 const InsertPassword: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
   const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
-  const [password, setPassword] = useState("");
+  const { logout } = useAuthStore();
+  const [password, setPassword] = useState("Senha@123");
   const [showPassword, setShowPassword] = useState(false);
 
   const senhaRef = useRef<TextInput>(null);
@@ -51,6 +53,7 @@ const InsertPassword: React.FC = () => {
 
   const onSubmit = () => {
     Keyboard.dismiss();
+    logout();
     if (!password) {
       showWarning("Atenção", "Preencha todos os campos");
       return;
@@ -64,7 +67,7 @@ const InsertPassword: React.FC = () => {
   };
 
   const navigationForgotPassword = () => {
-    router.push("/(auth)/cpf-otp-screen");
+    router.push("/(auth)/validity");
   };
 
   const navigationRegister = () => {

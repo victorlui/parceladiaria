@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { getToken, getUser, removeToken, saveToken } from "../lib/authStorage";
 import { ApiUserData } from "@/interfaces/login_inteface";
+import { queryClient } from "@/lib/queryClient";
 
 type AuthState = {
   token: string | null;
@@ -9,6 +10,8 @@ type AuthState = {
   tokenRegister: string | null;
   isLoading: boolean;
   can_renew: boolean;
+  cpfValid: string | null;
+  setCpfValid: (cpfValid: string | null) => void;
   setCanRenew: (can_renew: boolean) => void;
   login: (token: string, user: ApiUserData | null) => void;
   register: (token: string, user: ApiUserData | null) => void;
@@ -25,6 +28,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   tokenRegister: null,
   isLoading: true,
   can_renew: false,
+  cpfValid: null,
+  setCpfValid: (cpfValid) => {
+    set({ cpfValid });
+  },
   setCanRenew: (can_renew) => {
     set({ can_renew });
   },
@@ -52,6 +59,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     removeToken();
+    queryClient.clear();
     set({ token: null, user: null });
   },
 
@@ -60,8 +68,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const token = await getToken();
       const user = await getUser();
-      console.log("token", token);
-      console.log("user", user);
       set({ token, user, isLoading: false });
     } catch (error: any) {
       set({ token: null, user: null, isLoading: false });

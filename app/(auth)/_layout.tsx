@@ -9,9 +9,11 @@ export default function AuthLayout() {
     <>
       <StatusBar style="dark" />
       <Stack>
+        <Stack.Screen name="validity" options={options} />
         <Stack.Screen name="cpf-otp-screen" options={options} />
         <Stack.Screen name="otp-screen" options={options} />
         <Stack.Screen name="change-password-screen" options={options} />
+        <Stack.Screen name="timeless_face_check" options={options} />
       </Stack>
     </>
   );

@@ -13,7 +13,7 @@ import { router } from "expo-router";
 
 const PreApprovedLimit: React.FC = () => {
   const [step, setStep] = React.useState<"search" | "found" | "limit">(
-    "search"
+    "search",
   );
   const [limit] = React.useState<number>(600);
   const [accepted, setAccepted] = React.useState<boolean>(false);
@@ -34,7 +34,7 @@ const PreApprovedLimit: React.FC = () => {
   const openTerms = React.useCallback(async () => {
     try {
       const asset = Asset.fromModule(
-        require("@/assets/termodeuso_cadastro.html")
+        require("@/assets/termodeuso_cadastro.html"),
       );
       await asset.downloadAsync();
       const fileUri = asset.localUri || asset.uri;
@@ -56,7 +56,7 @@ const PreApprovedLimit: React.FC = () => {
       setTermsVisible(true);
     } catch (err) {
       setTermsHtml(
-        "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>"
+        "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>",
       );
       setTermsVisible(true);
     }
@@ -94,6 +94,9 @@ const PreApprovedLimit: React.FC = () => {
                 <Text style={styles.limitValue}>{formatCurrency(limit)}</Text>
                 <Text style={styles.limitParcel}>
                   em 26 parcelas de R$ 30,30 por dia
+                </Text>
+                <Text style={styles.limitSubtitle}>
+                  Sujeito à aprovação após análise de crédito
                 </Text>
                 <Text style={styles.limitSubtitle}>
                   O valor do empréstimo está sujeito a descontos de impostos e

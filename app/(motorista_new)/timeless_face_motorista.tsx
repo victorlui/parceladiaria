@@ -19,6 +19,9 @@ import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
+import { useRegisterAuthStore } from "@/store/register";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -54,9 +57,8 @@ const LoadingScreen: React.FC = () => (
 
 const TimelessFace: React.FC = () => {
   const { mutateAsync: updateUser } = useUpdateUserMutation();
-
   const { isPending } = useLoginMutation();
-
+  const { tokenRegister } = useAuthStore();
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -97,9 +99,15 @@ const TimelessFace: React.FC = () => {
         return;
       }
 
+      await api.get(`/v1/klavi`, {
+        headers: {
+          Authorization: `Bearer ${tokenRegister}`,
+        },
+      });
+
       await updateUser({
         request: {
-          etapa: Etapas.OPEN_FINANCE,
+          etapa: Etapas.ACEITANDO_TERMOS,
           face: finalUrl,
         },
       });

@@ -34,8 +34,9 @@ const InfoRow: React.FC<{
 
 const ProfileTab: React.FC = () => {
   const { user } = useAuthStore();
+  console.log("user profile 2 ", user);
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar />
       <ScrollView
         style={styles.container}
@@ -67,6 +68,11 @@ const ProfileTab: React.FC = () => {
             icon="call-outline"
             label="Telefone"
             value={formatCelular(user?.phone) || ""}
+          />
+          <InfoRow
+            icon="call-outline"
+            label="Chave PIX"
+            value={user?.pixKey || ""}
           />
         </SectionCard>
 

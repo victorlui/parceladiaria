@@ -27,8 +27,8 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
       icon: <FontAwesome name="whatsapp" size={28} color="#fff" />,
       available: false,
       onPress: async () => {
-        const phoneNumber = "5519981763585";
-        const message = "Olá! Estou com problemas com o app. Quero saber mais.";
+        const phoneNumber = "5511952133321";
+        const message = "Olá! Poderia me ajudar?";
 
         const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
 
@@ -53,7 +53,7 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
       icon: <Ionicons name="logo-instagram" size={28} color="#fff" />,
       available: false,
       onPress: async () => {
-        const url = "https://www.instagram.com/parcela.diaria";
+        const url = "https://www.instagram.com/parceladiaria";
         const supported = await Linking.canOpenURL(url);
         if (supported) {
           await Linking.openURL(url);

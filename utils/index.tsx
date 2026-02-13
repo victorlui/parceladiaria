@@ -28,7 +28,7 @@ export async function requestPermissions() {
     if (cameraStatus !== "granted" || mediaStatus !== "granted") {
       Alert.alert(
         "Permissão necessária",
-        "Precisamos de permissão para acessar câmera e fotos."
+        "Precisamos de permissão para acessar câmera e fotos.",
       );
       return false;
     }
@@ -39,12 +39,12 @@ export async function requestPermissions() {
 export async function generateSignature(
   uuid: string,
   secret: string,
-  timestamp: string
+  timestamp: string,
 ) {
   const payload = `${uuid}${timestamp}${secret}`;
   const hash = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    payload
+    payload,
   );
   return hash;
 }
@@ -80,6 +80,7 @@ export enum Etapas {
   MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
   MOTORISTA_REGISTRANDO_VERSO_CNH = "Enviando verso CNH",
   MOTORISTA_REGISTRANDO_VIDEO_PERFIL = "Enviando video perfil",
+  MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial motorista",
 
   //comerciante
   COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA = "Informando se possui empresa",
@@ -90,6 +91,9 @@ export enum Etapas {
   COMERCIANTE_ENVIANDO_VIDEO_INTERIOR = "Enviando video interior",
   COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL = "Enviando frente documento pessoal",
   COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL = "Enviando verso documento pessoal",
+
+  // OpenFinance
+  OPEN_FINANCE = "Openfinance",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -109,6 +113,8 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
   [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista_new)/cnh_verso",
   [Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL]: "/(motorista_new)/video_perfil",
+  [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]:
+    "/(motorista_new)/timeless_face_motorista",
 
   //comerciante
   [Etapas.COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA]:
@@ -128,6 +134,9 @@ const routeMap: Record<Etapas, string> = {
 
   [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
+
+  // OpenFinance
+  [Etapas.OPEN_FINANCE]: "/(register_new)/register-openfinance",
 
   [Etapas.FINALIZADO]: "/login",
 };
@@ -160,6 +169,6 @@ export function convertData() {
       (_, month, day, year, hours, minutes, seconds, period) => {
         const h = period === "PM" ? parseInt(hours) + 12 : parseInt(hours);
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minutes}:${seconds}-03:00`;
-      }
+      },
     );
 }
