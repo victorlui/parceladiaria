@@ -140,8 +140,7 @@
             "minSdkVersion": 26
           },
           "ios": {
-            "deploymentTarget": "16.0",
-            "useModularHeaders": true
+            "deploymentTarget": "16.0"
           }
         }
       ]

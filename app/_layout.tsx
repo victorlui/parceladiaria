@@ -11,8 +11,8 @@ import * as Updates from "expo-updates";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
-import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
-import { getToken, getUser } from "@/lib/authStorage";
+// import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
+// import { getToken, getUser } from "@/lib/authStorage";
 
 // 👉 Rotas públicas (deep link permitido)
 const PUBLIC_ROUTES = [
@@ -61,7 +61,7 @@ export default function RootLayout() {
 
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
-  AnalyticsBootstrap();
+  // AnalyticsBootstrap();
 
   // 🔔 Configuração global de notificações
   useEffect(() => {
