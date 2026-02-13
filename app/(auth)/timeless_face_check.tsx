@@ -56,7 +56,7 @@ const LoadingScreen: React.FC = () => (
 
 const TimelessFace: React.FC = () => {
   const { isPending } = useLoginMutation();
-  const { cpf_valid, register } = useAuthStore((state) => state);
+  const { cpfValid, register } = useAuthStore((state) => state);
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -97,7 +97,7 @@ const TimelessFace: React.FC = () => {
       const base64WithPrefix = `data:image/jpeg;base64,${base64}`;
 
       const data = {
-        cpf: cpf_valid,
+        cpf: cpfValid,
         selfie: base64WithPrefix,
       };
 

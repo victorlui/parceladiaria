@@ -28,7 +28,7 @@ const MenuIcon: React.FC<MenuItemProps> = ({ available, loading }) => {
       available: false,
       onPress: async () => {
         const phoneNumber = "5511952133321";
-        const message = "Olá! Estou com problemas com o app. Quero saber mais.";
+        const message = "Olá! Poderia me ajudar?";
 
         const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
 

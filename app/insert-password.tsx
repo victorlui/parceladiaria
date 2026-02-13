@@ -35,7 +35,7 @@ const InsertPassword: React.FC = () => {
   const { mutate, isPending, isError } = useLoginMutation();
   const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
   const { logout } = useAuthStore();
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("Senha@123");
   const [showPassword, setShowPassword] = useState(false);
 
   const senhaRef = useRef<TextInput>(null);

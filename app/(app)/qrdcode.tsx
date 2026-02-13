@@ -64,7 +64,7 @@ const QrCodePayment: React.FC = () => {
       try {
         const res: any = await getPaymentStatus(idNum);
         const statusText = String(
-          res?.status || res?.message || ""
+          res?.status || res?.message || "",
         ).toLowerCase();
         const paid =
           res?.status_code === 200 ||
@@ -75,7 +75,7 @@ const QrCodePayment: React.FC = () => {
           Alert.alert("Pagamento concluído", "Seu pagamento foi confirmado.", [
             {
               text: "OK",
-              onPress: () => router.replace("/(tabs)"),
+              onPress: () => router.replace("/(tabs)/home"),
             },
           ]);
           if (pollingRef.current) clearInterval(pollingRef.current);
@@ -196,7 +196,7 @@ const QrCodePayment: React.FC = () => {
 
             <TouchableOpacity
               style={styles.buttonHome}
-              onPress={() => router.replace("/(tabs)")}
+              onPress={() => router.replace("/(tabs)/home")}
             >
               <Text style={{ color: Colors.black, fontWeight: "bold" }}>
                 Voltar ao Início

@@ -1,4 +1,5 @@
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
+import { Link } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, Image, Modal } from "react-native";
 
@@ -10,6 +11,7 @@ interface AlertProps {
   message: string;
   buttonText: string;
   onPress: () => void;
+  sac?: boolean;
 }
 
 const icons = {
@@ -25,6 +27,7 @@ export function AlertComponent({
   message,
   buttonText,
   onPress,
+  sac = false,
 }: AlertProps) {
   // Define cores e ícones de acordo com o tipo
   useDisableBackHandler();
@@ -64,7 +67,9 @@ export function AlertComponent({
                 {title}
               </Text>
               {message && (
-                <Text className="text-gray-600 mb-6 text-center">
+                <Text
+                  className={`text-gray-600  text-center ${sac ? "mb-3" : "mb-6"}`}
+                >
                   {message}
                 </Text>
               )}
@@ -72,6 +77,15 @@ export function AlertComponent({
           ) : (
             <Text className="text-gray-600 mb-6 text-center">{message}</Text>
           )}
+          {sac && (
+            <Link
+              href="https://www.parceladiaria.com.br/sac"
+              className="text-blue-500 text-center font-semibold mb-6"
+            >
+              Clicando aqui
+            </Link>
+          )}
+
           <TouchableOpacity
             onPress={onPress}
             className={`px-6 py-3 rounded-lg ${buttonBg}`}

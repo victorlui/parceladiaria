@@ -51,6 +51,7 @@ export const useLoginMutation = () => {
           router.replace("/reanalise_screen");
         } else {
           const rota = getRouteByEtapa(etapa as Etapas);
+
           if (rota) {
             router.push(rota as any);
             //router.push("/(register_new)/timeless_face");
@@ -60,8 +61,6 @@ export const useLoginMutation = () => {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         const response = await api.get(`/v1/client/data/info`);
 
-        console.log("data info", response.data.data);
-        console.log("login", data);
         const responseClient = await api.get("/v1/client");
         const user: ApiUserData = {
           nome: response.data.data.name,
@@ -91,7 +90,7 @@ export const useLoginMutation = () => {
           router.replace("/divergencia_old_docs_screen");
           return;
         }
-        router.push("/(tabs)");
+        router.push("/(tabs)/home");
         //router.replace("/analise_screen");
       }
 

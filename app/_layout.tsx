@@ -12,6 +12,7 @@ import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
 import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
+import { getToken, getUser } from "@/lib/authStorage";
 
 // 👉 Rotas públicas (deep link permitido)
 const PUBLIC_ROUTES = [
@@ -53,7 +54,7 @@ const PUBLIC_ROUTES = [
 
 export default function RootLayout() {
   const pathname = usePathname() ?? "";
-  console.log("pathname", pathname);
+
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
   const hasRedirected = useRef(false);
@@ -163,9 +164,8 @@ export default function RootLayout() {
     if (user?.isLoggedIn) {
       const route =
         !user.status || !(user.status in statusRedirectMap)
-          ? "/(tabs)"
+          ? "/(tabs)/home"
           : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
-      console.log("route", route);
       hasRedirected.current = true;
       router.replace(route as any);
     }

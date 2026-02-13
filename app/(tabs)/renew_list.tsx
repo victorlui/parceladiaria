@@ -113,7 +113,7 @@ const RenewList: React.FC = () => {
       console.log("data", data);
       const res = await api.post("/v1/renew", data);
       showSuccess("Sucesso", `Renovação concluida com sucesso`, () => {
-        router.replace("/");
+        router.replace("/(tabs)/home");
       });
       console.log("sucesso res", res);
     } catch (error: any) {

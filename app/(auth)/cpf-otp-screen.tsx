@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const CPFOTPScreen: React.FC = () => {
   const { AlertDisplay, showError } = useAlerts();
   const { register } = useAuthStore();
-  const { cpf_valid } = useAuthStore();
+  const { cpfValid } = useAuthStore();
   const otpRef = useRef<TextInput>(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +72,7 @@ const CPFOTPScreen: React.FC = () => {
     setIsLoading(true);
     try {
       const data = {
-        cpf: cpf_valid,
+        cpf: cpfValid,
         otp,
       };
 

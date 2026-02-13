@@ -43,8 +43,6 @@ const RegisterCPF: React.FC = () => {
         `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
       );
 
-      console.log("data cpf", data);
-
       if (data?.data?.status === "recusado") {
         showError("Atenção", "Data de Nascimento inválida");
         return;
@@ -64,6 +62,7 @@ const RegisterCPF: React.FC = () => {
         return;
       }
     } catch (error: any) {
+      console.log("error cpf", error.response?.data);
       if (error.response && error.response.status === 403) {
         showWarning(
           "Atenção",

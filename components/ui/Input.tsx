@@ -8,6 +8,7 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
+  Platform,
 } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { MaskedTextInput } from "react-native-mask-text";
@@ -49,7 +50,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
       onSubmitEditing,
       ...rest
     },
-    ref
+    ref,
   ) => {
     const [focused, setFocused] = useState(false);
     const isInvalid = !!error;
@@ -139,7 +140,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
         {isInvalid ? <Text style={styles.error}>{error}</Text> : null}
       </View>
     );
-  }
+  },
 );
 
 InputComponent.displayName = "InputComponent";
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: Platform.OS === "ios" ? 22 : 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.borderColor,
