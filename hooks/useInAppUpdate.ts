@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
-import { useDisableBackHandler } from "./useDisabledBackHandler";
 
 export function useForceInAppUpdate() {
   useEffect(() => {

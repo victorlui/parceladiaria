@@ -60,8 +60,8 @@ export default function RootLayout() {
   const hasRedirected = useRef(false);
 
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
-  //useForceInAppUpdate();
-  //AnalyticsBootstrap();
+  useForceInAppUpdate();
+  AnalyticsBootstrap();
 
   // 🔔 Configuração global de notificações
   useEffect(() => {
