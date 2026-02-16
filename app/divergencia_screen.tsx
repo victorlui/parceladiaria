@@ -27,7 +27,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
   useDisableBackHandler();
-  const { userRegister, logout } = useAuthStore();
+  const { userRegister, logout, user } = useAuthStore();
   const { AlertDisplay, showWarning } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { uri: string; nameImage: string }>
@@ -50,25 +50,11 @@ const DivergenciaScreen: React.FC = () => {
   const isAllSelected =
     Object.keys(selectedFiles).length === divergenciasArray.length;
 
-  const handleBack = () => {
-    Alert.alert("Sair", "Deseja sair do aplicativo?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Sair",
-        onPress: () => {
-          logout();
-          router.replace("/login");
-        },
-      },
-    ]);
-  };
-
   const onSubmit = async () => {
     if (!isAllSelected) {
       return;
     }
 
-    console.log("selectedFiles", Object.entries(selectedFiles));
     setIsLoading(true);
     try {
       // Atualiza etapa para FINALIZADO antes de começar os uploads
@@ -95,8 +81,6 @@ const DivergenciaScreen: React.FC = () => {
         const response = await updateUserService({
           request: { [mappedKey]: uploadedUrl },
         });
-
-        console.log("response", response);
       }
       await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
       Alert.alert(
@@ -114,7 +98,7 @@ const DivergenciaScreen: React.FC = () => {
               router.replace("/login");
             },
           },
-        ]
+        ],
       );
     } catch (error: any) {
       console.log("error aqui", error);
@@ -158,6 +142,8 @@ const DivergenciaScreen: React.FC = () => {
 
   // Componente para animar os pontinhos de carregamento
 
+  console.log("user", userRegister);
+
   const LoadingScreen: React.FC = () => (
     <View style={styles.loadingContainer}>
       <View style={styles.spinnerWrapper}>
@@ -190,6 +176,13 @@ const DivergenciaScreen: React.FC = () => {
           Alguns documentos precisam ser reenviados para concluir a validação.
           Verifique os itens abaixo e envie novamente.
         </Text>
+
+        <View>
+          <Text style={styles.observacoesTitle}>Observações</Text>
+          <Text style={styles.observacoesText}>
+            {userRegister?.observacoes}
+          </Text>
+        </View>
 
         <View style={styles.itemsContainer}>{renderDocumentRequests()}</View>
       </ScrollView>
@@ -269,6 +262,16 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     lineHeight: 20,
     marginBottom: 24,
+  },
+  observacoesTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#11181C",
+  },
+  observacoesText: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
   },
   itemsContainer: {
     gap: 12,

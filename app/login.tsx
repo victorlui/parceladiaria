@@ -29,7 +29,7 @@ const Login: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { setCpf: setCPF } = useRegisterAuthStore();
   const { mutate, isError, isPending, error } = useCheckCPFMutation();
-  const [cpf, setCpf] = useState("41490671803");
+  const [cpf, setCpf] = useState("");
   const cpfRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
   const [sac, setSac] = useState(false);

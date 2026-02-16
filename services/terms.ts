@@ -11,6 +11,7 @@ interface TermsAcceptanceData {
 
 export async function acceptedTerms(data: TermsAcceptanceData) {
   const token = useAuthStore.getState().tokenRegister;
+  console.log("token acceptedTerms", token);
   try {
     const response = await api.post("/v1/client/acept-term", data, {
       headers: {
