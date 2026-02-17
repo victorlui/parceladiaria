@@ -6,6 +6,7 @@ export interface ApiUserData {
   complemento?: string | null;
   comprovante_comercio?: string | null;
   comprovante_endereco?: string | null;
+  chamada_video?: number | null;
   cpf?: string;
   criado?: string;
   data_divergencia?: string | null;
@@ -53,6 +54,7 @@ export interface ApiUserData {
   whatsapp2?: string | null;
   msg_painel?: string | null;
   msg_status?: string | null;
+  observacoes?: string | null;
   lastLoan?: {
     amount: string;
     customer: number;

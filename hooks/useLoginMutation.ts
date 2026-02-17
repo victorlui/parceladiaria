@@ -37,6 +37,8 @@ export const useLoginMutation = () => {
       const { etapa, status, type } = data.data;
       const { token } = data;
 
+      //   console.log("useLoginMutation", data);
+
       if (type === "lead") {
         useAuthStore.getState().register(data.token, data.data);
         if (status === Etapas.APP_ANALISE) {
@@ -62,6 +64,7 @@ export const useLoginMutation = () => {
         const response = await api.get(`/v1/client/data/info`);
 
         const responseClient = await api.get("/v1/client");
+        // console.log("responseClient", responseClient);
         const user: ApiUserData = {
           nome: response.data.data.name,
           email: response.data.data.email,
@@ -79,6 +82,7 @@ export const useLoginMutation = () => {
           pixKey: responseClient.data.data.data.pixKey ?? "",
           status_doc: response.data.data.status_doc,
           isLoggedIn: true,
+          observacoes: response.data.data.observacoes,
         };
 
         useAuthStore.getState().login(data.token, user);

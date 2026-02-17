@@ -19,6 +19,7 @@ type AuthState = {
   setToken: (token: string) => void;
   setUser: (user: ApiUserData | null) => void;
   restoreToken: () => Promise<void>;
+  setUserRegister: (userRegister: ApiUserData | null) => void;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -29,6 +30,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   can_renew: false,
   cpfValid: null,
+  setUserRegister: (userRegister) => {
+    set({ userRegister });
+  },
   setCpfValid: (cpfValid) => {
     set({ cpfValid });
   },

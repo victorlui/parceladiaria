@@ -62,7 +62,7 @@ const ProfileTab: React.FC = () => {
           <InfoRow
             icon="mail-outline"
             label="Email"
-            value={user?.email || ""}
+            value={user?.email || "Email não informado"}
           />
           <InfoRow
             icon="call-outline"
