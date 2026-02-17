@@ -41,6 +41,16 @@ const PreAprovado: React.FC = () => {
     }
   };
 
+  const openWeb = async () => {
+    const url = "https://cadastroparceladiaria.com.br/cliente/";
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      alert("Navegador não está instalado.");
+    }
+  };
+
   const onContinue = async () => {
     if (!accepted) return;
     setIsLoading(true);
@@ -276,10 +286,7 @@ const PreAprovado: React.FC = () => {
           </View>
 
           <View style={{ gap: 10 }}>
-            <TouchableOpacity
-              onPress={openWhatsApp}
-              style={styles.whatsappButton}
-            >
+            <TouchableOpacity onPress={openWeb} style={styles.whatsappButton}>
               <FontAwesome name="whatsapp" size={20} color={Colors.white} />
               <Text style={styles.whatsappButtonText}>
                 Falar com um Atendente
