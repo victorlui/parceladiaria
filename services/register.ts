@@ -85,7 +85,7 @@ export async function updateUserService({ request }: RequestProps): Promise<{
 
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
-    console.log("error update service", error);
+    console.log("error update service", error.response);
     if (error.response) {
       throw {
         status: error.response.status,

@@ -19,9 +19,9 @@ import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
-import { useRegisterAuthStore } from "@/store/register";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
+import { useSettingsStore } from "@/store/settings";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -57,6 +57,7 @@ const LoadingScreen: React.FC = () => (
 
 const TimelessFace: React.FC = () => {
   const { mutateAsync: updateUser } = useUpdateUserMutation();
+  const { openfinance } = useSettingsStore();
   const { isPending } = useLoginMutation();
   const { tokenRegister } = useAuthStore();
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
@@ -99,15 +100,20 @@ const TimelessFace: React.FC = () => {
         return;
       }
 
-      await api.get(`/v1/klavi`, {
-        headers: {
-          Authorization: `Bearer ${tokenRegister}`,
-        },
-      });
+      if (openfinance?.openfinance.motorista.eco) {
+        await api.get(`/v1/klavi`, {
+          headers: {
+            Authorization: `Bearer ${tokenRegister}`,
+          },
+        });
+      }
+      console.log("openfinance", openfinance);
 
       await updateUser({
         request: {
-          etapa: Etapas.ACEITANDO_TERMOS,
+          etapa: openfinance?.openfinance.motorista.connect
+            ? Etapas.OPEN_FINANCE
+            : Etapas.ACEITANDO_TERMOS,
           face: finalUrl,
         },
       });

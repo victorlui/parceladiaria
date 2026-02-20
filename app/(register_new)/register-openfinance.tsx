@@ -88,7 +88,6 @@ const OpenFinance: React.FC = () => {
         },
       });
 
-      console.log("/v1/klavi", data);
       setAttempts(data?.r_attempts);
 
       if (data?.status === "aprovado") {

@@ -8,6 +8,7 @@ import { Etapas, getRouteByEtapa, StatusCadastro } from "@/utils";
 import { useAuthStore } from "@/store/auth";
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
+import { useSettingsStore } from "@/store/settings";
 
 export const useCheckCPFMutation = () => {
   const { showError } = useAlerts();
@@ -30,6 +31,7 @@ export const useCheckCPFMutation = () => {
 
 export const useLoginMutation = () => {
   const { showError } = useAlerts();
+  const { setOpenfinance } = useSettingsStore();
   return useMutation({
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
@@ -37,7 +39,13 @@ export const useLoginMutation = () => {
       const { etapa, status, type } = data.data;
       const { token } = data;
 
-      //   console.log("useLoginMutation", data);
+      const response = await api.get("v1/register/settings", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setOpenfinance(response.data.data);
 
       if (type === "lead") {
         useAuthStore.getState().register(data.token, data.data);
