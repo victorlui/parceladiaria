@@ -24,11 +24,8 @@ export async function registerForPushNotificationsAsync() {
           text: "OK",
           onPress: () => Linking.openSettings(),
         },
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancel Pressed"),
-        },
-      ]
+      ],
+      { cancelable: false }
     );
     return;
   }
