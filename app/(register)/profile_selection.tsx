@@ -2,6 +2,8 @@ import Spinner from "@/components/Spinner";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
+import api from "@/services/api";
+import { useSettingsStore } from "@/store/settings";
 import { Etapas } from "@/utils";
 import { FontAwesome6, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
@@ -30,8 +32,8 @@ const options = [
 
 const ProfileSelection: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
-
-  const onContinue = (item: any) => {
+  const { setOpenfinance } = useSettingsStore();
+  const onContinue = async (item: any) => {
     let etapa =
       item.id === "comerciante"
         ? Etapas.COMERCIANTE_ENVIANDO_TIPO_COMERCIO
@@ -42,7 +44,13 @@ const ProfileSelection: React.FC = () => {
       profissao: item.label,
     };
 
-    mutate({ request });
+    try {
+      const response = await api.get("v1/register/settings");
+      setOpenfinance(response.data.data);
+      mutate({ request });
+    } catch (error) {
+      console.log(error);
+    }
   };
   return (
     <LayoutRegister

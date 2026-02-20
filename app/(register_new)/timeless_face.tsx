@@ -19,6 +19,7 @@ import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
 import FaceDetector from "@/components/FaceDetector";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
+import { useSettingsStore } from "@/store/settings";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -54,7 +55,7 @@ const LoadingScreen: React.FC = () => (
 
 const TimelessFace: React.FC = () => {
   const { mutateAsync: updateUser } = useUpdateUserMutation();
-
+  const { openfinance } = useSettingsStore((state) => state);
   const { isPending } = useLoginMutation();
 
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
@@ -99,7 +100,9 @@ const TimelessFace: React.FC = () => {
 
       await updateUser({
         request: {
-          etapa: Etapas.OPEN_FINANCE,
+          etapa: openfinance?.openfinance.comerciante.connect
+            ? Etapas.OPEN_FINANCE
+            : Etapas.ACEITANDO_TERMOS,
           face: finalUrl,
         },
       });

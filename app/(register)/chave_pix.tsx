@@ -44,6 +44,7 @@ const ChavePix: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
   const [selected, setSelected] = React.useState<string>("");
   const [keyPix, setKeyPix] = React.useState<string>("");
+
   React.useEffect(() => {
     if (!selected) return;
     if (selected === "cpf") {

@@ -29,8 +29,11 @@ import {
 import { router } from "expo-router";
 import { useRegisterAuthStore } from "@/store/register";
 import { useAuthStore } from "@/store/auth";
+import api from "@/services/api";
+import { useSettingsStore } from "@/store/settings";
 
 const InsertPassword: React.FC = () => {
+  const { setOpenfinance } = useSettingsStore((state) => state);
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
   const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
@@ -51,7 +54,7 @@ const InsertPassword: React.FC = () => {
     }
   }, [isError, showError]);
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     Keyboard.dismiss();
     logout();
     if (!password) {
@@ -59,11 +62,17 @@ const InsertPassword: React.FC = () => {
       return;
     }
 
-    setPasswordStore(password);
-    mutate({
-      cpf: cpf ?? "",
-      password,
-    });
+    try {
+      setPasswordStore(password);
+      mutate({
+        cpf: cpf ?? "",
+        password,
+      });
+    } catch (error: any) {
+      console.log("error login", error.response);
+      showWarning("Atenção", "CPF inválido");
+      return;
+    }
   };
 
   const navigationForgotPassword = () => {

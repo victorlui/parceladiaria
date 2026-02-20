@@ -54,7 +54,7 @@ const LoadingScreen = (text: string) => (
 const RegisterFinish: React.FC = () => {
   const { data } = useRegisterNewStore();
   const { userRegister, user } = useAuthStore();
-  const { cpf, phone, password } = useRegisterAuthStore();
+  const { cpf, password } = useRegisterAuthStore();
   const {
     mutate,
     isPending: isRegistering,
@@ -65,7 +65,6 @@ const RegisterFinish: React.FC = () => {
   const { mutate: loginMutate, isPending: isLoggingIn } = useLoginMutation();
   const [accepted, setAccepted] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {

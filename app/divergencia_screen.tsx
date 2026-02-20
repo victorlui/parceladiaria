@@ -26,7 +26,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
-  useDisableBackHandler();
   const { userRegister, logout, user } = useAuthStore();
   const { AlertDisplay, showWarning } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
@@ -140,10 +139,6 @@ const DivergenciaScreen: React.FC = () => {
     });
   };
 
-  // Componente para animar os pontinhos de carregamento
-
-  console.log("user", userRegister);
-
   const LoadingScreen: React.FC = () => (
     <View style={styles.loadingContainer}>
       <View style={styles.spinnerWrapper}>
@@ -168,6 +163,7 @@ const DivergenciaScreen: React.FC = () => {
       {isLoading && <LoadingScreen />}
 
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -272,11 +268,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     lineHeight: 20,
+    marginVertical: 12,
   },
   itemsContainer: {
     gap: 12,
   },
-  footer: {},
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+    backgroundColor: "#F9FAFB",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
   submitButton: {
     backgroundColor: Colors.green.button,
     padding: 16,
