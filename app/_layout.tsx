@@ -9,7 +9,7 @@ import { StatusCadastro } from "@/utils";
 import { useAlerts } from "@/components/useAlert";
 import * as Updates from "expo-updates";
 import * as Notifications from "expo-notifications";
-import { registerForPushNotificationsAsync } from "@/hooks/usePushNotification";
+import { usePushNotification } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
 // import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
 // import { getToken, getUser } from "@/lib/authStorage";
@@ -62,6 +62,7 @@ export default function RootLayout() {
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
   // AnalyticsBootstrap();
+  usePushNotification({ disabled: isLoading });
 
   // 🔔 Configuração global de notificações
   useEffect(() => {
@@ -73,11 +74,6 @@ export default function RootLayout() {
         shouldShowList: true,
       }),
     });
-  }, []);
-
-  // 🔔 Push notifications (função normal)
-  useEffect(() => {
-    registerForPushNotificationsAsync();
   }, []);
 
   // 📩 Listener de notificações
