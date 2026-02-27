@@ -4,6 +4,7 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
+import api from "@/services/api";
 import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
 import {
@@ -122,17 +123,14 @@ const AddressScreen: React.FC = () => {
     if (cleanCep.length === 8) {
       setLoadingCep(true);
       try {
-        const resp = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-        if (!resp.ok) {
-          return;
-        }
-        const data = await resp.json();
-        setRua(data.logradouro);
-        setBairro(data.bairro);
-        setEstado(data.uf);
-        setCidade(data.localidade);
+        const { data } = await api.get(`cep/${cleanCep}`);
+
+        setRua(data.data.logradouro);
+        setBairro(data.data.bairro);
+        setEstado(data.data.uf);
+        setCidade(data.data.localidade);
       } catch (e) {
-        console.log("ViaCEP erro", e);
+        showWarning("Atenção", "CEP não encontrado.");
       } finally {
         setLoadingCep(false);
       }

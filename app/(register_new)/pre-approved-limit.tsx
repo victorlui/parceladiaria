@@ -63,7 +63,6 @@ const PreApprovedLimit: React.FC = () => {
   }, []);
 
   const onSubmit = () => {
-    console.log("accepted", accepted);
     router.push("/(register_new)/register-phone");
   };
 

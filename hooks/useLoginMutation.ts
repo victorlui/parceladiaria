@@ -36,19 +36,26 @@ export const useLoginMutation = () => {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data) => {
-      const { etapa, status, type } = data.data;
-      const { token } = data;
+      const { token, openfinance } = data;
+      const { type, etapa, status } = data.data;
 
-      const response = await api.get("v1/register/settings", {
+      const responseClient = await api.get("v1/client", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setOpenfinance(response.data.data);
+      console.log("responseClient", responseClient);
+
+      setOpenfinance({
+        openfinance,
+      });
 
       if (type === "lead") {
-        useAuthStore.getState().register(data.token, data.data);
+        useAuthStore.getState().register(data.token, {
+          otp_obrigatorio: responseClient.data.data.data.otp_obrigatorio,
+          ...data.data,
+        });
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
         } else if (status === StatusCadastro.DIVERGENTE) {
@@ -67,49 +74,47 @@ export const useLoginMutation = () => {
             //router.push("/(register_new)/timeless_face");
           }
         }
-      } else {
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        const response = await api.get(`/v1/client/data/info`);
-
-        const responseClient = await api.get("/v1/client");
-        // console.log("responseClient", responseClient);
-        const user: ApiUserData = {
-          nome: response.data.data.name,
-          email: response.data.data.email,
-          cpf: response.data.data.cpf,
-          cidade: response.data.data.city,
-          bairro: response.data.data.neighborhood,
-          status: response.data.data.status,
-          estado: response.data.data.uf,
-          endereco: response.data.data.address,
-          msg_painel: response.data.data.msg_painel,
-          msg_status: response.data.data.msg_status,
-          lastLoan: data.data.lastLoan,
-          zip_code: response.data.data.zip_code,
-          phone: response.data.data.phone,
-          pixKey: responseClient.data.data.data.pixKey ?? "",
-          status_doc: response.data.data.status_doc,
-          isLoggedIn: true,
-          observacoes: response.data.data.observacoes,
-        };
-
-        useAuthStore.getState().login(data.token, user);
-
-        if (
-          response.data.data.status_doc === "Divergente" &&
-          response.data.data.status !== "Regular"
-        ) {
-          router.replace("/divergencia_old_docs_screen");
-          return;
-        }
-        router.push("/(tabs)/home");
-        //router.replace("/analise_screen");
+        return data;
       }
 
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      const response = await api.get(`/v1/client/data/info`);
+
+      const user: ApiUserData = {
+        nome: response.data.data.name,
+        email: response.data.data.email,
+        cpf: response.data.data.cpf,
+        cidade: response.data.data.city,
+        bairro: response.data.data.neighborhood,
+        status: response.data.data.status,
+        estado: response.data.data.uf,
+        endereco: response.data.data.address,
+        msg_painel: response.data.data.msg_painel,
+        msg_status: response.data.data.msg_status,
+        lastLoan: data.data.lastLoan,
+        zip_code: response.data.data.zip_code,
+        phone: response.data.data.phone,
+        pixKey: responseClient.data.data.data.pixKey ?? "",
+        status_doc: response.data.data.status_doc,
+        isLoggedIn: true,
+        observacoes: response.data.data.observacoes,
+        otp_obrigatorio: responseClient.data.data.data.otp_obrigatorio,
+      };
+
+      useAuthStore.getState().login(data.token, user);
+
+      if (
+        response.data.data.status_doc === "Divergente" &&
+        response.data.data.status !== "Regular"
+      ) {
+        router.replace("/divergencia_old_docs_screen");
+        return;
+      }
+      router.push("/(tabs)/home");
       return data;
     },
     onError: (error: any) => {
-      console.log("error login", error.response);
+      console.log("error login", error);
       showError("Ops!", error.message || "Ocorreu um erro inesperado.");
     },
   });

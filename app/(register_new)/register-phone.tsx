@@ -32,68 +32,12 @@ const RegisterPhone: React.FC = () => {
   const [code, setCode] = React.useState("");
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [showOtpError, setShowOtpError] = React.useState(false);
-  const [timer, setTimer] = React.useState(0);
-
-  React.useEffect(() => {
-    let interval: any;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  const sendCode = async () => {
-    Keyboard.dismiss();
-    if (validatePhone(phone) || !phone) {
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const response: any = await api.post("/auth/otp/generate", {
-        phone,
-        cpf: data?.cpf,
-        method: "sms",
-      });
-      setIsSuccess(true);
-      setShowOtpError(false);
-      setTimer(60);
-      setData({ ...data, phone: phone.replace(/\D/g, "") });
-    } catch (error: any) {
-      if (error.response && error.response.status === 403) {
-        showWarning(
-          "Atenção",
-          "Você fez muitas requisições, aguarde um momento e tente novamente.",
-        );
-        return;
-      }
-      showWarning(
-        "Erro ao enviar código",
-        error.response?.data?.data || "Erro ao enviar código",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const confirmOTP = async () => {
     Keyboard.dismiss();
-    if (code.length !== 6) {
-      setShowOtpError(true);
-      return;
-    }
-    setShowOtpError(false);
+
     setIsLoading(true);
     try {
-      await api.post("/auth/otp/check", {
-        phone,
-        password: data?.password,
-        cpf: data?.cpf,
-        otp: code,
-      });
-
       const registerData = {
         cpf: data?.cpf,
         phone: phone.replace(/\D/g, ""),
@@ -106,14 +50,9 @@ const RegisterPhone: React.FC = () => {
         phone: phone.replace(/\D/g, ""),
         cpf: data?.cpf!,
       });
-      // NOVO  setData({
-      //     ...data,
-      //     token: response.data.data.token,
-      //     etapa: Etapas.INICIO,
-      //   });
+
       router.replace("/(register_new)/register-email");
     } catch (error: any) {
-      console.log("error", error.response);
       showWarning(
         "Erro ao verificar código",
         error.response?.data?.message || "Erro ao verificar código",
@@ -140,48 +79,16 @@ const RegisterPhone: React.FC = () => {
         value={phone}
         onChangeText={setPhone}
         returnKeyType="done"
-        onSubmitEditing={sendCode}
         error={phone ? validatePhone(phone) : undefined}
       />
 
-      {isSuccess && (
-        <InputComponent
-          ref={otpRef}
-          placeholder="Digite o código de 6 dígitos"
-          keyboardType="numeric"
-          maxLength={6}
-          value={code}
-          icon={
-            <Ionicons name="key-sharp" size={20} color={Colors.gray.primary} />
-          }
-          onChangeText={setCode}
-          returnKeyType="done"
-          onSubmitEditing={confirmOTP}
-          error={
-            showOtpError && code.length !== 6 ? "Código inválido" : undefined
-          }
-        />
-      )}
-
       <ButtonComponent
-        title={isSuccess ? "Verificar Código" : "Confirmar"}
-        onPress={isSuccess ? confirmOTP : sendCode}
+        title={"Continuar"}
+        onPress={() => confirmOTP()}
         disabled={!phone || (isSuccess && code.length !== 6)}
         loading={isLoading}
         iconLeft={null}
       />
-      {isSuccess &&
-        (timer > 0 ? (
-          <View style={styles.sendCodeContainer}>
-            <Text style={styles.sendCodeText}>Reenviar código em {timer}s</Text>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.sendCodeContainer} onPress={sendCode}>
-            <Text style={styles.sendCodeText}>
-              Não recebeu? Reenviar código
-            </Text>
-          </TouchableOpacity>
-        ))}
     </LayoutRegister>
   );
 };

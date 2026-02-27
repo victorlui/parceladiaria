@@ -1,15 +1,17 @@
+import CreditProposalScreen from "@/components/CreditProposal";
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
+import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
 import { useRegisterNewStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
 import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -65,6 +67,7 @@ const RegisterFinish: React.FC = () => {
   const { mutate: loginMutate, isPending: isLoggingIn } = useLoginMutation();
   const [accepted, setAccepted] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [terms, setTerms] = useState("");
 
   useFocusEffect(
     React.useCallback(() => {
@@ -84,6 +87,19 @@ const RegisterFinish: React.FC = () => {
       }
     }, [isRegisterSuccess]),
   );
+
+  useEffect(() => {
+    const getTerms = async () => {
+      try {
+        const { data } = await api.get("termos/Proposta_condicionada");
+
+        setTerms(data.termo.content || "");
+      } catch (error) {
+        console.log("error", error);
+      }
+    };
+    getTerms();
+  }, []);
 
   const completeRegistration = () => {
     const userCpf = cpf ?? "";
@@ -176,45 +192,9 @@ const RegisterFinish: React.FC = () => {
           Telefone: {maskPhone(data?.phone! ?? userRegister?.whatsapp ?? "")}
         </Text>
       </View>
-      <ScrollView style={styles.card_termos}>
-        <Text style={styles.text_strong}>DETALHES DO CONTRATO</Text>
-        <Text style={styles.text_content}>
-          Valor do Contrato: <Text style={styles.text_strong}>R$ 600,00</Text>
-          {"\n"}
-          IOF (0,63%): - <Text style={styles.text_strong}>R$ 3,78</Text>
-          {"\n"}
-          Taxa T.I.C. (1,68%): -{" "}
-          <Text style={styles.text_strong}>R$ 10,08</Text>
-          {"\n"}
-          Valor a Receber: <Text style={styles.text_strong}>R$ 586,14</Text>
-        </Text>
-
-        <Text style={styles.text_strong}>PAGAMENTOS</Text>
-        <Text style={styles.text_content}>
-          Lembrando, os pagamentos são diários de segunda à sábado (incluindo
-          feriados), exceto aos domingos. O pagamento deve ser realizado até as
-          23hs, horário de Brasília. O pagamento das suas parcelas deverá ser
-          realizado apenas pelo nosso site na área de clientes.
-        </Text>
-
-        <Text style={styles.text_strong}>PENALIDADES POR ATRASO</Text>
-        <Text style={styles.text_content}>
-          Em casos de atrasos no pagamento, ocorrerá uma renegociação automática
-          de sua dívida conforme acordado em contrato. Esta penalidade acontece
-          a cada 2 (dois) atrasos. O valor acrescentado será de 5% sobre o valor
-          total financiado. O valor da penalidade será lançado em forma de uma
-          parcela extra em seu contrato, tendo a data de pagamento para um dia
-          após a sua última parcela lançada.
-        </Text>
-
-        <Text style={styles.text_strong}>RENOVAÇÕES</Text>
-        <Text style={styles.text_content}>
-          O aumento de limite é progressivo de R$300,00 em R$300,00 a cada
-          renovação, podendo chegar até o valor máximo de R$1.500,00. Para
-          renovar o seu empréstimo você deve atender as condições, que estão
-          disponíveis na sua área do cliente, em nosso site.
-        </Text>
-      </ScrollView>
+      <View style={{ marginHorizontal: 25, width: "100%" }}>
+        <CreditProposalScreen terms={terms} />
+      </View>
       <TouchableOpacity
         onPress={() => setAccepted((prev) => !prev)}
         style={styles.checkboxRow}
@@ -224,9 +204,12 @@ const RegisterFinish: React.FC = () => {
             <FontAwesome name="check" size={14} color={Colors.white} />
           )}
         </View>
-        <Text style={styles.checkboxText}>
-          Li e concordo com as condições acima.
-        </Text>
+        <View>
+          <Text style={styles.checkboxText}>
+            Li e concordo com as condições acima.
+          </Text>
+          <Text style={styles.termsLink}>26x R$ 30,30 por dia</Text>
+        </View>
       </TouchableOpacity>
       <ButtonComponent
         iconLeft={null}
@@ -265,8 +248,9 @@ const styles = StyleSheet.create({
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
+
     gap: 10,
-    marginVertical: 10,
+    padding: 10,
   },
   checkbox: {
     width: 22,
@@ -287,23 +271,6 @@ const styles = StyleSheet.create({
   termsLink: {
     color: Colors.green.primary,
     fontWeight: "bold",
-  },
-  card_termos: {
-    backgroundColor: "#F0F3F5",
-    padding: 10,
-    borderRadius: 12,
-  },
-  text_strong: {
-    color: Colors.green.text,
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  text_content: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: Colors.black,
   },
   successContainer: {
     alignItems: "center",

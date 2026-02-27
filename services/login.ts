@@ -1,22 +1,35 @@
 import { useNotificationsStore } from "@/store/notifications";
 import api from "./api";
 import { ApiUserResponse } from "@/interfaces/login_inteface";
+import { useAuthStore } from "@/store/auth";
 
 export async function login(
   cpf: string,
   password: string,
 ): Promise<ApiUserResponse> {
   const pushToken = useNotificationsStore.getState().pushToken;
+  const { register } = useAuthStore.getState();
 
   try {
+    register(null, null);
     const response = await api.post(`/auth/login`, {
       cpf,
       password,
       pushToken,
     });
 
-    return response.data.data;
+    const responseSettings = await api.get("v1/register/settings", {
+      headers: {
+        Authorization: `Bearer ${response.data.data.token}`,
+      },
+    });
+
+    return {
+      ...response.data.data,
+      ...responseSettings.data.data,
+    };
   } catch (error: any) {
+    console.log("erro login", error.response);
     if (error.response) {
       throw {
         status: error.response.status,

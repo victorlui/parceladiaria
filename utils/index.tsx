@@ -102,7 +102,7 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_COMPROVANTE_ENDERECO]: "/(register)/address_document",
   [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/profile_selection",
   [Etapas.REGISTRANDO_EMAIL]: "/(register)/email_screen",
-  [Etapas.REGISTRANDO_ENDERECO]: "/(register)/address_screen",
+  [Etapas.REGISTRANDO_ENDERECO]: "/(register_new)/register-address",
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
 

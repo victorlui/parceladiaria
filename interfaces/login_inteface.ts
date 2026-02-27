@@ -55,6 +55,7 @@ export interface ApiUserData {
   msg_painel?: string | null;
   msg_status?: string | null;
   observacoes?: string | null;
+  otp_obrigatorio?: number | null;
   lastLoan?: {
     amount: string;
     customer: number;
@@ -89,4 +90,14 @@ export interface ApiUserResponse {
   token_type: string;
   message: string;
   success: boolean;
+  openfinance: {
+    motorista: {
+      eco: boolean;
+      connect: boolean;
+    };
+    comerciante: {
+      eco: boolean;
+      connect: boolean;
+    };
+  };
 }

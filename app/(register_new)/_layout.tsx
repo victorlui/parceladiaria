@@ -12,6 +12,7 @@ const RegisterNewLayout: React.FC = () => {
       <Stack.Screen name="register-openfinance" />
       <Stack.Screen name="register-finish" />
       <Stack.Screen name="timeless_face" />
+      <Stack.Screen name="register-address" />
     </Stack>
   );
 };
