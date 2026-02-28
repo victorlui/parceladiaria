@@ -1,6 +1,6 @@
 import * as Notification from "expo-notifications";
 import * as Linking from "expo-linking";
-import { Alert, AppState } from "react-native";
+import { Alert, AppState, Platform } from "react-native";
 import Constants from "expo-constants";
 import { useNotificationsStore } from "@/store/notifications";
 import { useEffect, useRef } from "react";
@@ -36,14 +36,21 @@ export function usePushNotification(options?: { disabled?: boolean }) {
           "Para receber alertas importantes, ative as notificações nas configurações do aplicativo.",
           [
             {
-              text: "OK",
+              text: "Agora não",
+              style: "cancel",
+              onPress: () => {
+                isAlertShown.current = false;
+              },
+            },
+            {
+              text: "Configurações",
               onPress: () => {
                 isAlertShown.current = false;
                 Linking.openSettings();
               },
             },
           ],
-          { cancelable: false },
+          { cancelable: true },
         );
         return;
       }
