@@ -2,22 +2,25 @@ import React from "react";
 import {
   Modal,
   View,
+  ScrollView,
   Text,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import WebView from "react-native-webview";
 import { Colors } from "@/constants/Colors";
+import RenderHTML from "react-native-render-html";
 
 interface ModalTermsProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
   htmlContent?: string;
-  uri?: string;
+  loading?: boolean;
 }
 
 const ModalTerms: React.FC<ModalTermsProps> = ({
@@ -25,11 +28,9 @@ const ModalTerms: React.FC<ModalTermsProps> = ({
   onClose,
   title = "Termos e Condições de Uso",
   htmlContent = "",
-  uri,
+  loading = false,
 }) => {
-  const useUri = !!uri;
-  const isEmpty = !useUri && (!htmlContent || htmlContent.trim().length === 0);
-
+  const { width } = useWindowDimensions();
   return (
     <Modal visible={visible} animationType="slide">
       <SafeAreaView style={styles.container}>
@@ -43,51 +44,16 @@ const ModalTerms: React.FC<ModalTermsProps> = ({
 
         {/* Content */}
         <View style={styles.content}>
-          {isEmpty ? (
+          {loading ? (
             <View style={styles.loadingBox}>
               <ActivityIndicator size="small" color={Colors.green.primary} />
               <Text style={styles.loadingText}>Carregando termos...</Text>
             </View>
           ) : (
             <View style={styles.webviewContainer}>
-              {useUri ? (
-                <WebView
-                  originWhitelist={["*"]}
-                  source={{
-                    uri: `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
-                      String(uri)
-                    )}`,
-                  }}
-                  style={{ flex: 1 }}
-                  showsVerticalScrollIndicator
-                  showsHorizontalScrollIndicator={false}
-                  scrollEnabled
-                  nestedScrollEnabled
-                  startInLoadingState
-                  scalesPageToFit
-                  javaScriptEnabled
-                  domStorageEnabled
-                  mediaPlaybackRequiresUserAction
-                  bounces={false}
-                />
-              ) : (
-                <WebView
-                  originWhitelist={["*"]}
-                  source={{ html: htmlContent }}
-                  style={{ flex: 1 }}
-                  showsVerticalScrollIndicator
-                  showsHorizontalScrollIndicator={false}
-                  scrollEnabled
-                  nestedScrollEnabled
-                  startInLoadingState
-                  scalesPageToFit={false}
-                  javaScriptEnabled={false}
-                  domStorageEnabled={false}
-                  allowsInlineMediaPlayback={false}
-                  mediaPlaybackRequiresUserAction
-                  bounces={false}
-                />
-              )}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <RenderHTML contentWidth={width} source={{ html: htmlContent }} />
+              </ScrollView>
             </View>
           )}
         </View>
@@ -127,6 +93,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
     overflow: "hidden",
+    padding: 12,
   },
   loadingBox: {
     flex: 1,

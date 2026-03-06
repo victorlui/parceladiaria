@@ -10,6 +10,7 @@ import LayoutRegister from "@/layouts/layout-register";
 import ButtonComponent from "@/components/ui/Button";
 import ModalTerms from "@/components/config/modal-terms";
 import { router } from "expo-router";
+import api from "@/services/api";
 
 const PreApprovedLimit: React.FC = () => {
   const [step, setStep] = React.useState<"search" | "found" | "limit">(
@@ -19,10 +20,13 @@ const PreApprovedLimit: React.FC = () => {
   const [accepted, setAccepted] = React.useState<boolean>(false);
   const [termsVisible, setTermsVisible] = React.useState<boolean>(false);
   const [termsHtml, setTermsHtml] = React.useState<string>("");
+  const [termos, setTermos] = React.useState<string>("");
+  const [loadingTermos, setLoadingTermos] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     const t1 = setTimeout(() => setStep("found"), 2000);
     const t2 = setTimeout(() => setStep("limit"), 3800);
+    terms();
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -31,36 +35,21 @@ const PreApprovedLimit: React.FC = () => {
 
   React.useEffect(() => {}, [step]);
 
-  const openTerms = React.useCallback(async () => {
+  const terms = async () => {
+    setLoadingTermos;
     try {
-      const asset = Asset.fromModule(
-        require("@/assets/termodeuso_cadastro.html"),
-      );
-      await asset.downloadAsync();
-      const fileUri = asset.localUri || asset.uri;
-      if (!fileUri) throw new Error("URI inválida para Termos de Uso.");
-
-      const response = await fetch(fileUri);
-      const html = await response.text();
-
-      const css = `
-            <style>
-              body { font-family: system-ui, -apple-system, sans-serif; font-size:16px; line-height:1.5; padding:16px; margin:0; color:#333; background:#fff; }
-              h1,h2,h3 { font-weight:600; color:#111; margin:20px 0 10px; }
-              p,li { font-size:16px; margin-bottom:10px; text-align:justify; }
-              ul,ol { padding-left:20px; }
-              strong { font-weight:600; color:#111; }
-            </style>
-          `;
-      setTermsHtml(`<html><head>${css}</head><body>${html}</body></html>`);
-      setTermsVisible(true);
-    } catch (err) {
-      setTermsHtml(
-        "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>",
-      );
-      setTermsVisible(true);
+      const { data } = await api.get("termos/termos_condicao");
+      setTermos(data.termo.content);
+    } catch (error) {
+      setTermos("");
+    } finally {
+      setLoadingTermos(false);
     }
-  }, []);
+  };
+
+  const openTerms = () => {
+    setTermsVisible(true);
+  };
 
   const onSubmit = () => {
     router.push("/(register_new)/register-phone");
@@ -138,7 +127,8 @@ const PreApprovedLimit: React.FC = () => {
                 setTermsVisible(false);
               }}
               title="Termos e Condições"
-              htmlContent={termsHtml}
+              htmlContent={termos}
+              loading={loadingTermos}
             />
           </>
         )}

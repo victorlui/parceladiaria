@@ -58,6 +58,7 @@ export const useLoginMutation = () => {
         });
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
+          //router.replace("/pre_aprovado_screen");
         } else if (status === StatusCadastro.DIVERGENTE) {
           router.replace("/divergencia_screen");
         } else if (status === StatusCadastro.PRE_APROVADO) {

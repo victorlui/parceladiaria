@@ -23,7 +23,7 @@ type InputProps = {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
-  maskType?: "cpf" | "cellphone" | "date" | "cep" | "cnpj";
+  maskType?: "cpf" | "cellphone" | "date" | "cep" | "cnpj" | "otp";
 } & Omit<TextInputProps, "style" | "onChangeText" | "value" | "placeholder">;
 
 const InputComponent = forwardRef<TextInput, InputProps>(
@@ -66,7 +66,11 @@ const InputComponent = forwardRef<TextInput, InputProps>(
               ? "99999-999"
               : maskType === "date"
                 ? "99/99/9999"
-                : undefined;
+                : maskType === "otp"
+                  ? "999999"
+                  : undefined;
+
+    const computedMaxLength = maskType === "otp" ? 6 : (mask ? mask.length : maxLength);
 
     return (
       <View style={[styles.wrapper, containerStyle]}>
@@ -94,6 +98,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
               keyboardType={keyboardType ?? "number-pad"}
               autoCapitalize={autoCapitalize}
               editable={editable}
+              maxLength={computedMaxLength}
               returnKeyType={returnKeyType}
               onSubmitEditing={onSubmitEditing}
               onFocus={(e) => {
@@ -118,7 +123,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
               keyboardType={keyboardType}
               autoCapitalize={autoCapitalize}
               editable={editable}
-              maxLength={maxLength}
+              maxLength={computedMaxLength}
               returnKeyType={returnKeyType}
               onSubmitEditing={onSubmitEditing}
               onFocus={(e) => {

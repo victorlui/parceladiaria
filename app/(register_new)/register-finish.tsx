@@ -119,7 +119,7 @@ const RegisterFinish: React.FC = () => {
       mutate({
         request: {
           etapa: Etapas.FINALIZADO,
-          termos: 1,
+          //   termos: 1,
         },
       });
     } catch (error) {

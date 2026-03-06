@@ -5,21 +5,12 @@ import { Colors } from "@/constants/Colors";
 import LayoutRegister from "@/layouts/layout-register";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
-import { useRegisterAuthStore } from "@/store/register";
 import { useRegisterNewStore } from "@/store/register_new";
-import { Etapas } from "@/utils";
 import { validatePhone } from "@/utils/validation";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import {
-  Keyboard,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Keyboard, StyleSheet, TextInput } from "react-native";
 
 const RegisterPhone: React.FC = () => {
   const { data, setData } = useRegisterNewStore();

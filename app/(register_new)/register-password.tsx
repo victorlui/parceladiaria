@@ -38,7 +38,7 @@ const RegisterPassword: React.FC = () => {
       criteria.hasLetter &&
       criteria.hasNumber &&
       criteria.hasSymbol,
-    [criteria]
+    [criteria],
   );
 
   const confirmError =
@@ -147,6 +147,7 @@ const RegisterPassword: React.FC = () => {
           title="Continuar"
           onPress={handleContinue}
           iconRight="arrow-forward"
+          iconLeft={null}
           loading={loading}
         />
       </View>

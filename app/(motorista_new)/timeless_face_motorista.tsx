@@ -107,7 +107,6 @@ const TimelessFace: React.FC = () => {
           },
         });
       }
-      console.log("openfinance", openfinance);
 
       await updateUser({
         request: {
