@@ -5,6 +5,7 @@ import { useFocusEffect, router } from "expo-router";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -110,12 +111,10 @@ const RenewList: React.FC = () => {
         sign_info_country: "BR",
       };
 
-      console.log("data", data);
       const res = await api.post("/v1/renew", data);
-      showSuccess("Sucesso", `Renovação concluida com sucesso`, () => {
-        router.replace("/(tabs)/home");
-      });
-      console.log("sucesso res", res);
+      Alert.alert("Sucesso", `Renovação concluida com sucesso`, [
+        { text: "OK", onPress: () => router.replace("/(tabs)/home") },
+      ]);
     } catch (error: any) {
       console.log("error  renovação", error.response);
       showError("Atenção", error.response.data.error || "Erro ao renovar");
