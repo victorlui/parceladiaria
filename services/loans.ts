@@ -65,6 +65,7 @@ export async function getLoansOpen(id: number | null) {
 export async function getLoans(): Promise<Loan[]> {
   try {
     const response = await api.get("/v1/loan");
+    console.log("response", response.data.data.data);
     return response.data.data.data;
   } catch (error: unknown) {
     throw error;
@@ -72,7 +73,7 @@ export async function getLoans(): Promise<Loan[]> {
 }
 
 export async function getLoanInstallments(
-  loanId: number
+  loanId: number,
 ): Promise<Installment[]> {
   try {
     const response = await api.get(`/v1/loan/${loanId}`);
@@ -127,7 +128,7 @@ export type PropsQRCode = {
 };
 
 export async function gerarQRCode(
-  id: number[]
+  id: number[],
 ): Promise<PropsQRCode | undefined> {
   try {
     const response = await api.post("/v1/payment", {

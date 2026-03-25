@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "@/store/auth";
-
 import MenuIcon from "@/components/home/menu-icon";
 import { renewStatus } from "@/services/renew";
 import HistoryRecent from "@/components/home/history-recent";
@@ -18,7 +17,6 @@ import { ApiUserData } from "@/interfaces/login_inteface";
 import StatusDocModal from "@/components/home/StatusDocModal";
 import { router } from "expo-router";
 import RefinancingModal from "@/components/home/RefinancingModal";
-import { getFromGPS } from "@/services/fromIP";
 
 const HomeScreen: React.FC = () => {
   const { user, token, register } = useAuthStore();
@@ -31,6 +29,8 @@ const HomeScreen: React.FC = () => {
   const [userData, setUserData] = useState<ApiUserData | null>(null);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  console.log("user", user);
 
   useEffect(() => {
     if (userData?.status_doc?.toLowerCase() === "divergente") {
@@ -48,10 +48,9 @@ const HomeScreen: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-        if (typeof user?.refinanciamento === "string") {
-          setModalVisible(true);
-        }
-     
+      if (typeof user?.refinanciamento === "string") {
+        setModalVisible(true);
+      }
     }, [user]),
   );
 

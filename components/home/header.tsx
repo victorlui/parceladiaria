@@ -40,7 +40,8 @@ const HeaderHome: React.FC<Props> = ({ user }) => {
       <InfoBalance user={user || null} />
 
       <TouchableOpacity
-        style={styles.button}
+        disabled={!user?.lastLoan?.blocked}
+        style={[styles.button, { opacity: user?.lastLoan?.blocked ? 0.5 : 1 }]}
         onPress={() => router.push("/(tabs)/payments")}
       >
         <Text style={{ fontSize: 15, marginRight: 10 }}>💰</Text>

@@ -26,7 +26,7 @@ const ConfigTab: React.FC = () => {
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsHtml, setTermsHtml] = useState("");
 
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   const handleSave = async () => {
     Keyboard.dismiss();
@@ -157,7 +157,14 @@ const ConfigTab: React.FC = () => {
           <Text style={styles.cardTitle}>Termos e Condições</Text>
           <View style={{ height: 8 }} />
 
-          <TouchableOpacity style={styles.outlineButton} onPress={openTerms}>
+          <TouchableOpacity
+            disabled={user?.lastLoan?.blocked}
+            style={[
+              styles.outlineButton,
+              { opacity: user?.lastLoan?.blocked ? 0.5 : 1 },
+            ]}
+            onPress={openTerms}
+          >
             <Ionicons
               name="document-text-outline"
               size={18}
