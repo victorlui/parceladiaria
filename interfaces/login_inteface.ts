@@ -58,6 +58,7 @@ export interface ApiUserData {
   otp_obrigatorio?: number | null;
   lastLoan?: {
     amount: string;
+    blocked: boolean;
     customer: number;
     date: string;
     due_date: string;
@@ -80,6 +81,7 @@ export interface ApiUserData {
   } | null;
   pixKey?: string | null;
   isLoggedIn?: boolean;
+  refinanciamento?: string | null;
 }
 
 export interface ApiUserResponse {

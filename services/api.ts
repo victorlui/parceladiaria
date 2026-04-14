@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/auth";
+import { useNotificationsStore } from "@/store/notifications";
 import { generateSignature } from "@/utils";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { router } from "expo-router";
@@ -19,6 +20,7 @@ interface ApiHeaders {
   "X-UUID": string;
   "X-Timestamp": string;
   Authorization?: string;
+  "X-PUSH"?: string;
   "X-UserAgent": string;
   "X-Version-app": string;
 }
@@ -58,7 +60,7 @@ const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
     const signature = await generateSignature(
       uuid,
       apiConfig.secret,
-      timestamp
+      timestamp,
     );
 
     return {
@@ -97,10 +99,14 @@ api.interceptors.request.use(
       // Adiciona token de autenticação se disponível
       const token =
         useAuthStore.getState().token || useAuthStore.getState().tokenRegister;
-      console.log("token api", token);
+
       if (token) {
         (config.headers as any).Authorization = `Bearer ${token}`;
       }
+
+      // Adiciona token de push
+      const pushToken = useNotificationsStore.getState().pushToken;
+      (config.headers as any)["X-PUSH"] = pushToken || "";
 
       return config;
     } catch (error) {
@@ -111,7 +117,7 @@ api.interceptors.request.use(
   (error: AxiosError) => {
     console.error("Erro na configuração da requisição:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Interceptor de resposta melhorado
@@ -153,29 +159,29 @@ api.interceptors.request.use(
     } else if (error.response && error.response.status >= 500) {
       Alert.alert(
         "Erro do servidor",
-        "Ocorreu um erro interno. Tente novamente mais tarde."
+        "Ocorreu um erro interno. Tente novamente mais tarde.",
       );
     } else if (error.code === "ECONNABORTED") {
       Alert.alert(
         "Timeout",
-        "A requisição demorou muito para responder. Verifique sua conexão."
+        "A requisição demorou muito para responder. Verifique sua conexão.",
       );
     } else if (!error.response) {
       Alert.alert(
         "Erro de conexão",
-        "Verifique sua conexão com a internet e tente novamente."
+        "Verifique sua conexão com a internet e tente novamente.",
       );
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Função utilitária para retry automático
 export const apiWithRetry = async <T>(
   requestFn: () => Promise<AxiosResponse<T>>,
   maxRetries: number = 3,
-  delay: number = 1000
+  delay: number = 1000,
 ): Promise<AxiosResponse<T>> => {
   let lastError: AxiosError;
 
@@ -201,7 +207,7 @@ export const apiWithRetry = async <T>(
 
       // Delay exponencial
       await new Promise((resolve) =>
-        setTimeout(resolve, delay * Math.pow(2, attempt - 1))
+        setTimeout(resolve, delay * Math.pow(2, attempt - 1)),
       );
     }
   }

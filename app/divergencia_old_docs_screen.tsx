@@ -89,8 +89,6 @@ const DivergenciaScreen: React.FC = () => {
         const response = await updateUserService({
           request: { [key]: finalUrl },
         });
-
-        console.log("response", response);
       }
       if (user?.status_doc === "Divergente" && user.status !== "Regular") {
         await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
@@ -135,7 +133,6 @@ const DivergenciaScreen: React.FC = () => {
               : selectedFiles[item]?.nameImage
           }
           onSelect={(documentType, uri, name) => {
-            console.log("image", documentType, uri, name);
             setSelectedFiles((prev) => ({
               ...prev,
               [documentType]: { uri, nameImage: name },

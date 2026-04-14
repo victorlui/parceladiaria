@@ -69,7 +69,6 @@ const InsertPassword: React.FC = () => {
         password,
       });
     } catch (error: any) {
-      console.log("error login", error.response);
       showWarning("Atenção", "CPF inválido");
       return;
     }

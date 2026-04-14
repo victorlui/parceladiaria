@@ -34,11 +34,11 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "5",
+      "buildNumber": "7",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "versionCode": 11,
+      "versionCode": 12,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -140,8 +140,7 @@
             "minSdkVersion": 26
           },
           "ios": {
-            "deploymentTarget": "16.0",
-            "useModularHeaders": true
+            "deploymentTarget": "16.0"
           }
         }
       ]

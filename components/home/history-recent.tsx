@@ -26,7 +26,6 @@ const HistoryRecent: React.FC<Props> = ({
   loading,
   loan,
 }) => {
-  console.log("installments", installments);
   return (
     <View>
       <View style={styles.header}>

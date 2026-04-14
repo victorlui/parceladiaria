@@ -1,9 +1,9 @@
 import ButtonComponent from "@/components/ui/Button";
+// import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import LayoutRegister from "@/layouts/layout-register";
-import { useRegisterAuthStore } from "@/store/register";
 import { Etapas } from "@/utils";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
@@ -28,6 +28,7 @@ const BusinessTypeScreen: React.FC = () => {
       title="Qual o seu tipo de comércio?"
       subtitle="Ex: Barbearia, Lanchonete, Oficina, etc."
     >
+      {/* <ButtonChat /> */}
       <InputComponent
         label="Tipo de comércio"
         placeholder="Ex: Barbearia, Lanchonete, Oficina, etc."

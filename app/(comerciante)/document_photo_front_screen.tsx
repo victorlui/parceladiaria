@@ -1,13 +1,17 @@
 import React from "react";
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
+import MenuIAChatComponent from "@/components/ui/MenuIA";
 import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
 import { StyleSheet, Text, View } from "react-native";
+// import ButtonChat from "@/components/ui/ButtonChat";
 
 export default function DocumentFrontScreen() {
+  const { userRegister, user } = useAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
 
@@ -48,6 +52,7 @@ export default function DocumentFrontScreen() {
       subtitle="Envie uma foto ou anexe o PDF do seu documento."
     >
       {(loading || isPending) && <Spinner text="Enviando arquivo" />}
+      {/* <ButtonChat /> */}
       <View>
         <View style={style.infoContainer}>
           <Text style={style.infoIcon}>✓</Text>

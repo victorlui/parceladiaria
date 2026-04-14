@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "@/store/auth";
-
 import MenuIcon from "@/components/home/menu-icon";
 import { renewStatus } from "@/services/renew";
 import HistoryRecent from "@/components/home/history-recent";
@@ -18,7 +17,9 @@ import { ApiUserData } from "@/interfaces/login_inteface";
 import StatusDocModal from "@/components/home/StatusDocModal";
 import { router } from "expo-router";
 import RefinancingModal from "@/components/home/RefinancingModal";
-import { getFromGPS } from "@/services/fromIP";
+import MenssagemModal from "@/components/home/mensage-modal";
+// import MenuIAChatComponent from "@/components/ui/MenuIA";
+// import { MenuIAChat } from "@menuia/react-native";
 
 const HomeScreen: React.FC = () => {
   const { user, token, register } = useAuthStore();
@@ -48,10 +49,9 @@ const HomeScreen: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-        if (typeof user?.refinanciamento === "string") {
-          setModalVisible(true);
-        }
-     
+      if (typeof user?.refinanciamento === "string") {
+        setModalVisible(true);
+      }
     }, [user]),
   );
 
@@ -132,6 +132,15 @@ const HomeScreen: React.FC = () => {
           onClose={() => setModalVisible(false)}
           amount={user?.lastLoan?.installment_amount ?? 0}
           installments={1}
+        />
+        {/* <MenuIAChat
+          widgetId="75968a3e-7e74-41af-9bd2-453797409da8"
+          inline
+          primaryColor="#32e10e"
+        /> */}
+        <MenssagemModal
+          visible={user?.lastLoan?.blocked ?? false}
+          onClose={() => setModalVisible(false)}
         />
       </ScrollView>
     </SafeAreaView>

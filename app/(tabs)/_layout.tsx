@@ -1,17 +1,22 @@
 import { Colors } from "@/constants/Colors";
+import { useAuthStore } from "@/store/auth";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { View, TouchableOpacity, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const FloatingPayButton = (props: any) => {
+const FloatingPayButton = ({ disabled, ...props }: any) => {
   const focused = props?.accessibilityState?.selected;
 
   return (
     <TouchableOpacity
       {...props}
       activeOpacity={0.9}
-      style={[props.style, { top: -22, alignItems: "center" }]}
+      disabled={disabled}
+      style={[
+        props.style,
+        { top: -22, alignItems: "center", opacity: disabled ? 0.5 : 1 },
+      ]}
     >
       <View
         style={{
@@ -51,6 +56,7 @@ const FloatingPayButton = (props: any) => {
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuthStore.getState();
   return (
     <Tabs
       screenOptions={{
@@ -91,7 +97,12 @@ export default function TabLayout() {
         options={{
           title: "Pagar",
           tabBarLabel: "", // rótulo padrão oculto (usamos o Text customizado)
-          tabBarButton: (props) => <FloatingPayButton {...props} />,
+          tabBarButton: (props) => (
+            <FloatingPayButton
+              {...props}
+              {...{ disabled: user?.lastLoan?.blocked }}
+            />
+          ),
         }}
       />
 

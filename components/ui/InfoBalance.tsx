@@ -16,10 +16,12 @@ const InfoBalance: React.FC<Props> = ({ user }) => {
 
   const outstandingBalance = useMemo(() => {
     if (!lastLoan?.installments) return 0;
-    return lastLoan.installments.reduce((total, installment) => {
-      if (installment.paid === "Sim") return total;
-      return total + (parseFloat(String(installment.amount)) || 0);
-    }, 0);
+    return user?.lastLoan?.blocked
+      ? 0
+      : lastLoan.installments.reduce((total, installment) => {
+          if (installment.paid === "Sim") return total;
+          return total + (parseFloat(String(installment.amount)) || 0);
+        }, 0);
   }, [lastLoan]);
 
   const remainingInstallments = useMemo(() => {
@@ -35,9 +37,7 @@ const InfoBalance: React.FC<Props> = ({ user }) => {
   return (
     <View style={styles.body}>
       <Text style={styles.bodyText}>Saldo devedor</Text>
-      <Text style={styles.bodyValue}>
-        {formatCurrency(outstandingBalance)}
-      </Text>
+      <Text style={styles.bodyValue}>{formatCurrency(outstandingBalance)}</Text>
       {outstandingBalance > 0 && (
         <Text style={[styles.bodyText, { textTransform: "none" }]}>
           {remainingInstallments}x de{" "}

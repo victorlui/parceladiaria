@@ -23,8 +23,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency } from "@/utils/formats";
 import { convertData } from "@/utils";
 import * as Network from "expo-network";
-import { getFromGPS } from "@/services/fromIP";
 import { useAlerts } from "@/components/useAlert";
+import { tratarEstado } from "@/utils/validation";
 
 const RenewList: React.FC = () => {
   const { showSuccess, showError, AlertDisplay } = useAlerts();
@@ -42,8 +42,6 @@ const RenewList: React.FC = () => {
   // Evita refetch quando o modal for aberto/fechado
   const preventRefetch = React.useRef<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-
-  console.log("user", user);
 
   const outstandingBalance = useMemo(() => {
     return user?.lastLoan?.installments?.reduce((total, installment) => {
@@ -107,17 +105,22 @@ const RenewList: React.FC = () => {
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
         sign_info_city: user?.cidade ?? "São Paulo",
-        sign_info_state: user?.estado ?? "SP",
+        sign_info_state: tratarEstado(user?.estado || "SP"),
         sign_info_country: "BR",
       };
 
-      const res = await api.post("/v1/renew", data);
-      Alert.alert("Sucesso", `Renovação concluida com sucesso`, [
-        { text: "OK", onPress: () => router.replace("/(tabs)/home") },
-      ]);
+      await api.post("/v1/renew", data);
+      showSuccess("Sucesso", "Renovação concluída com sucesso!");
+      router.replace("/(tabs)/home");
     } catch (error: any) {
-      console.log("error  renovação", error.response);
-      showError("Atenção", error.response.data.error || "Erro ao renovar");
+      console.log("error renovação", error.response.data);
+
+      const responseData = error.response?.data;
+
+      showError(
+        "Atenção",
+        responseData?.message || error.message || "Erro ao renovar",
+      );
     } finally {
       setIsLoading(false);
       setModalVisible(false);
@@ -180,18 +183,20 @@ const RenewList: React.FC = () => {
         <Text style={styles.headerTitle}>Renovar Empréstimo</Text>
         <Text style={styles.headerSubtitle}>Escolha o valor da renovação</Text>
 
-        <LinearGradient
-          colors={["#fff9e6", "#fff0b3", "#ffecb3"]}
-          start={[0, 1]}
-          end={[1, 0]}
-          style={styles.warning}
-        >
-          <FontAwesome5 name="info-circle" size={18} color="#D97706" />
-          <Text style={styles.alertaTexto}>
-            A renovação quita automaticamente seu débito atual de (
-            {formatCurrency(outstandingBalance || 0)})
-          </Text>
-        </LinearGradient>
+        {outstandingBalance !== undefined && outstandingBalance > 0 && (
+          <LinearGradient
+            colors={["#fff9e6", "#fff0b3", "#ffecb3"]}
+            start={[0, 1]}
+            end={[1, 0]}
+            style={styles.warning}
+          >
+            <FontAwesome5 name="info-circle" size={18} color="#D97706" />
+            <Text style={styles.alertaTexto}>
+              A renovação quita automaticamente seu débito atual de (
+              {formatCurrency(outstandingBalance || 0)})
+            </Text>
+          </LinearGradient>
+        )}
       </View>
 
       {/* Lista */}

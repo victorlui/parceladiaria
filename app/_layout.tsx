@@ -11,8 +11,8 @@ import * as Updates from "expo-updates";
 import * as Notifications from "expo-notifications";
 import { usePushNotification } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
-import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
-import { getToken, getUser } from "@/lib/authStorage";
+// import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
+// import { getToken, getUser } from "@/lib/authStorage";
 
 // 👉 Rotas públicas (deep link permitido)
 const PUBLIC_ROUTES = [
@@ -61,7 +61,7 @@ export default function RootLayout() {
 
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
-  AnalyticsBootstrap();
+  // AnalyticsBootstrap();
   usePushNotification({ disabled: isLoading });
 
   // 🔔 Configuração global de notificações
@@ -187,6 +187,7 @@ export default function RootLayout() {
         <Stack.Screen name="login" />
         <Stack.Screen name="insert-password" />
         <Stack.Screen name="register" />
+        <Stack.Screen name="chat" />
 
         <Stack.Screen name="(register)" />
         <Stack.Screen name="(register_new)" />

@@ -17,6 +17,7 @@ import { Asset } from "expo-asset";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
 import { changePassword } from "@/services/loans";
+import api from "@/services/api";
 
 const ConfigTab: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -26,7 +27,7 @@ const ConfigTab: React.FC = () => {
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsHtml, setTermsHtml] = useState("");
 
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   const handleSave = async () => {
     Keyboard.dismiss();
@@ -69,24 +70,8 @@ const ConfigTab: React.FC = () => {
 
   const openTerms = useCallback(async () => {
     try {
-      const asset = Asset.fromModule(require("@/assets/termodeuso_app.html"));
-      await asset.downloadAsync();
-      const fileUri = asset.localUri || asset.uri;
-      if (!fileUri) throw new Error("URI inválida para Termos de Uso.");
-
-      const response = await fetch(fileUri);
-      const html = await response.text();
-
-      const css = `
-        <style>
-          body { font-family: system-ui, -apple-system, sans-serif; font-size:16px; line-height:1.5; padding:16px; margin:0; color:#333; background:#fff; }
-          h1,h2,h3 { font-weight:600; color:#111; margin:20px 0 10px; }
-          p,li { font-size:16px; margin-bottom:10px; text-align:justify; }
-          ul,ol { padding-left:20px; }
-          strong { font-weight:600; color:#111; }
-        </style>
-      `;
-      setTermsHtml(`<html><head>${css}</head><body>${html}</body></html>`);
+      const { data } = await api.get("/termos/termos_condicao");
+      setTermsHtml(data.termo.content);
       setTermsVisible(true);
     } catch (err) {
       setTermsHtml(
@@ -157,7 +142,14 @@ const ConfigTab: React.FC = () => {
           <Text style={styles.cardTitle}>Termos e Condições</Text>
           <View style={{ height: 8 }} />
 
-          <TouchableOpacity style={styles.outlineButton} onPress={openTerms}>
+          <TouchableOpacity
+            disabled={user?.lastLoan?.blocked}
+            style={[
+              styles.outlineButton,
+              { opacity: user?.lastLoan?.blocked ? 0.5 : 1 },
+            ]}
+            onPress={openTerms}
+          >
             <Ionicons
               name="document-text-outline"
               size={18}

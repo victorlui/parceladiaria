@@ -4,6 +4,7 @@ export default function TabLayout() {
   return (
     <Stack>
       <Stack.Screen name="qrdcode" options={{ headerShown: false }} />
+      <Stack.Screen name="indications" options={{ headerShown: false }} />
     </Stack>
   );
 }

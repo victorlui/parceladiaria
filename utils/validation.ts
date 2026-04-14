@@ -101,7 +101,7 @@ export function validateBirthDate18Plus(input: string): string {
   const eighteen = new Date(
     today.getFullYear() - 18,
     today.getMonth(),
-    today.getDate()
+    today.getDate(),
   );
 
   if (date > eighteen) return "Você deve ter pelo menos 18 anos";
@@ -138,4 +138,51 @@ export function validateCNPJ(cnpj: string): string {
   }
 
   return "";
+}
+
+const estadosSgl = {
+  Acre: "AC",
+  Alagoas: "AL",
+  Amapá: "AP",
+  Amazonas: "AM",
+  Bahia: "BA",
+  Ceará: "CE",
+  "Distrito Federal": "DF",
+  "Espírito Santo": "ES",
+  Goiás: "GO",
+  Maranhão: "MA",
+  "Mato Grosso": "MT",
+  "Mato Grosso do Sul": "MS",
+  "Minas Gerais": "MG",
+  Pará: "PA",
+  Paraíba: "PB",
+  Paraná: "PR",
+  Pernambuco: "PE",
+  Piauí: "PI",
+  "Rio de Janeiro": "RJ",
+  "Rio Grande do Norte": "RN",
+  "Rio Grande do Sul": "RS",
+  Rondônia: "RO",
+  Roraima: "RR",
+  "Santa Catarina": "SC",
+  "São Paulo": "SP",
+  Sergipe: "SE",
+  Tocantins: "TO",
+};
+
+export function tratarEstado(input: string) {
+  // 1. Se já for a sigla correta (ex: "CE"), retorna ela mesma
+  const siglasExistentes = Object.values(estadosSgl);
+
+  if (siglasExistentes.includes(input.toUpperCase())) {
+    return input.toUpperCase();
+  }
+
+  // 2. Se for o nome por extenso (ex: "Ceará"), converte
+  if (input in estadosSgl) {
+    return estadosSgl[input as keyof typeof estadosSgl];
+  }
+
+  // 3. Se for algo como "CECE" ou "CearáCE", não valida
+  return "Estado Inválido";
 }

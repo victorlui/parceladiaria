@@ -1,15 +1,16 @@
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
+// import ButtonChat from "@/components/ui/ButtonChat";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
+import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 const VideoPerfil: React.FC = () => {
   const { mutate, isPending } = useUpdateUserMutation();
-
   const [loading, setLoading] = React.useState(false);
 
   const sendFile = async (file: any) => {
@@ -38,6 +39,7 @@ const VideoPerfil: React.FC = () => {
       subtitle="Grave a tela mostrando o perfil e ganhos no seu app de motorista"
     >
       {(loading || isPending) && <Spinner text="Enviando vídeo	" />}
+      {/* <ButtonChat /> */}
       <View>
         <View style={style.infoContainer}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

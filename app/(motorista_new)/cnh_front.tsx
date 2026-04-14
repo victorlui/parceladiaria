@@ -1,21 +1,19 @@
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
+// import ButtonChat from "@/components/ui/ButtonChat";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { Etapas } from "@/utils";
-import React, { useEffect } from "react";
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 const CNHFront: React.FC = () => {
-  const { openfinance } = useSettingsStore((state) => state);
-  const { userRegister } = useAuthStore();
+  const { userRegister, user } = useAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
-
-  console.log("openfinance", openfinance);
 
   const sendFileFront = async (file: any) => {
     setLoading(true);
@@ -61,6 +59,7 @@ const CNHFront: React.FC = () => {
       }
     >
       {(loading || isPending) && <Spinner text="Enviando arquivo" />}
+
       <View>
         <View style={style.infoContainer}>
           <Text style={style.infoIcon}>✓</Text>
@@ -72,6 +71,8 @@ const CNHFront: React.FC = () => {
         </View>
         <SendFilesButtons sendFile={sendFileFront} />
       </View>
+
+      {/* <ButtonChat /> */}
     </LayoutRegister>
   );
 };

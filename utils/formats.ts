@@ -92,3 +92,18 @@ export const formatDateToBR = (dateString: string | undefined): string => {
   }
   return dateString;
 };
+
+export const formatCurrencyBRL = (value: unknown) => {
+  const numeric =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value.replace(",", "."))
+        : 0;
+
+  const safe = Number.isFinite(numeric) ? numeric : 0;
+  return safe.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};

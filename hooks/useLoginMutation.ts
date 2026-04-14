@@ -45,7 +45,7 @@ export const useLoginMutation = () => {
         },
       });
 
-      console.log("responseClient", responseClient);
+      console.log("responseClient", responseClient.data);
 
       setOpenfinance({
         openfinance,
@@ -63,7 +63,7 @@ export const useLoginMutation = () => {
           router.replace("/divergencia_screen");
         } else if (status === StatusCadastro.PRE_APROVADO) {
           router.replace("/pre_aprovado_screen");
-        } else if (etapa === Etapas.FINALIZADO) {
+        } else if (status === StatusCadastro.RECUSADO) {
           router.replace("/recusado_screen");
         } else if (status === StatusCadastro.REANALISE) {
           router.replace("/reanalise_screen");

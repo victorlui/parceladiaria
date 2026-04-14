@@ -4,10 +4,14 @@ import { uploadRawFile } from "@/hooks/useUploadDocument";
 import { Etapas } from "@/utils";
 import SendFilesButtons from "@/components/register/buttons-file";
 import Spinner from "@/components/Spinner";
+import MenuIAChatComponent from "@/components/ui/MenuIA";
 import LayoutRegister from "@/layouts/layout-register";
+import { useAuthStore } from "@/store/auth";
 import React from "react";
+// import ButtonChat from "@/components/ui/ButtonChat";
 
 export default function DocumentBackScreen() {
+  const { userRegister, user } = useAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
   const sendFileFront = async (file: any) => {
@@ -37,6 +41,7 @@ export default function DocumentBackScreen() {
       subtitle="Agora, uma foto do VERSO do documento."
     >
       {(loading || isPending) && <Spinner text="Enviando arquivo" />}
+      {/* <ButtonChat /> */}
       <View>
         <View style={style.infoContainer}>
           <Text style={style.infoIcon}>✓</Text>

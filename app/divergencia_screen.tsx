@@ -100,7 +100,6 @@ const DivergenciaScreen: React.FC = () => {
         ],
       );
     } catch (error: any) {
-      console.log("error aqui", error);
       if (
         error.data?.message &&
         error.data?.message ===
@@ -128,7 +127,6 @@ const DivergenciaScreen: React.FC = () => {
               : selectedFiles[item]?.nameImage
           }
           onSelect={(documentType, uri, name) => {
-            console.log("image", documentType, uri, name);
             setSelectedFiles((prev) => ({
               ...prev,
               [documentType]: { uri, nameImage: name },
