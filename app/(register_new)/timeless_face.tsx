@@ -7,19 +7,14 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { Colors } from "@/constants/Colors";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Network from "expo-network";
 import { Camera } from "react-native-vision-camera";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadRawFile } from "@/hooks/useUploadDocument";
-import { Etapas } from "@/utils";
 import ButtonComponent from "@/components/ui/Button";
-import FaceDetector from "@/components/FaceDetector";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
-import { useSettingsStore } from "@/store/settings";
+import FaceDetector from "@/pages/register/TimelessFace";
 
 const TipItem: React.FC<{ icon: React.ReactNode; label: string }> = ({
   icon,
@@ -54,12 +49,10 @@ const LoadingScreen: React.FC = () => (
 );
 
 const TimelessFace: React.FC = () => {
-  const { mutateAsync: updateUser } = useUpdateUserMutation();
-  const { openfinance } = useSettingsStore((state) => state);
   const { isPending } = useLoginMutation();
 
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading] = React.useState(false);
 
   const requestPermission = async () => {
     const status = await Camera.requestCameraPermission();
@@ -74,58 +67,9 @@ const TimelessFace: React.FC = () => {
     setShowFaceDetector(true);
   };
 
-  const sendPhoto = async (photo: string) => {
-    const { isInternetReachable } = await Network.getNetworkStateAsync();
-    if (isInternetReachable === false) {
-      Alert.alert(
-        "Sem conexão",
-        "Verifique sua conexão com a internet e tente novamente.",
-      );
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const finalUrl = await uploadRawFile({
-        uri: `file://${photo}`,
-        name: `selfie-${Date.now()}.jpg`,
-        mimeType: "image/jpeg",
-      });
-
-      if (!finalUrl) {
-        setIsLoading(false);
-        return;
-      }
-
-      await updateUser({
-        request: {
-          etapa: openfinance?.openfinance.comerciante.connect
-            ? Etapas.OPEN_FINANCE
-            : Etapas.ACEITANDO_TERMOS,
-          face: finalUrl,
-        },
-      });
-
-      //Etapas.ACEITANDO_TERMOS,
-      // router.push("/(register_new)/register-finish");
-    } catch (error) {
-      const { isInternetReachable } = await Network.getNetworkStateAsync();
-      if (isInternetReachable === false) {
-        Alert.alert(
-          "Conexão perdida",
-          "Sua internet caiu durante o envio. Verifique a conexão e tente novamente.",
-        );
-      } else {
-        // Se não for erro de rede, o hook useUpdateUserMutation ou uploadRawFile já devem ter mostrado alerta
-        // Mas para garantir, podemos mostrar um genérico se não tiver sido tratado
-        // Alert.alert("Erro", "Ocorreu um erro ao enviar a foto.");
-      }
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (showFaceDetector) {
+    return <FaceDetector />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -179,7 +123,7 @@ const TimelessFace: React.FC = () => {
             iconRight={null}
             onPress={requestPermission}
           />
-          {showFaceDetector && <FaceDetector takePhoto={sendPhoto} />}
+          {/* {showFaceDetector && <FaceDetector takePhoto={sendPhoto} />} */}
         </>
       )}
 

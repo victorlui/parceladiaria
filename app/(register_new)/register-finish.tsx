@@ -189,7 +189,10 @@ const RegisterFinish: React.FC = () => {
           CPF: {maskCpf(data?.cpf! ?? userRegister?.cpf ?? "")}
         </Text>
         <Text style={styles.propostaText}>
-          Telefone: {maskPhone(data?.phone! ?? userRegister?.whatsapp ?? "")}
+          Telefone:{" "}
+          {maskPhone(
+            data?.phone! ?? userRegister?.whatsapp ?? userRegister?.phone ?? "",
+          )}
         </Text>
       </View>
       <View style={{ marginHorizontal: 25, width: "100%" }}>
