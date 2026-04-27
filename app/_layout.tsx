@@ -7,14 +7,11 @@ import "../global.css";
 import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { StatusCadastro } from "@/utils";
 import { useAlerts } from "@/components/useAlert";
-import * as Updates from "expo-updates";
 import * as Notifications from "expo-notifications";
 import { usePushNotification } from "@/hooks/usePushNotification";
 import { useForceInAppUpdate } from "@/hooks/useInAppUpdate";
-// import { AnalyticsBootstrap } from "@/hooks/useAnalyticsBootstrap";
-// import { getToken, getUser } from "@/lib/authStorage";
+import { useLiveUpdate } from "@/hooks/useLiveUpdate";
 
-// 👉 Rotas públicas (deep link permitido)
 const PUBLIC_ROUTES = [
   "/login",
   "/insert-password",
@@ -58,7 +55,7 @@ export default function RootLayout() {
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
   const hasRedirected = useRef(false);
-
+  useLiveUpdate();
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
   // AnalyticsBootstrap();
@@ -97,33 +94,6 @@ export default function RootLayout() {
         vibrationPattern: [0, 250, 250, 250],
       });
     }
-  }, []);
-
-  // 🔄 OTA updates
-  useEffect(() => {
-    async function checkUpdate() {
-      try {
-        if (!Updates.isEnabled) return;
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          Alert.alert(
-            "Atualização disponível",
-            "O app será reiniciado para aplicar as novas alterações.",
-            [
-              {
-                text: "OK",
-                onPress: () => Updates.reloadAsync(),
-              },
-            ],
-          );
-        }
-      } catch (e) {
-        console.log("Erro ao buscar update", e);
-      }
-    }
-
-    checkUpdate();
   }, []);
 
   // 🔐 Restaurar token

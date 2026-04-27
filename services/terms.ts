@@ -19,7 +19,7 @@ export async function acceptedTerms(data: TermsAcceptanceData) {
       },
     });
     return response;
-  } catch (error) {
+  } catch (error: any) {
     console.log("Error ao aceitar os termos:", error.response);
     throw error;
   }

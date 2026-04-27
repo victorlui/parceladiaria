@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Colors } from "@/constants/Colors";
-import { FontAwesome } from "@expo/vector-icons";
 import {
+  Alert,
   Linking,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,26 +12,211 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
+import { WebView } from "react-native-webview";
+import { Camera } from "react-native-vision-camera";
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
 
 const ChamadaVideoScreen: React.FC = () => {
-  const { logout } = useAuthStore((state) => state);
+  const { logout, user, userRegister } = useAuthStore((state) => state);
+  const [hasPermissions, setHasPermissions] = React.useState<boolean | null>(
+    null,
+  );
+  const [call, setCall] = useState<{
+    expira_minutos: number;
+    url: string;
+  } | null>(null);
+  const callExpiryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const requestPermissions = React.useCallback(async () => {
+    try {
+      const cameraStatus = await Camera.requestCameraPermission();
+      const micStatus = await Camera.requestMicrophonePermission();
 
-  const openWeb = async () => {
-    const url = "https://cadastroparceladiaria.com.br/cliente/";
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-      logout();
-      router.replace("/login");
-    } else {
-      alert("Navegador não está instalado.");
+      const allowed = cameraStatus === "granted" && micStatus === "granted";
+      setHasPermissions(allowed);
+
+      if (!allowed) {
+        Alert.alert(
+          "Permissão necessária",
+          "Para realizar a chamada de vídeo, autorize Câmera e Microfone nas configurações do app.",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Abrir Configurações",
+              onPress: () => Linking.openSettings(),
+            },
+          ],
+        );
+      }
+    } catch {
+      setHasPermissions(false);
     }
-  };
+  }, []);
+
+  React.useEffect(() => {
+    requestPermissions();
+  }, [requestPermissions]);
 
   const onExit = () => {
+    if (callExpiryTimeoutRef.current) {
+      clearTimeout(callExpiryTimeoutRef.current);
+      callExpiryTimeoutRef.current = null;
+    }
     logout();
     router.replace("/login");
   };
+
+  const fetchChamada = React.useCallback(async () => {
+    const cpf = user?.cpf || userRegister?.cpf;
+    const { data } = await axios.post(
+      "https://cadastroparceladiaria.com.br/api/chamada-app",
+      {
+        cpf,
+        nome: user?.nome || userRegister?.nome || "",
+        telefone: user?.phone || userRegister?.phone || "",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return data as { expira_minutos: number; url: string };
+  }, [
+    user?.cpf,
+    userRegister?.cpf,
+    user?.nome,
+    user?.phone,
+    userRegister?.nome,
+    userRegister?.phone,
+  ]);
+
+  const onRequestChamada = React.useCallback(async () => {
+    try {
+      const data = await fetchChamada();
+      setCall(data);
+    } catch {
+      Alert.alert(
+        "Não foi possível iniciar a chamada",
+        "Tente novamente em instantes.",
+      );
+    }
+  }, [fetchChamada]);
+
+  const onRefreshChamadaAfterExpiry = React.useCallback(async () => {
+    try {
+      const data = await fetchChamada();
+      setCall(data);
+    } catch {
+      setCall(null);
+      Alert.alert(
+        "Link expirado",
+        "O link expirou e não foi possível gerar um novo agora. Tente novamente.",
+      );
+    }
+  }, [fetchChamada]);
+
+  React.useEffect(() => {
+    if (!call) return;
+
+    if (callExpiryTimeoutRef.current) {
+      clearTimeout(callExpiryTimeoutRef.current);
+      callExpiryTimeoutRef.current = null;
+    }
+
+    const expirationMs = Math.max(0, call.expira_minutos) * 60 * 1000;
+
+    callExpiryTimeoutRef.current = setTimeout(() => {
+      Alert.alert(
+        "Link expirado",
+        "O link da chamada expirou. Gerando um novo link agora.",
+      );
+      onRefreshChamadaAfterExpiry();
+    }, expirationMs);
+
+    return () => {
+      if (callExpiryTimeoutRef.current) {
+        clearTimeout(callExpiryTimeoutRef.current);
+        callExpiryTimeoutRef.current = null;
+      }
+    };
+  }, [call, onRefreshChamadaAfterExpiry]);
+
+  if (call) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.webviewContainer}>
+          {hasPermissions ? (
+            <WebView
+              key={call.url}
+              source={{ uri: call.url }}
+              originWhitelist={["*"]}
+              javaScriptEnabled
+              domStorageEnabled
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              injectedJavaScriptBeforeContentLoaded={`
+    (function() {
+      const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
+        navigator.mediaDevices
+      );
+
+      navigator.mediaDevices.getUserMedia = async function(constraints) {
+        console.log('constraints originais', constraints);
+
+        // força apenas vídeo
+        return originalGetUserMedia({
+          video: true,
+          audio: true,
+        });
+      };
+    })();
+
+    true;
+  `}
+              allowsFullscreenVideo
+              mixedContentMode="always"
+              mediaCapturePermissionGrantType="grantIfSameHostElsePrompt"
+              androidLayerType="hardware"
+              setSupportMultipleWindows={false}
+              onPermissionRequest={(event: any) => {
+                if (Platform.OS === "android") {
+                  event.grant(event.resources);
+                }
+              }}
+            />
+          ) : (
+            <View style={styles.permissionContainer}>
+              <Text style={styles.permissionTitle}>
+                Não foi possível acessar a câmera/microfone
+              </Text>
+              <Text style={styles.permissionSubtitle}>
+                Autorize as permissões e tente novamente. Se continuar falhando,
+                abra no navegador do celular.
+              </Text>
+              <TouchableOpacity
+                onPress={requestPermissions}
+                style={styles.primaryButton}
+              >
+                <Text style={styles.primaryButtonText}>Tentar novamente</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.infoText}>
+            Não saia desta tela até o final da chamada para evitar desconexão.
+          </Text>
+          <TouchableOpacity onPress={onExit} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F7FCFA" }}>
@@ -84,7 +270,10 @@ const ChamadaVideoScreen: React.FC = () => {
         </View>
 
         <View style={{ gap: 10 }}>
-          <TouchableOpacity onPress={openWeb} style={styles.whatsappButton}>
+          <TouchableOpacity
+            onPress={onRequestChamada}
+            style={styles.whatsappButton}
+          >
             <FontAwesome name="whatsapp" size={20} color={Colors.white} />
             <Text style={styles.whatsappButtonText}>
               Falar com um Atendente
@@ -101,6 +290,69 @@ const ChamadaVideoScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F7FCFA",
+  },
+  webviewContainer: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  permissionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: Colors.black,
+    textAlign: "center",
+  },
+  permissionSubtitle: {
+    fontSize: 14,
+    color: Colors.gray.text,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderColor,
+    backgroundColor: Colors.white,
+  },
+  infoText: {
+    color: Colors.gray.text,
+    textAlign: "center",
+    fontSize: 12,
+  },
+  secondaryButtonText: {
+    color: Colors.gray.text,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  primaryButton: {
+    backgroundColor: Colors.green.button,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: Colors.white,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  secondaryButton: {
+    backgroundColor: Colors.white,
+    borderColor: Colors.borderColor,
+    borderWidth: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
   preAprovadoContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -177,19 +429,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: "bold",
     fontSize: 16,
-  },
-  secondaryButtonText: {
-    color: Colors.gray.text,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  secondaryButton: {
-    backgroundColor: Colors.white,
-    borderColor: Colors.borderColor,
-    borderWidth: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
   },
 });
 

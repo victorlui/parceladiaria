@@ -32,9 +32,6 @@ const ModalChangepix: React.FC<Props> = ({
       return showError("Atenção", "Chave Pix não pode estar vazia");
     }
 
-    console.log("validateEmail(keyNew)", validateEmail(keyNew));
-    console.log("keyNew", keyNew);
-
     if (type === "email" && validateEmail(keyNew)) {
       return showError("Atenção", "E-mail inválido");
     }
@@ -44,19 +41,18 @@ const ModalChangepix: React.FC<Props> = ({
 
     try {
       setLoading(true);
-      const { data } = await api.get("/v1/search/dict", {
+      await api.get("/v1/search/dict", {
         params: {
           pixKey: keyNew,
           type: type === "random" ? "evp" : type,
         },
       });
-      console.log("data", data);
+
       onChangePixKey(keyNew);
       showSuccess("Sucesso", "Chave Pix alterada com sucesso", () => {
         onClose();
       });
     } catch (error: any) {
-      console.log("error ao alterar chave Pix", error.response);
       showError(
         "Atenção",
         error.response?.data?.error || "Erro ao alterar chave Pix",
@@ -78,7 +74,7 @@ const ModalChangepix: React.FC<Props> = ({
       <View className="flex-1 bg-black/50 items-center justify-center">
         <View
           className="bg-white rounded-24 p-6 w-[90%] "
-          style={{ borderRadius: 16 }}
+          style={{ borderRadius: 16, width: "90%" }}
         >
           <View className="flex items-end bg-slate-500">
             <Ionicons

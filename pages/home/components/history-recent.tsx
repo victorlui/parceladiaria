@@ -10,11 +10,11 @@ import {
   View,
 } from "react-native";
 
-import TimelineItem from "../ui/Timeline";
+import TimelineItem from "../../../components/ui/Timeline";
 import { router } from "expo-router";
 
 interface Props {
-  installments: InstallmentsProps[];
+  installments: InstallmentsProps[] | [];
   totalInstallments: number;
   loading: boolean;
   loan: any;

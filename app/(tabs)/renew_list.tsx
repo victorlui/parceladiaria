@@ -25,9 +25,12 @@ import { convertData } from "@/utils";
 import * as Network from "expo-network";
 import { useAlerts } from "@/components/useAlert";
 import { tratarEstado } from "@/utils/validation";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
 
 const RenewList: React.FC = () => {
   const { showSuccess, showError, AlertDisplay } = useAlerts();
+  const { refetch } = useQueryDataClient();
+
   const { user } = useAuthStore((state) => state);
   const [list, setList] = React.useState<RenewListProps[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -110,6 +113,7 @@ const RenewList: React.FC = () => {
       };
 
       await api.post("/v1/renew", data);
+      refetch();
       showSuccess("Sucesso", "Renovação concluída com sucesso!");
       router.replace("/(tabs)/home");
     } catch (error: any) {
@@ -143,26 +147,13 @@ const RenewList: React.FC = () => {
 
       <ModalConfirm
         visible={modalVisible}
-        onClose={() => {
+        onCancel={() => {
           setModalVisible(false);
           setKeyNew("");
           setStep("confirm");
         }}
         onConfirm={() => onConfirmRenew()}
-        onStepChange={(step) => {
-          setStep(step);
-        }}
-        step={step}
-        valueSelected={Number(selectedItem?.loan_value || 0)}
-        valueToReceive={Number(selectedItem?.to_receive || 0)}
-        pixKey={pixKey || ""}
-        keyNew={keyNew}
-        onChangeKey={setKeyNew}
-        onSave={() => {
-          setKeyNew(keyNew);
-          setStep("confirm");
-        }}
-        isLoading={isLoading}
+        selectedItem={(selectedItem as RenewListProps) ?? null}
       />
       <AlertDisplay />
 

@@ -1,12 +1,13 @@
 import { Text, TouchableOpacity, View, Animated } from "react-native";
 
-import CircleIcon from "../ui/CircleIcon";
+import CircleIcon from "../../../components/ui/CircleIcon";
 
 type Item = {
   key: string;
   title: string;
   icon: React.ReactNode;
-  available: boolean;
+  badge: boolean;
+  titleBadge: string;
   onPress?: () => void;
   disabled?: boolean;
 };
@@ -14,7 +15,8 @@ type Item = {
 export const MenuItem: React.FC<Item> = ({
   title,
   icon,
-  available,
+  badge,
+  titleBadge,
   onPress,
   disabled,
 }) => {
@@ -27,9 +29,22 @@ export const MenuItem: React.FC<Item> = ({
         disabled={disabled}
       >
         <View className="relative">
-          {!disabled && available && title === "Renovar Empréstimo" && (
-            <View className="absolute -top-2 -left-2 bg-red-600 rounded-full px-2 py-1 z-10">
-              <Text className="text-white text-[10px]">Disponível</Text>
+          {badge && (
+            <View
+              style={{
+                position: "absolute",
+                top: -4,
+                left: -4,
+                backgroundColor: "#dc2626",
+                borderRadius: 9999,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                zIndex: 10,
+              }}
+            >
+              <Text style={{ color: "#ffffff", fontSize: 10 }}>
+                {titleBadge}
+              </Text>
             </View>
           )}
           <CircleIcon

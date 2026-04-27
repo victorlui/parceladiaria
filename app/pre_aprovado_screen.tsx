@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Network from "expo-network";
+import { tratarEstado } from "@/utils/validation";
 
 const PreAprovado: React.FC = () => {
   const { userRegister } = useAuthStore();
@@ -17,16 +18,17 @@ const PreAprovado: React.FC = () => {
     setLoadingAccept(true);
     try {
       const ip = await Network.getIpAddressAsync();
-
+      console.log("userRegister", userRegister);
       const payload = {
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
         sign_info_city: userRegister?.cidade ?? "São Paulo",
-        sign_info_state: userRegister?.estado ?? "SP",
+        sign_info_state: tratarEstado(userRegister?.estado || "SP"),
         sign_info_country: "BR",
       };
 
-      await api.post("v1/client/acept-term", payload);
+      const { data } = await api.post("v1/client/acept-term", payload);
+      console.log("data", data);
       Alert.alert(
         "Sucesso",
         "Contrato aceito com sucesso. Faça login novamente para continuar.",

@@ -3,11 +3,20 @@ import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useIndicationHook } from "../hooks/useIndicationHook";
 
-export const TermosFooter = React.memo(() => {
-  const { accepted, loadingAccept, toggleAccepted, acceptTermos } =
-    useIndicationHook();
+type Props = {
+  accepted: boolean;
+  loadingAccept: boolean;
+  toggleAccepted: () => void;
+  acceptTermos: () => Promise<void>;
+};
+
+export const TermosFooter = React.memo(function TermosFooter({
+  accepted,
+  loadingAccept,
+  toggleAccepted,
+  acceptTermos,
+}: Props) {
 
   return (
     <View style={styles.footer}>

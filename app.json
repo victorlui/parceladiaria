@@ -2,7 +2,7 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.1.0",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "parceladiaria",
@@ -38,7 +38,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "versionCode": 12,
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -48,7 +48,10 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
       ],
       "intentFilters": [
         {
@@ -154,9 +157,11 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.1.0",
+    "runtimeVersion": "1.1.2",
     "updates": {
-      "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557"
+      "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

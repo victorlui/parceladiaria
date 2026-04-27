@@ -65,7 +65,6 @@ export async function getLoansOpen(id: number | null) {
 export async function getLoans(): Promise<Loan[]> {
   try {
     const response = await api.get("/v1/loan");
-    console.log("response", response.data.data.data);
     return response.data.data.data;
   } catch (error: unknown) {
     throw error;

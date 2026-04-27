@@ -82,7 +82,12 @@ export const FormInput = forwardRef<TextInput, FormInputProps>(
               returnKeyType,
               onSubmitEditing,
               placeholderTextColor: "#9CA3AF",
-              style: { color: "#111827", flex: 1, fontSize: 18, paddingHorizontal: 12, height: "100%" },
+              style: {
+                color: "#111827",
+                flex: 1,
+                fontSize: 18,
+                paddingHorizontal: 12,
+              },
             };
 
             // Props específicos para TextInput normal

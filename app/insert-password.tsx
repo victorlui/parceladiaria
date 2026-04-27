@@ -1,8 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import React, { useEffect, useRef, useState } from "react";
-
 import {
-  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -21,19 +19,12 @@ import InputComponent from "@/components/ui/Input";
 import { FontAwesome } from "@expo/vector-icons";
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
-import { validateCPF } from "@/utils/validation";
-import {
-  useCheckCPFMutation,
-  useLoginMutation,
-} from "@/hooks/useLoginMutation";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
 import { useRegisterAuthStore } from "@/store/register";
 import { useAuthStore } from "@/store/auth";
-import api from "@/services/api";
-import { useSettingsStore } from "@/store/settings";
 
 const InsertPassword: React.FC = () => {
-  const { setOpenfinance } = useSettingsStore((state) => state);
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { mutate, isPending, isError } = useLoginMutation();
   const { cpf, setPassword: setPasswordStore } = useRegisterAuthStore();
@@ -47,7 +38,7 @@ const InsertPassword: React.FC = () => {
   useEffect(() => {
     if (isError && !hasShownError.current) {
       hasShownError.current = true;
-      showError("Atenção", "Acesso negado");
+      showError("Atenção", "Senha incorreta");
     }
     if (!isError) {
       hasShownError.current = false;
@@ -68,7 +59,7 @@ const InsertPassword: React.FC = () => {
         cpf: cpf ?? "",
         password,
       });
-    } catch (error: any) {
+    } catch {
       showWarning("Atenção", "CPF inválido");
       return;
     }
@@ -76,10 +67,6 @@ const InsertPassword: React.FC = () => {
 
   const navigationForgotPassword = () => {
     router.push("/(auth)/validity");
-  };
-
-  const navigationRegister = () => {
-    router.push("/(register_new)/register-cpf");
   };
 
   return (

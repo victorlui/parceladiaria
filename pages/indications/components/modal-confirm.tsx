@@ -68,7 +68,7 @@ const ModalConfirm: React.FC<Props> = (props) => {
       >
         <View
           className="bg-white rounded-24 p-6 w-[90%] "
-          style={{ borderRadius: 16 }}
+          style={{ borderRadius: 16, width: "90%", gap: 20 }}
         >
           <View className="flex items-end bg-slate-500">
             <Ionicons

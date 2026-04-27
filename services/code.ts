@@ -11,7 +11,7 @@ export async function sendCode(
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao enviar codigo:", error.response);
     throw error;
   }

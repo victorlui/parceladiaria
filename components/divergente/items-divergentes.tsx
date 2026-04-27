@@ -2,8 +2,20 @@ import ButtonComponent from "../ui/Button";
 import React from "react";
 import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import { FontAwesome6, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  FontAwesome6,
+  MaterialCommunityIcons,
+  Ionicons,
+} from "@expo/vector-icons";
+import {
+  Alert,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Camera } from "react-native-vision-camera";
 import FaceDetector from "../FaceDetector";
 
@@ -22,6 +34,7 @@ export const documentDisplayNames: Record<string, string> = {
   video_interior: "Vídeo do Interior",
   mei: "Certificado de MEI",
   face: "Reconhecimento Facial",
+  video_perfil_app: "Vídeo do Perfil no App",
 };
 
 interface Props {
@@ -40,7 +53,7 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
       Alert.alert(
         "Permissão necessária",
         "Você negou o acesso à câmera. Para usar esta função, ative a câmera nas Configurações.",
-        [{ text: "OK", style: "cancel" }]
+        [{ text: "OK", style: "cancel" }],
       );
     }
 
@@ -53,7 +66,7 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
   const buildFileName = (
     documentType: string,
     originalName?: string,
-    uri?: string
+    uri?: string,
   ) => {
     const baseName = documentType;
     const source =
@@ -72,7 +85,7 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
       const newName = buildFileName(
         documentType,
         pickerResult.name,
-        pickerResult.uri
+        pickerResult.uri,
       );
       onSelect(documentType, pickerResult.uri, newName);
     }

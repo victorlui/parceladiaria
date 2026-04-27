@@ -14,10 +14,12 @@ import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
 import StatusBar from "@/components/ui/StatusBar";
 import { useRenewStore } from "@/store/renew";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
 
 // RenewScreen component
 const RenewScreen: React.FC = () => {
   const { renew } = useRenewStore();
+
   const canRenew = !!renew?.can_renew;
 
   return (

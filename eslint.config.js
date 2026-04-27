@@ -6,6 +6,5 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ["dist/*"],
-    plugins: ["react-native-worklets-core/plugin"],
   },
 ]);

@@ -5,7 +5,8 @@ export type Item = {
   key: string;
   title: string;
   icon: React.ReactNode;
-  available: boolean;
+  badge: boolean;
+  titleBadge: string;
   disabled: boolean;
   onPress: () => void | Promise<void>;
 };
@@ -21,7 +22,8 @@ export function getMenuItems({ user, router }: Props): Item[] {
       key: "renew",
       title: "Renovar Empréstimo",
       icon: <FontAwesome name="refresh" size={24} color="#fff" />,
-      available: true,
+      badge: false,
+      titleBadge: "",
       disabled: user?.lastLoan?.blocked ?? false,
       onPress: () => {
         router.push("/(tabs)/renew");
@@ -31,7 +33,8 @@ export function getMenuItems({ user, router }: Props): Item[] {
       key: "whatsapp",
       title: "Suporte WhatsApp",
       icon: <FontAwesome name="whatsapp" size={28} color="#fff" />,
-      available: false,
+      badge: false,
+      titleBadge: "",
       disabled: false,
       onPress: async () => {
         const url = `https://parceladiaria.com.br/campanha/76`;
@@ -47,8 +50,9 @@ export function getMenuItems({ user, router }: Props): Item[] {
     {
       key: "indications",
       title: "Indicações",
-      icon: <Ionicons name="chatbox-ellipses-outline" size={28} color="#fff" />,
-      available: false,
+      icon: <Ionicons name="people-outline" size={28} color="white" />,
+      badge: false,
+      titleBadge: "",
       disabled: false,
       onPress: () => {
         router.push("/(app)/indications");
@@ -58,7 +62,8 @@ export function getMenuItems({ user, router }: Props): Item[] {
       key: "instagram",
       title: "Instagram",
       icon: <Ionicons name="logo-instagram" size={28} color="#fff" />,
-      available: false,
+      badge: false,
+      titleBadge: "",
       disabled: false,
       onPress: async () => {
         const url = "https://www.instagram.com/parceladiaria.oficial";

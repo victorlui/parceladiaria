@@ -68,7 +68,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "home-outline",
       title: "Início",
       onPress: () => {
-        router.push("/(app)/home");
+        router.push("/(tabs)/home");
         onClose();
       },
     },
@@ -76,7 +76,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "wallet-outline",
       title: "Meus Empréstimos",
       onPress: () => {
-        router.push("/(app)/my_loans_screen");
+        router.push("/(tabs)/loans");
         onClose();
       },
     },
@@ -85,7 +85,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "reload-outline",
       title: "Renovação",
       onPress: () => {
-        router.push("/(app)/renew_screen");
+        router.push("/(tabs)/renew");
         onClose();
       },
     },
@@ -93,7 +93,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "person-outline",
       title: "Meu Perfil",
       onPress: () => {
-        router.push("/(app)/profile_screen");
+        router.push("/(tabs)/profile");
         onClose();
       },
     },
@@ -101,7 +101,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "settings-outline",
       title: "Configurações",
       onPress: () => {
-        router.push("/(app)/settings_screen");
+        router.push("/(tabs)/config");
         onClose();
       },
     },
@@ -109,7 +109,7 @@ const DrawerMenu: React.FC<DrawerMenuProps> = ({
       icon: "document-text-outline",
       title: "Termos e Condições",
       onPress: () => {
-        router.push("/(app)/view_terms");
+        router.push("/(tabs)/config");
         onClose();
       },
     },

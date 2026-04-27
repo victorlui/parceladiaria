@@ -1,7 +1,6 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { useQRCodeStore } from "@/store/qrcode";
-import React, { useEffect, useRef, useState } from "react";
-
+import React, { useEffect, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
@@ -20,6 +19,7 @@ import { formatCurrency } from "@/utils/formats";
 import QRCode from "react-native-qrcode-svg";
 import * as Clipboard from "expo-clipboard";
 import { getPaymentStatus } from "@/services/loans";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
 
 const COLORS = {
   GRADIENT_START: "#209c91",
@@ -35,12 +35,13 @@ const COLORS = {
 
 const QrCodePayment: React.FC = () => {
   const { isLoading, qrCodeData } = useQRCodeStore();
+  const { refetch } = useQueryDataClient();
 
   const copyQRCode = async () => {
     if (qrCodeData?.payment?.qrCode) {
       try {
         await Clipboard.setStringAsync(qrCodeData.payment.qrCode);
-      } catch (error: any) {
+      } catch {
         Alert.alert("Erro", "Não foi possível copiar o código QR.", [
           { text: "OK" },
         ]);
@@ -50,19 +51,25 @@ const QrCodePayment: React.FC = () => {
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const ids = (qrCodeData as any)?.ids;
+  const transactionId = qrCodeData?.payment?.transactionId;
+  const txId = qrCodeData?.payment?.txId;
+
+  const paymentId = React.useMemo(() => {
+    const idSource = Array.isArray(ids) ? ids[0] : transactionId || txId;
+    if (!idSource) return null;
+    const idNum = Number(idSource);
+    if (!idNum || Number.isNaN(idNum)) return null;
+    return idNum;
+  }, [ids, transactionId, txId]);
+
   useEffect(() => {
-    const idsArr: any = (qrCodeData as any)?.ids;
-    const idSource = Array.isArray(idsArr)
-      ? idsArr[0]
-      : qrCodeData?.payment?.transactionId || qrCodeData?.payment?.txId;
-    if (!idSource) return;
-    const idNum =
-      typeof idSource === "string" ? Number(idSource) : Number(idSource);
-    if (!idNum || Number.isNaN(idNum)) return;
+    if (!paymentId) return;
 
     const check = async () => {
       try {
-        const res: any = await getPaymentStatus(idNum);
+        const res: any = await getPaymentStatus(paymentId);
+        await refetch();
         const statusText = String(
           res?.status || res?.message || "",
         ).toLowerCase();
@@ -80,7 +87,7 @@ const QrCodePayment: React.FC = () => {
           ]);
           if (pollingRef.current) clearInterval(pollingRef.current);
         }
-      } catch (e) {}
+      } catch {}
     };
 
     pollingRef.current = setInterval(check, 5000);
@@ -89,7 +96,7 @@ const QrCodePayment: React.FC = () => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [qrCodeData?.payment?.transactionId, qrCodeData?.payment?.txId]);
+  }, [paymentId, refetch]);
 
   return (
     <SafeAreaView className="flex-1 ">

@@ -9,7 +9,7 @@ export const apiValidation = async (file: any) => {
   };
 
   // 'file' é o nome do campo que o seu servidor espera para o arquivo.
-  formData.append("file", fileToUpload);
+  formData.append("file", fileToUpload as any);
   console.log(
     "process.env.EXPO_PUBLIC_API_VALIDATION",
     process.env.EXPO_PUBLIC_API_VALIDATION

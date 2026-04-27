@@ -23,6 +23,7 @@ interface ApiHeaders {
   "X-PUSH"?: string;
   "X-UserAgent": string;
   "X-Version-app": string;
+  Accept: string;
 }
 
 // Configuração da API
@@ -30,6 +31,8 @@ const apiConfig: ApiConfig = {
   baseURL: process.env.EXPO_PUBLIC_API_URL || "",
   secret: process.env.EXPO_PUBLIC_SECRET || "",
 };
+
+console.log("apiConfig", apiConfig);
 
 // Validação das variáveis de ambiente
 if (!apiConfig.baseURL || !apiConfig.secret) {
@@ -65,6 +68,7 @@ const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
 
     return {
       "Content-Type": "application/json",
+      Accept: "application/json",
       "X-Signature": signature,
       "X-UUID": uuid,
       "X-Timestamp": timestamp,

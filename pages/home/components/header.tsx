@@ -3,7 +3,7 @@ import { Fontisto } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import InfoBalance from "../ui/InfoBalance";
+import InfoBalance from "../../../components/ui/InfoBalance";
 import { router } from "expo-router";
 
 const COLORS = {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert, Linking, Modal, StyleSheet, Text, View } from "react-native";
-import ButtonComponent from "../ui/Button";
+import ButtonComponent from "../../../components/ui/Button";
 import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
 

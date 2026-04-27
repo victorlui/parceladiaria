@@ -5,7 +5,6 @@ import * as ExpoInAppUpdates from "expo-in-app-updates";
 export function useForceInAppUpdate() {
   useEffect(() => {
     async function check() {
-      // Só Android + produção
       if (Platform.OS !== "android" || __DEV__) return;
 
       try {

@@ -45,8 +45,6 @@ export const useLoginMutation = () => {
         },
       });
 
-      console.log("responseClient", responseClient.data);
-
       setOpenfinance({
         openfinance,
       });
@@ -80,7 +78,7 @@ export const useLoginMutation = () => {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const response = await api.get(`/v1/client/data/info`);
-
+      console.log("response login client", response.data.data);
       const user: ApiUserData = {
         nome: response.data.data.name,
         email: response.data.data.email,
