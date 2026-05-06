@@ -23,6 +23,7 @@ import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { router } from "expo-router";
 import { useRegisterAuthStore } from "@/store/register";
 import { useAuthStore } from "@/store/auth";
+import api from "@/services/api";
 
 const InsertPassword: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();

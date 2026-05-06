@@ -46,7 +46,7 @@ const PUBLIC_ROUTES = [
   "/register-openfinance",
   "/register-password",
   "/register-phone",
-  "/timeless_face",
+  "/verification",
 ];
 
 export default function RootLayout() {
@@ -165,6 +165,8 @@ export default function RootLayout() {
         <Stack.Screen name="(comerciante)" />
         <Stack.Screen name="(motorista_new)" />
 
+        <Stack.Screen name="verification" />
+        <Stack.Screen name="face_recognition" />
         <Stack.Screen name="recusado_screen" />
         <Stack.Screen name="divergencia_screen" />
         <Stack.Screen name="divergencia_old_docs_screen" />

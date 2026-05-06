@@ -155,6 +155,9 @@ const RegisterFinish: React.FC = () => {
           <Text style={styles.successText}>
             Seu cadastro foi enviado com sucesso. Em breve entraremos em contato
           </Text>
+          <Text style={styles.successText}>
+            Acesse a área do cliente para consultar o status do seu cadastro.
+          </Text>
         </View>
         <View style={{ marginVertical: 15, width: "100%" }}>
           <ButtonComponent

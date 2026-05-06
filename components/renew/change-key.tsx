@@ -12,6 +12,9 @@ import {
 import PixKeySelect from "./PixKeySelect";
 import { Colors } from "@/constants/Colors";
 import ButtonModal from "./button-modal";
+import api from "@/services/api";
+import { useAlerts } from "../useAlert";
+import ModalOtp from "./modal-otp";
 
 interface Props {
   onSave: (newKey: string, type: string) => void;
@@ -20,12 +23,55 @@ interface Props {
 }
 
 const ChangeKey: React.FC<Props> = ({ onSave, onStepChange, isLoading }) => {
+  const { showWarning, AlertDisplay } = useAlerts();
   const [type, setType] = useState<"cpf" | "email" | "phone" | "random">("cpf");
   const [keyNew, setKeyNew] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [data, setData] = useState<{
+    data: { phone: string };
+    message: string;
+  } | null>(null);
+  const [visible, setVisible] = useState<boolean>(false);
 
   const onChangeKey = (text: string) => {
     setKeyNew(text);
   };
+
+  const handleSendOTP = async () => {
+    if (!keyNew) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await api.post("/v1/client/change/pix/otp", {
+        pix: keyNew,
+        type: type,
+      });
+      setData(data);
+      setVisible(true);
+    } catch (error: any) {
+      showWarning(
+        "Atenção",
+        error.response.data.message || "Erro ao enviar OTP",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (visible) {
+    return (
+      <ModalOtp
+        data={data}
+        visible={visible}
+        onCancel={() => setVisible(false)}
+        onSave={() => {
+          onSave(keyNew, type);
+          setVisible(false);
+        }}
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -33,6 +79,7 @@ const ChangeKey: React.FC<Props> = ({ onSave, onStepChange, isLoading }) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
+      <AlertDisplay />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -77,10 +124,11 @@ const ChangeKey: React.FC<Props> = ({ onSave, onStepChange, isLoading }) => {
                 textButton2="Salvar"
                 onConfirm={() => {
                   Keyboard.dismiss();
-                  onSave(keyNew, type);
+                  //   onSave(keyNew, type);
+                  handleSendOTP();
                 }}
                 handleChangePress={() => onStepChange("confirm")}
-                loading={isLoading}
+                loading={isLoading || loading}
               />
             </View>
           </View>

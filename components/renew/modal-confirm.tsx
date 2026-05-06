@@ -37,22 +37,26 @@ const ModalConfirm: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
 
   const handleChangeKey = async (newKey: string, type: string) => {
-    console.log("nova chave", newKey, type);
     setLoading(true);
     try {
-      const data = await changePixKey(newKey, type);
-      console.log("sucesso", data);
-      setUser({
-        ...user,
-        pixKey: newKey,
-      });
+      await changePixKey(newKey, type);
+
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        setUser({
+          ...currentUser,
+          pixKey: newKey,
+        });
+      }
+
       setStep("confirm");
     } catch (error: any) {
-      console.log("error", error.response);
-      showWarning(
-        "Atenção",
-        error.response.data.error || "Chave pertence a outro titular",
-      );
+      const message =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Chave pertence a outro titular";
+
+      showWarning("Atenção", message);
     } finally {
       setLoading(false);
     }
@@ -66,14 +70,14 @@ const ModalConfirm: React.FC<Props> = ({
       presentationStyle="overFullScreen"
     >
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <AlertDisplay />
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <ScrollView
             keyboardShouldPersistTaps="handled"
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+            style={{ flex: 1 }}
             contentContainerStyle={{
               flexGrow: 1,
               alignItems: "center",
@@ -91,7 +95,10 @@ const ModalConfirm: React.FC<Props> = ({
                     ? "Confirmar Chave PIX"
                     : "Alterar Chave PIX"
                 }
-                onClose={onCancel}
+                onClose={() => {
+                  setStep("confirm");
+                  onCancel();
+                }}
               />
               {step === "confirm" && (
                 <>
@@ -119,7 +126,7 @@ const ModalConfirm: React.FC<Props> = ({
                     textButton2="Sim, está correto"
                     onConfirm={() => onConfirm()}
                     handleChangePress={() => setStep("change-key")}
-                    loading={false}
+                    loading={loading}
                   />
                 </>
               )}

@@ -1,6 +1,6 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { useQRCodeStore } from "@/store/qrcode";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
@@ -36,11 +36,13 @@ const COLORS = {
 const QrCodePayment: React.FC = () => {
   const { isLoading, qrCodeData } = useQRCodeStore();
   const { refetch } = useQueryDataClient();
+  const [copying, setCopying] = useState(false);
 
   const copyQRCode = async () => {
     if (qrCodeData?.payment?.qrCode) {
       try {
         await Clipboard.setStringAsync(qrCodeData.payment.qrCode);
+        setCopying(true);
       } catch {
         Alert.alert("Erro", "Não foi possível copiar o código QR.", [
           { text: "OK" },
@@ -160,7 +162,11 @@ const QrCodePayment: React.FC = () => {
                 Se preferir, copie o código e cole no app do seu banco.
               </Text>
 
-              <View style={styles.copyContainer}>
+              <TouchableOpacity
+                onPress={copyQRCode}
+                style={styles.copyContainer}
+                disabled={copying}
+              >
                 <ScrollView
                   style={styles.copyScroll}
                   showsVerticalScrollIndicator
@@ -174,15 +180,18 @@ const QrCodePayment: React.FC = () => {
                   style={styles.copyButton}
                   onPress={copyQRCode}
                   activeOpacity={0.8}
+                  disabled={copying}
                 >
                   <MaterialIcons
                     name="content-copy"
                     size={18}
                     color={COLORS.BUTTON_TEXT}
                   />
-                  <Text style={styles.copyButtonText}>Copiar</Text>
+                  <Text style={styles.copyButtonText}>
+                    {copying ? "Copiado" : "Copiar PIX"}
+                  </Text>
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             </View>
 
             <LinearGradient
@@ -335,8 +344,6 @@ const styles = StyleSheet.create({
 
   // NOVOS ESTILOS
   copyContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
     gap: 10,
     backgroundColor: Colors.white,
     borderRadius: 12,
@@ -354,7 +361,7 @@ const styles = StyleSheet.create({
   },
   copyButton: {
     alignSelf: "stretch",
-    paddingVertical: 8,
+    paddingVertical: 18,
     paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: COLORS.BUTTON_BG,
@@ -362,6 +369,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.BUTTON_TEXT,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 6,
   },
   copyButtonText: {

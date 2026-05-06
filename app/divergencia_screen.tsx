@@ -77,7 +77,7 @@ const DivergenciaScreen: React.FC = () => {
         const mappedKey = key === "ganhos_app" ? "video_perfil_app" : key;
 
         // Envia a URL do arquivo imediatamente após o upload
-        const response = await updateUserService({
+        await updateUserService({
           request: { [mappedKey]: uploadedUrl },
         });
       }

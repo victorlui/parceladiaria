@@ -16,10 +16,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderInfo from "./components/header";
 import ItemPayment from "./components/item-payment";
+import Skeleton from "./components/skeleton";
 
 const PaymentsScreen: React.FC = () => {
   const { user } = useAuthStore();
-  const { refetch } = useQueryDataClient();
+  const { refetch, isFetching } = useQueryDataClient();
   const { generateQRCode } = useQRCodeStore();
   const router = useRouter();
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>(
@@ -82,20 +83,32 @@ const PaymentsScreen: React.FC = () => {
           <FontAwesome5 name="arrow-left" size={18} color="black" />
           <Text style={styles.title}>Pagamentos</Text>
         </TouchableOpacity>
-        <HeaderInfo loading={false} skeletonOpacity={0} user={user || null} />
+        <HeaderInfo
+          loading={isFetching}
+          skeletonOpacity={0.8}
+          user={user || null}
+        />
         <View
           style={[
             styles.body,
             { paddingBottom: selectedInstallments.length > 0 ? 150 : 80 },
           ]}
         >
-          {installments.length > 0 && (
+          {!isFetching && installments.length > 0 && (
             <Text style={styles.infoText}>
               Selecione as parcelas para pagar
             </Text>
           )}
 
-          {installments.length === 0 && (
+          {isFetching && (
+            <View style={{ marginTop: 10, gap: 10 }}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} />
+              ))}
+            </View>
+          )}
+
+          {!isFetching && installments.length === 0 && (
             <View style={styles.emptyContainer}>
               <FontAwesome5
                 name="clipboard-check"
@@ -109,7 +122,8 @@ const PaymentsScreen: React.FC = () => {
             </View>
           )}
 
-          {installments.length > 0 &&
+          {!isFetching &&
+            installments.length > 0 &&
             installments.map((item: any) => (
               <ItemPayment
                 key={item.id}
@@ -118,16 +132,17 @@ const PaymentsScreen: React.FC = () => {
                 item={item}
               />
             ))}
-
-          <TouchableOpacity
-            style={styles.selectAllButton}
-            onPress={allSelected ? handleClearSelection : handleSelectAll}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.selectAllButtonText}>
-              {allSelected ? "Limpar seleção" : "Selecionar todas"}
-            </Text>
-          </TouchableOpacity>
+          {!isFetching && (
+            <TouchableOpacity
+              style={styles.selectAllButton}
+              onPress={allSelected ? handleClearSelection : handleSelectAll}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.selectAllButtonText}>
+                {allSelected ? "Limpar seleção" : "Selecionar todas"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 

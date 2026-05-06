@@ -33,8 +33,8 @@ const InfoRow: React.FC<{
 );
 
 const ProfileTab: React.FC = () => {
-  const { user } = useAuthStore();
-  console.log("user profile 2 ", user);
+  const user = useAuthStore((state) => state.user);
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar />

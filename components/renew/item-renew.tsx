@@ -12,6 +12,7 @@ interface Props {
 
 const ItemRenew: React.FC<Props> = ({ item, onPress, selectedId }) => {
   const isSelected = item.id === selectedId;
+  const [detailsOpen, setDetailsOpen] = React.useState(false);
 
   const handleSelect = (id: number) => {
     onPress(id);
@@ -75,6 +76,30 @@ const ItemRenew: React.FC<Props> = ({ item, onPress, selectedId }) => {
         <Text style={styles.rowLabel}>(-) Dívida Atual</Text>
         <Text style={styles.rowValue}>{formatCurrency(item.debt)}</Text>
       </View>
+
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => setDetailsOpen((v) => !v)}
+        style={styles.expandButton}
+      >
+        <Text style={styles.expandButtonText}>
+          {detailsOpen ? "Ocultar detalhes" : "Ver detalhes"}
+        </Text>
+        <Text style={styles.expandButtonIcon}>{detailsOpen ? "▲" : "▼"}</Text>
+      </TouchableOpacity>
+
+      {detailsOpen && (
+        <View style={styles.expandContent}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Juros Remuneratórios</Text>
+            <Text style={styles.detailValue}>88,30% a.m</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>CET</Text>
+            <Text style={styles.detailValue}>442.647,88% a.a</Text>
+          </View>
+        </View>
+      )}
 
       <View style={styles.footer}>
         <Text style={styles.footerLabel}>Você recebe</Text>
@@ -146,6 +171,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#374151",
     fontWeight: "600",
+  },
+  expandButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+  expandButtonText: {
+    fontSize: 13,
+    color: Colors.green.primary,
+    fontWeight: "700",
+  },
+  expandButtonIcon: {
+    fontSize: 12,
+    color: Colors.green.primary,
+    fontWeight: "900",
+  },
+  expandContent: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  detailValue: {
+    fontSize: 12,
+    color: "#374151",
+    fontWeight: "700",
   },
   footer: {
     flexDirection: "row",

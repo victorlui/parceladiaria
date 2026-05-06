@@ -12,24 +12,33 @@ export async function login(
 
   try {
     register(null, null);
-    const response = await api.post(`/auth/login`, {
+
+    const response = await api.post(`/auth/login-app`, {
       cpf,
       password,
       pushToken,
     });
 
-    const responseSettings = await api.get("v1/register/settings", {
-      headers: {
-        Authorization: `Bearer ${response.data.data.token}`,
-      },
-    });
+    const data = response.data.data;
+    const token = (data as any)?.token;
 
-    return {
-      ...response.data.data,
-      ...responseSettings.data.data,
-    };
+    if (typeof token === "string" && token.length > 0) {
+      const responseSettings = await api.get("v1/register/settings", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return {
+        ...data,
+        ...responseSettings.data.data,
+      };
+    }
+
+    return data;
   } catch (error: any) {
-    console.log("erro login", error.response);
+    console.log(error.response);
+
     if (error.response) {
       throw {
         status: error.response.status,

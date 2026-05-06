@@ -80,7 +80,7 @@ export enum Etapas {
   MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
   MOTORISTA_REGISTRANDO_VERSO_CNH = "Enviando verso CNH",
   MOTORISTA_REGISTRANDO_VIDEO_PERFIL = "Enviando video perfil",
-  MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial motorista",
+  //MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial motorista",
 
   //comerciante
   COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA = "Informando se possui empresa",
@@ -106,15 +106,15 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
 
-  [Etapas.REGISTRANDO_TIMELESS_FACE]: "/(register_new)/timeless_face",
+  [Etapas.REGISTRANDO_TIMELESS_FACE]: "/face_recognition",
   [Etapas.ACEITANDO_TERMOS]: "/(register_new)/register-finish",
 
   // motorista carro ou moto
   [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
   [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista_new)/cnh_verso",
   [Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL]: "/(motorista_new)/video_perfil",
-  [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]:
-    "/(motorista_new)/timeless_face_motorista",
+  //   [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]:
+  //     "/(motorista_new)/timeless_face_motorista",
 
   //comerciante
   [Etapas.COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA]:

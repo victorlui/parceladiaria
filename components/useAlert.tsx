@@ -34,8 +34,17 @@ export function useAlerts() {
     });
   };
 
-  const showWarning = (title: string, message: string) => {
-    setAlert({ type: "warning", title, message, onPress: () => hideAlert() });
+  const showWarning = (
+    title: string,
+    message: string,
+    onPress?: () => void,
+  ) => {
+    setAlert({
+      type: "warning",
+      title,
+      message,
+      onPress: onPress || hideAlert,
+    });
   };
 
   const showWarningPress = (
@@ -54,7 +63,7 @@ export function useAlerts() {
     setAlert(null);
   };
 
-  const AlertDisplay = () => {
+  const AlertDisplay = React.useCallback(() => {
     if (!alert) {
       return null;
     }
@@ -72,7 +81,7 @@ export function useAlerts() {
         sac={alert.sac}
       />
     );
-  };
+  }, [alert]);
 
   return {
     showSuccess,

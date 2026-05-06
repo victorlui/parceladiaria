@@ -129,6 +129,7 @@ export function useIndicationHook() {
         data: {
           ...currentData,
           pix_key: key,
+          pixKey: key,
         },
       };
     });

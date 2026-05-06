@@ -92,6 +92,10 @@ export interface ApiUserResponse {
   token_type: string;
   message: string;
   success: boolean;
+  needs_otp?: boolean;
+  phone_masked?: string;
+  email_masked?: string;
+  cpf?: string;
   openfinance: {
     motorista: {
       eco: boolean;

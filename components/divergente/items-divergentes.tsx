@@ -16,8 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Camera } from "react-native-vision-camera";
-import FaceDetector from "../FaceDetector";
+
+import FaceCaptureWebView from "@/pages/face/components/FaceCaptureWebView";
 
 export const documentDisplayNames: Record<string, string> = {
   comprovante_endereco: "Comprovante de endereço",
@@ -46,19 +46,6 @@ interface Props {
 const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
   const { takePhoto, takeVideo } = useDocumentPicker(100);
   const [showFaceDetector, setShowFaceDetector] = React.useState(false);
-
-  const requestPermission = async () => {
-    const status = await Camera.requestCameraPermission();
-    if (status === "denied") {
-      Alert.alert(
-        "Permissão necessária",
-        "Você negou o acesso à câmera. Para usar esta função, ative a câmera nas Configurações.",
-        [{ text: "OK", style: "cancel" }],
-      );
-    }
-
-    setShowFaceDetector(true);
-  };
 
   const isVideoType = (documentType: string) =>
     documentType.startsWith("video") || documentType === "ganhos_app";
@@ -91,9 +78,9 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
     }
   };
 
-  const sendPhoto = async (photo: string) => {
+  const sendPhoto = async (photo: any) => {
     setShowFaceDetector(false);
-    const uri = photo.startsWith("file://") ? photo : `file://${photo}`;
+    const uri = photo.file.uri;
     onSelect(item, uri, `face_${Date.now()}.jpg`);
   };
 
@@ -131,11 +118,21 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
 
   const handlePress = () => {
     if (item === "face") {
-      requestPermission();
+      setShowFaceDetector(true);
     } else {
       pickMedia(item);
     }
   };
+
+  if (showFaceDetector) {
+    return (
+      <FaceCaptureWebView
+        visible={showFaceDetector}
+        onSuccess={sendPhoto}
+        onClose={() => setShowFaceDetector(false)}
+      />
+    );
+  }
 
   return (
     <>
@@ -145,7 +142,6 @@ const ItemsDivergentes: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
         onRequestClose={() => setShowFaceDetector(false)}
       >
         <View style={{ flex: 1 }}>
-          <FaceDetector takePhoto={sendPhoto} />
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setShowFaceDetector(false)}

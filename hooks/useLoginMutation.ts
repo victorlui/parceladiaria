@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth";
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
 import { useSettingsStore } from "@/store/settings";
+import { useVerificationStore } from "@/store/validation";
 
 export const useCheckCPFMutation = () => {
   const { showError } = useAlerts();
@@ -36,8 +37,27 @@ export const useLoginMutation = () => {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data) => {
-      const { token, openfinance } = data;
-      const { type, etapa, status } = data.data;
+      if ((data as any)?.needs_otp === true) {
+        useVerificationStore.getState().handleData({
+          needs_otp: true,
+          phone_masked: (data as any)?.phone_masked,
+          email_masked: (data as any)?.email_masked,
+          cpf: (data as any)?.cpf,
+        });
+        router.replace("/verification");
+        return;
+      }
+
+      const token = (data as any)?.token;
+      const openfinance = (data as any)?.openfinance;
+      const userData = (data as any)?.data;
+
+      if (typeof token !== "string" || token.length === 0 || !userData) {
+        showError("Ops!", "Resposta inválida do servidor.");
+        return;
+      }
+
+      const { type, etapa, status } = userData;
 
       const responseClient = await api.get("v1/client", {
         headers: {
@@ -45,14 +65,18 @@ export const useLoginMutation = () => {
         },
       });
 
-      setOpenfinance({
-        openfinance,
-      });
+      console.log("userData", userData);
+
+      if (openfinance) {
+        setOpenfinance({
+          openfinance,
+        });
+      }
 
       if (type === "lead") {
-        useAuthStore.getState().register(data.token, {
+        useAuthStore.getState().register(token, {
           otp_obrigatorio: responseClient.data.data.data.otp_obrigatorio,
-          ...data.data,
+          ...userData,
         });
         if (status === Etapas.APP_ANALISE) {
           router.replace("/analise_screen");
@@ -78,7 +102,7 @@ export const useLoginMutation = () => {
 
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       const response = await api.get(`/v1/client/data/info`);
-      console.log("response login client", response.data.data);
+
       const user: ApiUserData = {
         nome: response.data.data.name,
         email: response.data.data.email,
@@ -90,7 +114,7 @@ export const useLoginMutation = () => {
         endereco: response.data.data.address,
         msg_painel: response.data.data.msg_painel,
         msg_status: response.data.data.msg_status,
-        lastLoan: data.data.lastLoan,
+        lastLoan: userData.lastLoan,
         zip_code: response.data.data.zip_code,
         phone: response.data.data.phone,
         pixKey: responseClient.data.data.data.pixKey ?? "",
@@ -100,7 +124,7 @@ export const useLoginMutation = () => {
         otp_obrigatorio: responseClient.data.data.data.otp_obrigatorio,
       };
 
-      useAuthStore.getState().login(data.token, user);
+      useAuthStore.getState().login(token, user);
 
       if (
         response.data.data.status_doc === "Divergente" &&
@@ -113,7 +137,6 @@ export const useLoginMutation = () => {
       return data;
     },
     onError: (error: any) => {
-      console.log("error login", error);
       showError("Ops!", error.message || "Ocorreu um erro inesperado.");
     },
   });

@@ -5,13 +5,10 @@ import MenuIAChatComponent from "@/components/ui/MenuIA";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadRawFile } from "@/hooks/useUploadDocument";
 import LayoutRegister from "@/layouts/layout-register";
-import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
 import { StyleSheet, Text, View } from "react-native";
-// import ButtonChat from "@/components/ui/ButtonChat";
 
 const CNF: React.FC = () => {
-  const { userRegister, user } = useAuthStore();
   const { mutate, isPending } = useUpdateUserMutation();
   const [loading, setLoading] = React.useState(false);
 

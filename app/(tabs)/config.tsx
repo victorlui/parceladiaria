@@ -1,56 +1,110 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Alert,
   Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, Feather } from "@expo/vector-icons";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import ModalTerms from "@/components/config/modal-terms";
-import { Asset } from "expo-asset";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
 import { changePassword } from "@/services/loans";
 import api from "@/services/api";
+import { Device } from "@/interfaces/devices";
+
+// --- Sub-componente para o Item de Dispositivo ---
+const DeviceItem = ({
+  device,
+  isCurrent,
+  onRevoke,
+}: {
+  device: Device;
+  isCurrent: boolean;
+  onRevoke: (id: number) => void;
+}) => (
+  <View style={styles.deviceInnerCard}>
+    <View style={styles.deviceHeader}>
+      <Text style={styles.deviceName}>
+        {device.user_agent === "mobile" ? "Celular" : device.user_agent}
+      </Text>
+      {isCurrent && (
+        <View style={styles.currentBadge}>
+          <Text style={styles.currentBadgeText}>ATUAL</Text>
+        </View>
+      )}
+    </View>
+
+    <Text style={styles.deviceInfo}>IP: {device.ip_last_seen}</Text>
+    <Text style={styles.deviceInfo}>Último acesso: {device.last_used_at}</Text>
+
+    {!isCurrent && (
+      <TouchableOpacity
+        style={styles.revokeButton}
+        onPress={() => onRevoke(device.id)}
+      >
+        <Feather name="x" size={16} color="#0F172A" />
+        <Text style={styles.revokeButtonText}>Revogar</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+);
 
 const ConfigTab: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [loadingDevices, setLoadingDevices] = useState(true);
 
   const [termsVisible, setTermsVisible] = useState(false);
   const [termsHtml, setTermsHtml] = useState("");
+  const [devices, setDevices] = useState<Device[]>([]);
 
   const { logout, user } = useAuthStore();
+
+  const fetchDevices = useCallback(async () => {
+    try {
+      setLoadingDevices(true);
+      const { data } = await api.get("/v1/client/trusted-devices");
+      setDevices(data.data);
+    } catch {
+      setDevices([]);
+    } finally {
+      setLoadingDevices(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDevices();
+  }, [fetchDevices]);
 
   const handleSave = async () => {
     Keyboard.dismiss();
     if (!newPassword || !confirmPassword) {
-      Alert.alert(
+      return Alert.alert(
         "Campos obrigatórios",
         "Informe a nova senha e a confirmação.",
       );
-      return;
     }
     if (newPassword.length < 6) {
-      Alert.alert(
+      return Alert.alert(
         "Senha inválida",
         "A senha deve ter pelo menos 6 caracteres.",
       );
-      return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert(
+      return Alert.alert(
         "Senhas diferentes",
         "A confirmação deve ser igual à nova senha.",
       );
-      return;
     }
 
     try {
@@ -58,6 +112,7 @@ const ConfigTab: React.FC = () => {
       await changePassword(newPassword);
       setNewPassword("");
       setConfirmPassword("");
+      Alert.alert("Sucesso", "Senha alterada com sucesso!");
     } catch (error: any) {
       Alert.alert(
         "Erro",
@@ -68,15 +123,37 @@ const ConfigTab: React.FC = () => {
     }
   };
 
+  const handleRevokeDevice = async (id: number) => {
+    Alert.alert(
+      "Revogar acesso",
+      "Deseja realmente remover este dispositivo?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Revogar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete(`/v1/client/trusted-devices/${id}`);
+              fetchDevices();
+            } catch {
+              Alert.alert("Erro", "Não foi possível revogar o dispositivo.");
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const openTerms = useCallback(async () => {
     try {
       const { data } = await api.get("/termos/termos_condicao");
       setTermsHtml(data.termo.content);
-      setTermsVisible(true);
-    } catch (err) {
+    } catch {
       setTermsHtml(
         "<html><body><p>Erro ao carregar os termos de uso.</p></body></html>",
       );
+    } finally {
       setTermsVisible(true);
     }
   }, []);
@@ -87,9 +164,9 @@ const ConfigTab: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <StatusBar />
-      <View style={styles.content}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <Ionicons
@@ -103,7 +180,7 @@ const ConfigTab: React.FC = () => {
         {/* Card: Alterar Senha */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Alterar Senha</Text>
-          <View style={{ height: 8 }} />
+          <View style={styles.inputGap} />
 
           <Text style={styles.label}>Nova Senha</Text>
           <TextInput
@@ -130,18 +207,45 @@ const ConfigTab: React.FC = () => {
             onPress={handleSave}
             disabled={isSaving}
           >
-            <FontAwesome name="save" size={18} color={Colors.white} />
-            <Text style={styles.primaryButtonText}>
-              {isSaving ? "Salvando..." : "Salvar Alterações"}
-            </Text>
+            {isSaving ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <FontAwesome name="save" size={18} color={Colors.white} />
+                <Text style={styles.primaryButtonText}>Salvar Alterações</Text>
+              </>
+            )}
           </TouchableOpacity>
+        </View>
+
+        {/* Card de dispositivos - REFATORADO PARA O LAYOUT NOVO */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Dispositivos Confiáveis</Text>
+          <Text style={styles.cardDescription}>
+            Locais e dispositivos onde você já entrou. Revogue qualquer um que
+            não reconheça.
+          </Text>
+
+          <View style={styles.deviceList}>
+            {loadingDevices ? (
+              <ActivityIndicator color={Colors.green.primary} />
+            ) : (
+              devices.map((device, index) => (
+                <DeviceItem
+                  key={device.id}
+                  device={device}
+                  isCurrent={index === 0} // Exemplo: assume que o primeiro é o atual
+                  onRevoke={handleRevokeDevice}
+                />
+              ))
+            )}
+          </View>
         </View>
 
         {/* Card: Termos e Condições */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Termos e Condições</Text>
-          <View style={{ height: 8 }} />
-
+          <View style={styles.inputGap} />
           <TouchableOpacity
             disabled={user?.lastLoan?.blocked}
             style={[
@@ -168,9 +272,8 @@ const ConfigTab: React.FC = () => {
           />
           <Text style={styles.logoutText}>Sair da Conta</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
-      {/* Modal de Termos */}
       <ModalTerms
         visible={termsVisible}
         onClose={() => setTermsVisible(false)}
@@ -185,7 +288,12 @@ export default ConfigTab;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
-  content: { padding: 16, gap: 16 },
+  content: {
+    padding: 16,
+    gap: 16,
+    paddingBottom: 40,
+    flexGrow: 1,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -202,11 +310,56 @@ const styles = StyleSheet.create({
     borderColor: "#E3F2F2",
   },
   cardTitle: { fontSize: 18, fontWeight: "700", color: "#0F172A" },
+  cardDescription: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 4,
+    lineHeight: 20,
+  },
   label: { fontSize: 12, color: "#64748B" },
+  inputGap: { height: 12 },
 
+  // --- Estilos dos Dispositivos (Novo Layout) ---
+  deviceList: { marginTop: 16, gap: 12 },
+  deviceInnerCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  deviceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  deviceName: { fontSize: 16, fontWeight: "700", color: "#0F172A" },
+  currentBadge: {
+    backgroundColor: "#10B981",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  currentBadgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "700" },
+  deviceInfo: { fontSize: 13, color: "#64748B", marginTop: 2 },
+  revokeButton: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 20,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  revokeButtonText: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
+
+  // --- Outros Componentes ---
   input: {
     borderWidth: 1,
-    borderColor: Colors.borderColor,
+    borderColor: "#E2E8F0",
     backgroundColor: Colors.white,
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -215,13 +368,11 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     marginTop: 6,
   },
-
   primaryButton: {
     marginTop: 16,
     backgroundColor: Colors.green.primary,
     borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -229,13 +380,11 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: { fontSize: 16, fontWeight: "600", color: Colors.white },
   disabled: { opacity: 0.6 },
-
   outlineButton: {
     borderWidth: 1,
-    borderColor: Colors.borderColor,
+    borderColor: "#E2E8F0",
     borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -243,17 +392,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   outlineButtonText: { fontSize: 16, fontWeight: "600", color: "#0F172A" },
-
   logoutButton: {
     borderWidth: 1,
     borderColor: Colors.green.primary,
     borderRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    marginBottom: 20,
   },
   logoutText: { fontSize: 16, fontWeight: "600", color: Colors.green.primary },
 });

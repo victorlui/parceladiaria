@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
 import { WebView } from "react-native-webview";
-import { Camera } from "react-native-vision-camera";
+
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 
@@ -31,25 +31,7 @@ const ChamadaVideoScreen: React.FC = () => {
   );
   const requestPermissions = React.useCallback(async () => {
     try {
-      const cameraStatus = await Camera.requestCameraPermission();
-      const micStatus = await Camera.requestMicrophonePermission();
-
-      const allowed = cameraStatus === "granted" && micStatus === "granted";
-      setHasPermissions(allowed);
-
-      if (!allowed) {
-        Alert.alert(
-          "Permissão necessária",
-          "Para realizar a chamada de vídeo, autorize Câmera e Microfone nas configurações do app.",
-          [
-            { text: "Cancelar", style: "cancel" },
-            {
-              text: "Abrir Configurações",
-              onPress: () => Linking.openSettings(),
-            },
-          ],
-        );
-      }
+      await Linking.openSettings();
     } catch {
       setHasPermissions(false);
     }
