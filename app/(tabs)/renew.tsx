@@ -1,291 +1,309 @@
-// RenewScreen component
 import React from "react";
-import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   FontAwesome,
-  FontAwesome5,
   FontAwesome6,
   Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { router } from "expo-router";
-import StatusBar from "@/components/ui/StatusBar";
 import { useRenewStore } from "@/store/renew";
-import { useQueryDataClient } from "@/hooks/useQueryClient";
 
-// RenewScreen component
 const RenewScreen: React.FC = () => {
   const { renew } = useRenewStore();
-
   const canRenew = !!renew?.can_renew;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar />
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <MaterialIcons
-              name="arrow-back"
-              size={22}
-              color={Colors.green.primary}
-            />
-            <Text style={styles.backText}>Voltar</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Header Padronizado */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="#1E293B" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Renovação</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-        {canRenew ? (
-          <LinearGradient
-            colors={[Colors.success.light, Colors.success.medium]}
-            style={styles.mainCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.checkCircle}>
-              <FontAwesome
-                name="check-circle"
-                size={32}
-                color={Colors.green.primary}
-              />
-            </View>
-
-            <Text style={styles.availableTitle}>Renovação Disponível</Text>
-            <Text style={styles.availableSubtitle}>
-              Parabéns! Você já pode renovar agora mesmo.
-            </Text>
-          </LinearGradient>
-        ) : (
-          <LinearGradient
-            colors={[Colors.yellow.light, Colors.yellow.medium]}
-            style={styles.mainCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.clockCircle}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Status Card Imersivo */}
+        <LinearGradient
+          colors={canRenew ? ["#F0FDF4", "#DCFCE7"] : ["#FFFBEB", "#FEF3C7"]}
+          style={[
+            styles.mainCard,
+            { borderColor: canRenew ? "#BBF7D0" : "#FDE68A" },
+          ]}
+        >
+          <View style={[styles.iconCircle, { backgroundColor: "#FFF" }]}>
+            {canRenew ? (
               <Ionicons
-                name="time-outline"
-                size={26}
-                color={Colors.orange.primary}
+                name="checkmark-circle"
+                size={36}
+                color={Colors.green.button}
+              />
+            ) : (
+              <Ionicons name="time" size={32} color="#D97706" />
+            )}
+          </View>
+
+          <Text
+            style={[
+              styles.statusTitle,
+              { color: canRenew ? "#166534" : "#92400E" },
+            ]}
+          >
+            {canRenew ? "Renovação Disponível" : "Renovação em Breve"}
+          </Text>
+          <Text style={styles.statusSubtitle}>
+            {canRenew
+              ? "Parabéns! Você já pode renovar seu contrato agora mesmo."
+              : "Continue pagando suas parcelas para liberar a renovação."}
+          </Text>
+        </LinearGradient>
+
+        {/* Info Grid (Data e Parcelas) */}
+        <View style={styles.infoGrid}>
+          <View style={styles.infoItem}>
+            <View style={styles.infoIconArea}>
+              <FontAwesome6
+                name="calendar-days"
+                size={20}
+                color={Colors.green.button}
               />
             </View>
-
-            <Text style={styles.title}>Renovação em Breve</Text>
-            <Text style={styles.subtitle}>
-              Continue pagando suas parcelas para liberar a renovação.
-            </Text>
-          </LinearGradient>
-        )}
-
-        {/* Card data prevista */}
-        <View style={styles.dateCard}>
-          <View style={styles.dateHeader}>
-            <FontAwesome6
-              name="calendar-check"
-              size={24}
-              color={Colors.green.primary}
-            />
-            <Text style={styles.dateLabel}>Data prevista</Text>
-            <Text style={styles.dateValue}>{renew?.date}</Text>
+            <View>
+              <Text style={styles.infoLabel}>Data prevista</Text>
+              <Text style={styles.infoValue}>{renew?.date || "--/--/--"}</Text>
+            </View>
           </View>
-          <View style={styles.dateHeader}>
-            <FontAwesome5
-              name="list-ol"
-              size={24}
-              color={Colors.green.primary}
-            />
-            <Text style={styles.dateLabel}>Parcela restantes </Text>
-            <Text style={styles.dateValue}>{renew?.remaining_paid}</Text>
+
+          <View style={styles.verticalDivider} />
+
+          <View style={styles.infoItem}>
+            <View style={styles.infoIconArea}>
+              <FontAwesome6
+                name="list-check"
+                size={20}
+                color={Colors.green.button}
+              />
+            </View>
+            <View>
+              <Text style={styles.infoLabel}>Restantes</Text>
+              <Text style={styles.infoValue}>
+                {renew?.remaining_paid || "0"}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {!canRenew && (
-          <View style={styles.disabledBar}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={18}
-              color={Colors.gray.primary}
-            />
-            <Text style={styles.disabledText}>Renovação Indisponível</Text>
+        {/* Box Dica - Mais elegante */}
+        <View style={styles.tipBox}>
+          <View style={styles.tipIconCircle}>
+            <Ionicons name="bulb-outline" size={20} color="#3B82F6" />
           </View>
-        )}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.tipTitle}>Como acelerar?</Text>
+            <Text style={styles.tipText}>
+              Mantenha seus pagamentos em dia para antecipar sua próxima
+              renovação.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
 
-        {canRenew && (
+      {/* Ações no Rodapé */}
+      <View style={styles.footer}>
+        {canRenew ? (
           <TouchableOpacity
+            activeOpacity={0.8}
             style={styles.renewButton}
             onPress={() => router.push("/renew_list")}
           >
-            <FontAwesome name="refresh" size={20} color="white" />
             <Text style={styles.renewButtonText}>Renovar Agora</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
-        )}
-
-        {/* Box dica */}
-        <View style={styles.tipBox}>
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={Colors.info.text}
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.tipTitle}>Dica:</Text>
-            <Text style={styles.tipText}>
-              Mantenha seus pagamentos em dia para liberar a renovação mais
-              rápido!
-            </Text>
+        ) : (
+          <View style={styles.disabledBar}>
+            <Ionicons name="lock-closed" size={18} color="#94A3B8" />
+            <Text style={styles.disabledText}>Renovação Bloqueada</Text>
           </View>
-        </View>
+        )}
       </View>
     </SafeAreaView>
   );
 };
 
-export default RenewScreen;
-
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: { flex: 1, backgroundColor: "#FFF" },
   container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 30,
   },
-
-  // Header
-  header: { marginVertical: 15 },
-  backButton: { flexDirection: "row", alignItems: "center", gap: 8 },
-  backText: { fontSize: 16, color: Colors.green.primary, fontWeight: "600" },
-
-  // Card principal
-  mainCard: {
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    elevation: 3,
-  },
-  clockCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: 12,
-    elevation: 2,
-  },
-  checkCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: 12,
-    elevation: 2,
-  },
-  availableTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-    color: Colors.green.primary,
-    marginBottom: 8,
-  },
-  availableSubtitle: {
-    fontSize: 14,
-    textAlign: "center",
-    color: "#4B5563",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-    color: "#92400E",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: "center",
-    color: "#6B7280",
-  },
-
-  // Card data prevista
-  dateCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
-    elevation: 2,
+  header: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    height: 60,
+  },
+  headerTitle: {
+    fontSize: 19,
+    fontWeight: "800",
+    color: "#1E293B",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
-    gap: 80,
   },
-  dateHeader: {
+  mainCard: {
+    borderRadius: 28,
+    paddingVertical: 32,
+    paddingHorizontal: 20,
     alignItems: "center",
-    gap: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  statusTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
     marginBottom: 8,
   },
-  dateLabel: { fontSize: 13, color: "#6B7280" },
-  dateValue: { fontSize: 16, fontWeight: "700", color: "#111827" },
-
-  // Barra desabilitada
+  statusSubtitle: {
+    fontSize: 15,
+    textAlign: "center",
+    color: "#64748B",
+    lineHeight: 22,
+  },
+  infoGrid: {
+    flexDirection: "row",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+  infoItem: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  infoIconArea: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  verticalDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#E2E8F0",
+    marginHorizontal: 15,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+  infoValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#1E293B",
+  },
+  tipBox: {
+    flexDirection: "row",
+    gap: 15,
+    backgroundColor: "#F0F9FF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+  tipIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tipTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0369A1",
+    marginBottom: 2,
+  },
+  tipText: { fontSize: 14, color: "#334155", lineHeight: 20 },
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 10,
+  },
+  renewButton: {
+    backgroundColor: Colors.green.button,
+    height: 60,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 12,
+    shadowColor: Colors.green.button,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  renewButtonText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "white",
+  },
   disabledBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  disabledText: { fontSize: 14, fontWeight: "600", color: Colors.gray.primary },
-
-  // Box dica
-  tipBox: {
-    flexDirection: "row",
     gap: 10,
-    backgroundColor: Colors.info.bg,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    backgroundColor: "#F1F5F9",
+    height: 60,
+    borderRadius: 20,
   },
-  tipTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.info.text,
-    marginBottom: 2,
-  },
-  tipText: { fontSize: 14, color: "#374151" },
-  // Botão renovar
-  renewButton: {
-    backgroundColor: Colors.green.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    flexDirection: "row",
-    gap: 8,
-  },
-  renewButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.white,
-  },
+  disabledText: { fontSize: 16, fontWeight: "700", color: "#94A3B8" },
 });
+
+export default RenewScreen;

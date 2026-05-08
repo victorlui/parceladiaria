@@ -3,18 +3,18 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import * as Network from "expo-network";
 import { Alert } from "react-native";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
+
 import { useAuthStore } from "@/store/auth";
 import api from "@/services/api";
 import LoadingScreen from "@/pages/face/components/LoadingScreen";
 
 const TimeLess: React.FC = () => {
-  const { isPending } = useLoginMutation();
   const { cpfValid, register } = useAuthStore((state) => state);
   const [loading, setLoading] = useState(false);
 
   const sendFace = async (face: any) => {
     setLoading(true);
+    console.log("cpfValid", cpfValid);
     try {
       if (!face) {
         return;
@@ -37,7 +37,6 @@ const TimeLess: React.FC = () => {
       register(response.data.data.token, {
         cpf: response.data.data.cpf,
         nome: response.data.data.nome,
-        pixKey: "",
       });
       router.push("/(auth)/change-password-screen");
       return;
@@ -63,7 +62,7 @@ const TimeLess: React.FC = () => {
     }
   };
 
-  if (isPending || loading) {
+  if (loading) {
     return <LoadingScreen />;
   }
 

@@ -6,6 +6,7 @@ interface AppState {
     phone_masked?: string;
     email_masked?: string;
     cpf?: string;
+    password?: string;
   } | null;
   handleData: (data: AppState["data"]) => void;
   reset: () => void;

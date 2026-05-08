@@ -5,7 +5,6 @@ import { useFocusEffect, router } from "expo-router";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -16,35 +15,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";
 import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import ItemRenew from "@/components/renew/item-renew";
-import ModalConfirm from "@/components/renew/modal-confirm";
 import { useAuthStore } from "@/store/auth";
-import api from "@/services/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { formatCurrency } from "@/utils/formats";
-import { convertData } from "@/utils";
-import * as Network from "expo-network";
-import { useAlerts } from "@/components/useAlert";
-import { tratarEstado } from "@/utils/validation";
-import { useQueryDataClient } from "@/hooks/useQueryClient";
+import { useRenewStore } from "@/store/renew";
+import { useConfirmPixStore } from "@/store/confirm-pix";
 
 const RenewList: React.FC = () => {
-  const { showSuccess, showError, AlertDisplay } = useAlerts();
-  const { refetch } = useQueryDataClient();
-
   const { user } = useAuthStore((state) => state);
+  const { setData } = useConfirmPixStore();
   const [list, setList] = React.useState<RenewListProps[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
-  const [modalVisible, setModalVisible] = React.useState<boolean>(false);
-  const [selectedItem, setSelectedItem] = React.useState<RenewListProps | null>(
-    null,
-  );
-  const [pixKey, setPixKey] = React.useState<string | null>(null);
-  const [step, setStep] = React.useState<"confirm" | "change">("confirm");
-  const [keyNew, setKeyNew] = React.useState<string>("");
+
   // Evita refetch quando o modal for aberto/fechado
   const preventRefetch = React.useRef<boolean>(false);
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const outstandingBalance = useMemo(() => {
     return user?.lastLoan?.installments?.reduce((total, installment) => {
@@ -57,10 +42,7 @@ const RenewList: React.FC = () => {
     try {
       setLoading(true);
       const response = await renewList();
-      const responseClient = await api.get("/v1/client");
 
-      setPixKey(responseClient.data?.data.data.pixKey || null);
-      // Preserva seleção ao recarregar
       const renewWithSelection = response.map((item) => ({
         ...item,
         selected: item.id === selectedId,
@@ -86,49 +68,18 @@ const RenewList: React.FC = () => {
 
   const handleSelect = (item: RenewListProps) => {
     setSelectedId(item.id);
-    setSelectedItem(item);
+    setData({
+      value: item.loan_value,
+      to_receive: item.to_receive,
+      isLoan: true,
+      id: item.id,
+    });
     setList((prev) =>
       prev.map((i) => ({
         ...i,
         selected: i.id === item.id,
       })),
     );
-  };
-
-  const onConfirmRenew = async () => {
-    setIsLoading(true);
-    try {
-      const ip = await Network.getIpAddressAsync();
-
-      //   const fromIP = await getFromGPS();
-      //   console.log("fromIP", fromIP);
-
-      const data = {
-        id: selectedId,
-        sign_info_date: convertData(),
-        sign_info_ip_address: ip,
-        sign_info_city: user?.cidade ?? "São Paulo",
-        sign_info_state: tratarEstado(user?.estado || "SP"),
-        sign_info_country: "BR",
-      };
-
-      await api.post("/v1/renew", data);
-      refetch();
-      showSuccess("Sucesso", "Renovação concluída com sucesso!");
-      router.replace("/(tabs)/home");
-    } catch (error: any) {
-      console.log("error renovação", error.response.data);
-
-      const responseData = error.response?.data;
-
-      showError(
-        "Atenção",
-        responseData?.message || error.message || "Erro ao renovar",
-      );
-    } finally {
-      setIsLoading(false);
-      setModalVisible(false);
-    }
   };
 
   const renderItem = ({ item }: { item: RenewListProps }) => {
@@ -144,18 +95,6 @@ const RenewList: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar />
-
-      <ModalConfirm
-        visible={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-          setKeyNew("");
-          setStep("confirm");
-        }}
-        onConfirm={() => onConfirmRenew()}
-        selectedItem={(selectedItem as RenewListProps) ?? null}
-      />
-      <AlertDisplay />
 
       {/* Header com voltar e título */}
       <View style={styles.header}>
@@ -212,10 +151,11 @@ const RenewList: React.FC = () => {
         <TouchableOpacity
           style={styles.confirmButton}
           onPress={() => {
-            if (!selectedId) return;
-            // Marca para não refazer o fetch ao recuperar foco
-            preventRefetch.current = true;
-            setModalVisible(true);
+            // if (!selectedId) return;
+            // // Marca para não refazer o fetch ao recuperar foco
+            // preventRefetch.current = true;
+            // setModalVisible(true);
+            router.push("/(app)/confirm-pix");
           }}
           disabled={!selectedId}
         >

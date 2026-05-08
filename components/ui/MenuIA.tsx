@@ -2,8 +2,6 @@ import React from "react";
 
 import { MenuIAChat } from "@menuia/react-native";
 import { useNotificationsStore } from "@/store/notifications";
-import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 interface MenuIAProps {
   user: {

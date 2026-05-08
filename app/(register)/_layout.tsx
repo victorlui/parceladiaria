@@ -9,11 +9,9 @@ export default function RegisterLayout() {
     <>
       <StatusBar style="dark" />
       <Stack>
-        <Stack.Screen name="profile_selection" options={options} />
-        <Stack.Screen name="address_screen" options={options} />
-        <Stack.Screen name="chave_pix" options={options} />
-        <Stack.Screen name="address_document" options={options} />
-        <Stack.Screen name="recognition_face" options={options} />
+        <Stack.Screen name="step1" options={options} />
+        <Stack.Screen name="openfinance" options={options} />
+        <Stack.Screen name="termos" options={options} />
       </Stack>
     </>
   );

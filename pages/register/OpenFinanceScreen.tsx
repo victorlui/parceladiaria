@@ -1,0 +1,421 @@
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { useRegisterStore } from "@/store/register_new";
+import { Etapas } from "@/utils";
+import { router, useFocusEffect } from "expo-router";
+import { AlertCircle, Landmark, Lock, X } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  AppState,
+  Linking,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import PulsingImageLoader from "./components/PulsingImageLoader";
+
+type FlowState =
+  | "checking"
+  | "idle"
+  | "connecting"
+  | "analyzing"
+  | "approved"
+  | "denied"
+  | "retry"
+  | "skip";
+
+const OpenFinanceScreen: React.FC = () => {
+  const { data: registerData } = useRegisterStore();
+  const { logout } = useAuthStore();
+  const { AlertDisplay, showWarningPress } = useAlerts();
+
+  const [flowState, setFlowState] = useState<FlowState>("checking");
+
+  const [loading, setLoading] = useState(true);
+  const [attempts, setAttempts] = useState<number>(0);
+  const [loadingMessage, setLoadingMessage] = useState("Verificando status...");
+
+  const appState = useRef(AppState.currentState);
+
+  /**
+   * INITIAL FLOW
+   */
+  useFocusEffect(
+    useCallback(() => {
+      async function initialize() {
+        setLoading(true);
+
+        try {
+          const { data } = await api.get("v1/register/settings");
+
+          const isDriver =
+            registerData?.profissao === "Motoboy" ||
+            registerData?.profissao === "Motorista";
+
+          /**
+           * MOTORISTA / MOTOBOY
+           */
+          if (isDriver) {
+            const { data: klaviData } = await api.get("/v1/klavi");
+
+            setAttempts(klaviData?.r_attempts || 0);
+
+            if (klaviData?.status === "aprovado") {
+              await goToTerms();
+              return;
+            }
+
+            if (klaviData?.r_attempts <= 0) {
+              setFlowState("denied");
+            } else {
+              setFlowState("idle");
+            }
+
+            return;
+          }
+
+          /**
+           * COMERCIANTE
+           */
+          if (registerData?.profissao === "Comerciante") {
+            const connectEnabled =
+              data?.data?.openfinance?.comerciante?.connect;
+
+            if (!connectEnabled) {
+              await goToTerms();
+              return;
+            }
+
+            const { data: klaviData } = await api.get("/v1/klavi");
+
+            setAttempts(klaviData?.r_attempts || 0);
+
+            if (klaviData?.status === "aprovado") {
+              await goToTerms();
+              return;
+            }
+
+            if (klaviData?.r_attempts <= 0) {
+              setFlowState("denied");
+            } else {
+              setFlowState("idle");
+            }
+
+            return;
+          }
+
+          /**
+           * OUTRAS PROFISSÕES
+           */
+          await goToTerms();
+        } catch (error: any) {
+          console.log("initialize error", error?.response ?? error);
+
+          setFlowState("idle");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      initialize();
+    }, [registerData?.profissao]),
+  );
+
+  /**
+   * APP STATE
+   */
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        if (flowState === "connecting") {
+          setFlowState("analyzing");
+        }
+      }
+
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [flowState]);
+
+  /**
+   * POLLING
+   */
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (flowState === "analyzing") {
+      setLoadingMessage("Analisando seus dados bancários...");
+
+      checkAnalysisStatus();
+
+      intervalId = setInterval(checkAnalysisStatus, 10000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [flowState]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * GO TO TERMS
+   */
+  async function goToTerms() {
+    try {
+      await api.put("/v1/client/update", {
+        etapa: Etapas.ACEITANDO_TERMOS,
+      });
+      router.push("/(register)/termos");
+    } catch (error) {
+      console.log("update etapa error", error);
+    }
+
+    router.replace("/(register)/termos");
+  }
+
+  /**
+   * CONNECT KLAVI
+   */
+  async function connectKlavi() {
+    try {
+      setFlowState("connecting");
+
+      const { data } = await api.post("/v1/klavi/connect", {
+        redirect: "expotemplatebase://register-openfinance",
+      });
+
+      const url = data?.data?.body?.linkURL;
+
+      if (url) {
+        Linking.openURL(url);
+      } else {
+        setFlowState("idle");
+      }
+    } catch (error: any) {
+      console.log("connect klavi error", error?.response ?? error);
+
+      setFlowState("idle");
+
+      if (error?.response?.status === 401) {
+        handleLogout();
+      }
+    }
+  }
+
+  /**
+   * CHECK ANALYSIS STATUS
+   */
+  async function checkAnalysisStatus() {
+    try {
+      const { data } = await api.get("/v1/cliente/check-status");
+
+      const status = data?.status;
+
+      setAttempts(data?.r_attempts || 0);
+
+      if (status === "aprovado") {
+        setFlowState("approved");
+
+        await goToTerms();
+
+        return;
+      }
+
+      if (status === "completed") {
+        return;
+      }
+
+      if (data?.r_attempts > 0) {
+        setFlowState("retry");
+      } else {
+        setFlowState("denied");
+      }
+    } catch (error: any) {
+      console.log("checkAnalysisStatus error", error?.response ?? error);
+
+      if (error?.response?.status === 401) {
+        handleLogout();
+      }
+    }
+  }
+
+  /**
+   * LOGOUT
+   */
+  function handleLogout() {
+    showWarningPress(
+      "Conexão perdida",
+      "Você foi desconectado. Faça login novamente",
+      () => {
+        logout();
+        router.replace("/login");
+      },
+    );
+  }
+
+  /**
+   * LOADING SCREEN
+   */
+  if (loading || flowState === "checking") {
+    return (
+      <PulsingImageLoader
+        source={require("@/assets/images/logo-verde.png")}
+        size={120}
+        text="Aguarde..."
+      />
+    );
+  }
+
+  /**
+   * RENDER CONTENT
+   */
+  const renderContent = () => {
+    switch (flowState) {
+      case "connecting":
+      case "analyzing":
+      case "approved":
+        return (
+          <View className="w-full items-center">
+            <ActivityIndicator
+              size="large"
+              color={Colors.green.primary}
+              className="mb-6"
+            />
+
+            <Text className="text-center text-lg font-semibold text-gray-800">
+              {loadingMessage}
+            </Text>
+
+            {flowState === "analyzing" && (
+              <Text className="mt-2 text-center text-sm text-gray-500">
+                Isso pode levar alguns segundos...
+              </Text>
+            )}
+          </View>
+        );
+
+      case "denied":
+        return (
+          <View className="w-full items-center px-4">
+            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-red-50">
+              <X size={40} color="#ef4444" />
+            </View>
+
+            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
+              Cadastro recusado
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Você tem {attempts} tentativas restantes.
+            </Text>
+
+            <Text className="mb-6 text-center text-base leading-6 text-gray-500">
+              Infelizmente não foi possível aprovar seu empréstimo neste
+              momento.
+            </Text>
+
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-xl border border-teal-800 bg-white py-4"
+              onPress={() => {
+                router.replace("/login");
+              }}
+            >
+              <Text className="text-lg font-semibold text-teal-800">Sair</Text>
+            </TouchableOpacity>
+          </View>
+        );
+
+      case "retry":
+        return (
+          <View className="w-full items-center px-4">
+            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-orange-50">
+              <AlertCircle size={40} color="#f97316" />
+            </View>
+
+            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
+              Tentar novamente
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Você tem {attempts} tentativas restantes.
+            </Text>
+
+            <Text className="mb-6 text-center text-base leading-6 text-gray-500">
+              Não conseguimos aprovar com a conta conectada.
+            </Text>
+
+            <Text className="mb-10 text-center text-sm font-semibold text-gray-500">
+              Conecte outra conta bancária (de preferência onde você tem maior
+              movimentação).
+            </Text>
+
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-xl bg-teal-800 py-4"
+              onPress={connectKlavi}
+            >
+              <Text className="text-lg font-semibold text-white">
+                Conectar outra conta
+              </Text>
+            </TouchableOpacity>
+          </View>
+        );
+
+      case "idle":
+      default:
+        return (
+          <View className="w-full items-center px-4">
+            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-teal-50">
+              <Landmark size={40} color="#0f766e" />
+            </View>
+
+            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
+              Conecte sua conta
+            </Text>
+
+            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+              Você tem {attempts} tentativas restantes.
+            </Text>
+
+            <Text className="mb-10 text-center text-base leading-6 text-gray-500">
+              Conecte sua melhor conta para podermos oferecer um crédito
+              adequado para você.
+            </Text>
+
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-xl bg-teal-800 py-4"
+              onPress={connectKlavi}
+            >
+              <Text className="text-lg font-semibold text-white">
+                Conectar Conta
+              </Text>
+            </TouchableOpacity>
+
+            <View className="mt-6 flex-row items-center">
+              <Lock size={14} color="#9ca3af" style={{ marginRight: 6 }} />
+
+              <Text className="text-sm text-gray-400">
+                Conexão segura via Open Finance
+              </Text>
+            </View>
+          </View>
+        );
+    }
+  };
+
+  return (
+    <View className="flex-1 items-center justify-center bg-white px-6">
+      <AlertDisplay />
+      {renderContent()}
+    </View>
+  );
+};
+
+export default OpenFinanceScreen;

@@ -1,11 +1,11 @@
-export function validateCPF(input: string): string {
+export function validateCPF(input: string): boolean {
   const raw = (input ?? "").trim();
   const cpf = raw.replace(/\D/g, "");
 
-  if (!raw) return "CPF é obrigatório";
-  if (/[A-Za-z]/.test(raw)) return "CPF deve conter somente números";
-  if (cpf.length !== 11) return "CPF deve conter 11 dígitos";
-  if (/^(\d)\1{10}$/.test(cpf)) return "CPF inválido";
+  if (!raw) return false;
+  if (/[A-Za-z]/.test(raw)) return false;
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
 
   let sum = 0;
   for (let i = 0; i < 9; i++) {
@@ -13,7 +13,7 @@ export function validateCPF(input: string): string {
   }
   let digit = 11 - (sum % 11);
   if (digit > 9) digit = 0;
-  if (digit !== parseInt(cpf.charAt(9))) return "CPF inválido";
+  if (digit !== parseInt(cpf.charAt(9))) return false;
 
   sum = 0;
   for (let i = 0; i < 10; i++) {
@@ -21,57 +21,75 @@ export function validateCPF(input: string): string {
   }
   digit = 11 - (sum % 11);
   if (digit > 9) digit = 0;
-  if (digit !== parseInt(cpf.charAt(10))) return "CPF inválido";
+  if (digit !== parseInt(cpf.charAt(10))) return false;
 
-  return "";
+  return true;
 }
 
-export function validateEmail(input: string): string {
+export function validateEmail(input: string): boolean {
   const email = (input ?? "").trim();
-  if (!email) return "Email é obrigatório";
+
+  if (!email) return false;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isBasicValid = emailRegex.test(email);
-  if (!isBasicValid) return "Formato de email inválido";
 
-  if (email.length < 5 || email.length > 254)
-    return "Formato de email inválido";
+  if (!emailRegex.test(email)) return false;
+
+  if (email.length < 5 || email.length > 254) return false;
 
   const [localPart, domain] = email.split("@");
-  if (!localPart || !domain) return "Formato de email inválido";
-  if (localPart.length > 64 || domain.length > 255)
-    return "Formato de email inválido";
 
-  return "";
+  if (!localPart || !domain) return false;
+
+  if (localPart.length > 64 || domain.length > 255) return false;
+
+  return true;
 }
 
-export function validatePhone(input: string): string {
+export function validatePhone(input: string): boolean {
   const raw = (input ?? "").trim();
   const digits = raw.replace(/\D/g, "");
 
-  if (!raw) return "Telefone é obrigatório";
-  if (!(digits.length === 10 || digits.length === 11)) {
-    return "Telefone deve conter 10 ou 11 dígitos (incluindo DDD)";
-  }
+  if (!raw) return false;
+  if (![10, 11].includes(digits.length)) return false;
 
   const ddd = parseInt(digits.substring(0, 2));
-  if (isNaN(ddd) || ddd < 11 || ddd > 99) return "Telefone inválido";
 
-  if (/^(\d)\1+$/.test(digits)) return "Telefone inválido";
+  if (isNaN(ddd) || ddd < 11 || ddd > 99) return false;
 
-  if (digits.length === 11 && digits[2] !== "9") return "Telefone inválido";
-  if (digits.length === 10 && !["6", "7", "8", "9"].includes(digits[2]))
-    return "Telefone inválido";
+  // Bloqueia sequências repetidas
+  if (/^(\d)\1+$/.test(digits)) return false;
+  if (/^(\d{2})\1+$/.test(digits)) return false;
 
-  return "";
+  // Celular: obrigatório 9
+  if (digits.length === 11 && digits[2] !== "9") {
+    return false;
+  }
+
+  // Fixo: deve começar entre 2 e 5
+  if (digits.length === 10 && !["2", "3", "4", "5"].includes(digits[2])) {
+    return false;
+  }
+
+  // Bloqueia prefixos inválidos em celular
+  if (
+    digits.length === 11 &&
+    ["10", "20", "30", "40", "50", "60", "70", "80", "90"].includes(
+      digits.substring(3, 5),
+    )
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
-export function validateBirthDate18Plus(input: string): string {
+export function validateBirthDate18Plus(input: string): boolean {
   const raw = (input ?? "").trim();
-  if (!raw) return "Data de nascimento é obrigatória";
+  if (!raw) return false;
 
   const digits = raw.replace(/\D/g, "");
-  if (digits.length !== 8) return "Formato de data inválido";
+  if (digits.length !== 8) return false;
 
   const day = parseInt(digits.slice(0, 2), 10);
   const month = parseInt(digits.slice(2, 4), 10);
@@ -85,7 +103,7 @@ export function validateBirthDate18Plus(input: string): string {
     month > 12 ||
     day < 1
   ) {
-    return "Data de nascimento inválida";
+    return false;
   }
 
   const date = new Date(year, month - 1, day);
@@ -94,7 +112,7 @@ export function validateBirthDate18Plus(input: string): string {
     date.getMonth() !== month - 1 ||
     date.getDate() !== day
   ) {
-    return "Data de nascimento inválida";
+    return false;
   }
 
   const today = new Date();
@@ -104,8 +122,8 @@ export function validateBirthDate18Plus(input: string): string {
     today.getDate(),
   );
 
-  if (date > eighteen) return "Você deve ter pelo menos 18 anos";
-  return "";
+  if (date > eighteen) return false;
+  return true;
 }
 
 export function validateCNPJ(cnpj: string): string {

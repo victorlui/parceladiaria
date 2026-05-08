@@ -1,5 +1,4 @@
 import StatusBar from "@/components/ui/StatusBar";
-import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import React from "react";
 import {
@@ -26,11 +25,9 @@ const LayoutRegister: React.FC<Props> = ({
   subtitle,
   isCenter = true,
 }) => {
-  const { AlertDisplay } = useAlerts();
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar />
-      <AlertDisplay />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

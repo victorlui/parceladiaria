@@ -45,7 +45,7 @@ const ModalConfirm: React.FC<Props> = ({
       if (currentUser) {
         setUser({
           ...currentUser,
-          pixKey: newKey,
+          pix: newKey,
         });
       }
 
@@ -114,7 +114,7 @@ const ModalConfirm: React.FC<Props> = ({
                   </Text>
                   <View className="mt-3 border border-gray-200 rounded-xl px-4 py-3">
                     <Text className="text-gray-900 font-semibold text-center">
-                      {user?.pixKey?.replace(/[^\w\s]/gi, "") || ""}
+                      {user?.pix?.replace(/[^\w\s]/gi, "") || ""}
                     </Text>
                   </View>
 

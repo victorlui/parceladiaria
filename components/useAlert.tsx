@@ -1,75 +1,98 @@
 import { AlertComponent } from "@/components/AlertDialog";
-import React, { useState } from "react";
+import React from "react";
+import { create } from "zustand";
+
+type AlertType = "success" | "error" | "warning" | "info";
+
+type AlertData = {
+  type: AlertType;
+  title: string;
+  message: string;
+  onPress?: () => void;
+  sac?: boolean;
+};
+
+type AlertStore = {
+  alert: AlertData | null;
+  showSuccess: (title: string, message: string, onOkPress?: () => void) => void;
+  showError: (title: string, message: string, sac?: boolean) => void;
+  showWarning: (title: string, message: string, onPress?: () => void) => void;
+  showWarningPress: (
+    title: string,
+    message: string,
+    onOkPress?: () => void,
+  ) => void;
+  showInfo: (title: string, message: string) => void;
+  hideAlert: () => void;
+};
+
+const useAlertStore = create<AlertStore>((set) => ({
+  alert: null,
+  showSuccess: (title, message, onOkPress) =>
+    set({
+      alert: {
+        type: "success",
+        title,
+        message,
+        onPress: onOkPress,
+        sac: false,
+      },
+    }),
+  showError: (title, message, sac) =>
+    set({
+      alert: {
+        type: "error",
+        title,
+        message,
+        sac,
+      },
+    }),
+  showWarning: (title, message, onPress) =>
+    set({
+      alert: {
+        type: "warning",
+        title,
+        message,
+        onPress,
+      },
+    }),
+  showWarningPress: (title, message, onOkPress) =>
+    set({
+      alert: {
+        type: "warning",
+        title,
+        message,
+        onPress: onOkPress,
+      },
+    }),
+  showInfo: (title, message) =>
+    set({
+      alert: {
+        type: "info",
+        title,
+        message,
+      },
+    }),
+  hideAlert: () => set({ alert: null }),
+}));
 
 export function useAlerts() {
-  const [alert, setAlert] = useState<{
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    message: string;
-    onPress?: () => void; // Adicionamos a ação customizada aqui
-    sac?: boolean;
-  } | null>(null);
-
-  const showSuccess = (
-    title: string,
-    message: string,
-    onOkPress?: () => void,
-  ) => {
-    setAlert({
-      type: "success",
-      title,
-      message,
-      onPress: onOkPress,
-      sac: false,
-    });
-  };
-
-  const showError = (title: string, message: string, sac?: boolean) => {
-    setAlert({
-      type: "error",
-      title,
-      message,
-      onPress: () => hideAlert(),
-      sac,
-    });
-  };
-
-  const showWarning = (
-    title: string,
-    message: string,
-    onPress?: () => void,
-  ) => {
-    setAlert({
-      type: "warning",
-      title,
-      message,
-      onPress: onPress || hideAlert,
-    });
-  };
-
-  const showWarningPress = (
-    title: string,
-    message: string,
-    onOkPress?: () => void,
-  ) => {
-    setAlert({ type: "warning", title, message, onPress: onOkPress });
-  };
-
-  const showInfo = (title: string, message: string) => {
-    setAlert({ type: "info", title, message, onPress: () => hideAlert() });
-  };
-
-  const hideAlert = () => {
-    setAlert(null);
-  };
+  const alert = useAlertStore((s) => s.alert);
+  const showSuccess = useAlertStore((s) => s.showSuccess);
+  const showError = useAlertStore((s) => s.showError);
+  const showWarning = useAlertStore((s) => s.showWarning);
+  const showWarningPress = useAlertStore((s) => s.showWarningPress);
+  const showInfo = useAlertStore((s) => s.showInfo);
+  const hideAlert = useAlertStore((s) => s.hideAlert);
 
   const AlertDisplay = React.useCallback(() => {
-    if (!alert) {
-      return null;
-    }
+    if (!alert) return null;
 
-    // Ação padrão do botão se nenhuma for fornecida
-    const handlePress = alert.onPress || hideAlert;
+    const handlePress = () => {
+      const onPress = alert.onPress;
+      hideAlert();
+      onPress?.();
+    };
 
     return (
       <AlertComponent
@@ -81,7 +104,7 @@ export function useAlerts() {
         sac={alert.sac}
       />
     );
-  }, [alert]);
+  }, [alert, hideAlert]);
 
   return {
     showSuccess,

@@ -3,9 +3,7 @@ import InputComponent from "@/components/ui/Input";
 import LogoComponent from "@/components/ui/Logo";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import { useLoginMutation } from "@/hooks/useLoginMutation";
 import api from "@/services/api";
-import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
 import { useVerificationStore } from "@/store/validation";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,13 +20,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLoginHook } from "../login/hooks/useLoginHook";
+import { useRegisterStore } from "@/store/register_new";
 
 const VerificationScreen: React.FC = () => {
   const router = useRouter();
   const { showSuccess, showError, AlertDisplay } = useAlerts();
-  const { mutate, isPending } = useLoginMutation();
-  const { cpf, password } = useRegisterAuthStore();
+  const { loginMutation } = useLoginHook();
   const { data } = useVerificationStore();
+  const { data: registerStoreData } = useRegisterStore();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
@@ -55,16 +55,16 @@ const VerificationScreen: React.FC = () => {
     setLoading(true);
     try {
       await api.post("/auth/login-otp", {
-        cpf: data?.cpf ?? cpf,
+        cpf: data?.cpf,
         otp: code,
       });
+
       showSuccess("Sucesso", "Código validado com sucesso");
-      mutate({
-        cpf: cpf || "",
-        password: password || "",
+      loginMutation.mutate({
+        cpf: data?.cpf || "",
+        password: registerStoreData?.password || "",
       });
     } catch (error: any) {
-      console.log("Login OTP Error", error.response);
       showError(
         "Atenção",
         error.response.message || "Código inválido ou Expirado.",
@@ -81,7 +81,7 @@ const VerificationScreen: React.FC = () => {
     setLoading(true);
     try {
       await api.post("auth/otp", {
-        cpf: data?.cpf ?? cpf,
+        cpf: data?.cpf || "",
       });
       showSuccess("Sucesso", "Código reenviado com sucesso");
       setResendTimer(60);
@@ -102,7 +102,7 @@ const VerificationScreen: React.FC = () => {
     setLoading(true);
     try {
       await api.post("auth/otp", {
-        cpf: data?.cpf ?? cpf,
+        cpf: data?.cpf || "",
         channel: "email",
       });
       showSuccess("Sucesso", "Código reenviado com sucesso");
@@ -169,7 +169,7 @@ const VerificationScreen: React.FC = () => {
                   iconLeft={null}
                   iconRight={null}
                   disabled={!canConfirm}
-                  loading={loading || isPending}
+                  loading={loading || loginMutation.isPending}
                 />
               </View>
 
@@ -186,7 +186,7 @@ const VerificationScreen: React.FC = () => {
                       <TouchableOpacity
                         onPress={handleResendCode}
                         activeOpacity={0.8}
-                        disabled={loading || isPending}
+                        disabled={loading || loginMutation.isPending}
                       >
                         <Text style={styles.linkAction}>Reenviar codigo</Text>
                       </TouchableOpacity>
@@ -195,7 +195,7 @@ const VerificationScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={handleSendByEmail}
                       activeOpacity={0.8}
-                      disabled={loading || isPending}
+                      disabled={loading || loginMutation.isPending}
                     >
                       <Text style={styles.linkAction}>
                         Enviar codigo por email
@@ -207,7 +207,7 @@ const VerificationScreen: React.FC = () => {
                 <TouchableOpacity
                   onPress={handleBackToLogin}
                   activeOpacity={0.8}
-                  disabled={loading || isPending}
+                  disabled={loading || loginMutation.isPending}
                 >
                   <Text style={styles.linkAction}>Voltar ao login</Text>
                 </TouchableOpacity>

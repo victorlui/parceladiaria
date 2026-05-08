@@ -2,6 +2,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useAuthStore } from "@/store/auth";
+import { useRegisterStore } from "@/store/register_new";
 import { formatDateToBR } from "@/utils/formats";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -12,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const RecusadoScreen: React.FC = () => {
   useDisableBackHandler();
   const { logout, userRegister } = useAuthStore();
+  const { data } = useRegisterStore();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,7 +30,7 @@ const RecusadoScreen: React.FC = () => {
       <View style={styles.motivoRecusa}>
         <Text style={styles.titleMotivoRecusa}>Motivo da Recusa</Text>
         <Text style={styles.textMotivoRecusa}>
-          {userRegister?.motivo_recusa}
+          {data?.motivo_recusa ?? "Nenhum motivo registrado"}
         </Text>
       </View>
 

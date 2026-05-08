@@ -1,12 +1,12 @@
 export interface ApiUserData {
   bairro?: string | null;
   cep?: string | null;
+  chamada_video?: number | null;
   chave?: string | null;
   cidade?: string | null;
   complemento?: string | null;
   comprovante_comercio?: string | null;
   comprovante_endereco?: string | null;
-  chamada_video?: number | null;
   cpf?: string;
   criado?: string;
   data_divergencia?: string | null;
@@ -18,8 +18,6 @@ export interface ApiUserData {
   endereco?: string | null;
   erro?: string | null;
   estado?: string | null;
-  zip_code?: string | null;
-  phone?: string | null;
   etapa?: string;
   face?: string | null;
   fachada?: string | null;
@@ -32,30 +30,7 @@ export interface ApiUserData {
   ganhos_app?: string | null;
   id?: number;
   interior?: string | null;
-  mei?: string | null;
-  motivo_recusa?: string | null;
-  nascimento?: string;
-  nome?: string;
-  numero?: string | null;
-  pix?: string | null;
-  placa?: string | null;
-  profissao?: string | null;
-  repescagem?: string | null;
-  signature?: string | null;
-  status?: string;
-  status_doc?: string | null;
-  termos?: number;
-  tipo_comercio?: string | null;
-  type?: string;
-  url_reconhecimento?: string | null;
-  validacoes?: string | null;
-  video_comercio?: string | null;
-  whatsapp?: string | null;
-  whatsapp2?: string | null;
-  msg_painel?: string | null;
-  msg_status?: string | null;
-  observacoes?: string | null;
-  otp_obrigatorio?: number | null;
+  isLoggedIn?: boolean;
   lastLoan?: {
     amount: string;
     blocked: boolean;
@@ -79,9 +54,33 @@ export interface ApiUserData {
       payment_date: string | null;
     }[];
   } | null;
-  pixKey?: string | null;
-  isLoggedIn?: boolean;
+  mei?: string | null;
+  motivo_recusa?: string | null;
+  msg_painel?: string | null;
+  msg_status?: string | null;
+  nascimento?: string;
+  nome?: string;
+  numero?: string | null;
+  observacoes?: string | null;
+  otp_obrigatorio?: number | null;
+  phone?: string | null;
+  pix?: string | null;
+  placa?: string | null;
+  profissao?: string | null;
   refinanciamento?: string | null;
+  repescagem?: string | null;
+  signature?: string | null;
+  status?: string;
+  status_doc?: string | null;
+  termos?: number;
+  tipo_comercio?: string | null;
+  type?: string;
+  url_reconhecimento?: string | null;
+  validacoes?: string | null;
+  video_comercio?: string | null;
+  whatsapp?: string | null;
+  whatsapp2?: string | null;
+  zip_code?: string | null;
 }
 
 export interface ApiUserResponse {

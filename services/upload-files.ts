@@ -4,12 +4,8 @@ import api from "./api";
 export const solicitarLinkS3 = async (
   filename: any,
   contentType: any,
-  token: any
+  token: any,
 ) => {
-  console.log("solicitarLinkS3", {
-    filename: filename,
-    content_type: contentType,
-  });
   try {
     const response = await api.post(
       "/v1/generate-presigned-url",
@@ -21,7 +17,7 @@ export const solicitarLinkS3 = async (
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
     console.log("solicitarLinkS3", response.data);
     return response.data;
@@ -36,7 +32,7 @@ export const solicitarLinkS3 = async (
 export const uploadArquivoParaS3 = async (
   uploadUrl: any,
   arquivo: any,
-  contentType: any
+  contentType: any,
 ) => {
   try {
     const response = await fetch(uploadUrl, {

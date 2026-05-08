@@ -4,7 +4,6 @@ import { AxiosError } from "axios";
 import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
 import * as Crypto from "expo-crypto";
-import { uuid } from "zod";
 
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -62,46 +61,31 @@ export enum StatusCadastro {
 
 export enum Etapas {
   INICIO = "Inicio",
-  INICIO_BIRTH = "inicio",
-  ASSISTINDO_VIDEO = "assistindo_video",
+  LIMITE = "Limite",
+  CNPJ = "Registrando CNPJ",
   FINALIZADO = "Finalizado",
   APP_ANALISE = "analise",
-  REGISTRANDO_COMPROVANTE_ENDERECO = "registrando_comprovante_endereco",
   REGISTRANDO_PROFISSAO = "Informando Profissão",
   REGISTRANDO_EMAIL = "registrando_email",
   REGISTRANDO_ENDERECO = "registrando_endereco",
   REGISTRANDO_PIX = "registrando_pix",
   INFORMANDO_PIX = "Informando PIX",
-
+  INFORMANDO_TIPO_COMERCIO = "Informando Tipo Comércio",
   REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial",
   ACEITANDO_TERMOS = "Aceitando termos",
 
-  // motorista carro ou moto
-  MOTORISTA_REGISTRANDO_FRENTE_CNH = "Enviando frente documento CNH",
-  MOTORISTA_REGISTRANDO_VERSO_CNH = "Enviando verso CNH",
-  MOTORISTA_REGISTRANDO_VIDEO_PERFIL = "Enviando video perfil",
-  //MOTORISTA_REGISTRANDO_TIMELESS_FACE = "Reconhecimento facial motorista",
-
-  //comerciante
-  COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA = "Informando se possui empresa",
-  COMERCIANTE_ENVIANDO_TIPO_COMERCIO = "Enviando tipo de comercio",
-  COMERCIANTE_INFORMANDO_CNPJ = "Informando CNPJ",
-  COMERCIANTE_ENVIANDO_EXTRATO = "Enviando extrato",
-  COMERCIANTE_ENVIANDO_VIDEO_FACHADA = "Enviando video fachada",
-  COMERCIANTE_ENVIANDO_VIDEO_INTERIOR = "Enviando video interior",
-  COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL = "Enviando frente documento pessoal",
-  COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL = "Enviando verso documento pessoal",
-
-  // OpenFinance
   OPEN_FINANCE = "Openfinance",
 }
 
 const routeMap: Record<Etapas, string> = {
-  [Etapas.INICIO]: "/(register_new)/register-email",
-  [Etapas.INICIO_BIRTH]: "/(register)/birthday_screen",
-  [Etapas.REGISTRANDO_COMPROVANTE_ENDERECO]: "/(register)/address_document",
-  [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/profile_selection",
-  [Etapas.REGISTRANDO_EMAIL]: "/(register)/email_screen",
+  [Etapas.INICIO]: "/(register)/step1",
+  [Etapas.LIMITE]: "/(register)/step1",
+  [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/step1",
+  [Etapas.REGISTRANDO_EMAIL]: "/(register)/step1",
+
+  [Etapas.CNPJ]: "/(register)/step1",
+  [Etapas.INFORMANDO_TIPO_COMERCIO]: "/(register)/step1",
+
   [Etapas.REGISTRANDO_ENDERECO]: "/(register_new)/register-address",
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
@@ -109,30 +93,6 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.REGISTRANDO_TIMELESS_FACE]: "/face_recognition",
   [Etapas.ACEITANDO_TERMOS]: "/(register_new)/register-finish",
 
-  // motorista carro ou moto
-  [Etapas.MOTORISTA_REGISTRANDO_FRENTE_CNH]: "/(motorista_new)/cnh_front",
-  [Etapas.MOTORISTA_REGISTRANDO_VERSO_CNH]: "/(motorista_new)/cnh_verso",
-  [Etapas.MOTORISTA_REGISTRANDO_VIDEO_PERFIL]: "/(motorista_new)/video_perfil",
-  //   [Etapas.MOTORISTA_REGISTRANDO_TIMELESS_FACE]:
-  //     "/(motorista_new)/timeless_face_motorista",
-
-  //comerciante
-  [Etapas.COMERCIANTE_INFORMANDO_SE_POSSUI_EMPRESA]:
-    "/(comerciante)/has_company_screen",
-  [Etapas.COMERCIANTE_ENVIANDO_TIPO_COMERCIO]:
-    "/(comerciante)/bussines_type_screen",
-  [Etapas.COMERCIANTE_INFORMANDO_CNPJ]: "/(comerciante)/cnpj",
-  [Etapas.COMERCIANTE_ENVIANDO_EXTRATO]: "/(comerciante)/extrato",
-  [Etapas.COMERCIANTE_ENVIANDO_VIDEO_FACHADA]:
-    "/(comerciante)/storefront_video_screen",
-  [Etapas.COMERCIANTE_ENVIANDO_VIDEO_INTERIOR]:
-    "/(comerciante)/storeinterior_video_screen",
-  [Etapas.COMERCIANTE_ENVIANDO_FRONT_DOCUMENTO_PESSOAL]:
-    "/(comerciante)/document_photo_front_screen",
-  [Etapas.COMERCIANTE_ENVIANDO_VERSO_DOCUMENTO_PESSOAL]:
-    "/(comerciante)/document_photo_back_screen",
-
-  [Etapas.ASSISTINDO_VIDEO]: "/(app)/video_screen",
   [Etapas.APP_ANALISE]: "/(app)/home",
 
   // OpenFinance

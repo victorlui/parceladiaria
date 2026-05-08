@@ -26,6 +26,7 @@ import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import api from "@/services/api";
 import { router } from "expo-router";
+import { useConfirmPixStore } from "@/store/confirm-pix";
 
 const TermosBody = React.memo(function TermosBody({
   termos,
@@ -61,6 +62,7 @@ const IndicationsScreen: React.FC = () => {
     updateSaqueAtual,
   } = useIndicationHook();
   const { AlertDisplay, showSuccess, showWarning } = useAlerts();
+  const { setData } = useConfirmPixStore();
   const [visible, setVisible] = useState(false);
   const [code, setCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -371,7 +373,11 @@ const IndicationsScreen: React.FC = () => {
           <View>
             <Pressable
               onPress={() => {
-                if (!isDisabled) setVisible(true);
+                setData({
+                  isLoan: false,
+                  value: String(saldoDisponivel),
+                });
+                router.push("/(app)/confirm-pix");
               }}
               style={[
                 styles.button,

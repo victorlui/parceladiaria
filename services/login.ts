@@ -20,20 +20,6 @@ export async function login(
     });
 
     const data = response.data.data;
-    const token = (data as any)?.token;
-
-    if (typeof token === "string" && token.length > 0) {
-      const responseSettings = await api.get("v1/register/settings", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return {
-        ...data,
-        ...responseSettings.data.data,
-      };
-    }
 
     return data;
   } catch (error: any) {

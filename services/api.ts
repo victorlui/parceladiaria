@@ -1,233 +1,247 @@
-import { useAuthStore } from "@/store/auth";
-import { useNotificationsStore } from "@/store/notifications";
-import { generateSignature } from "@/utils";
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { router } from "expo-router";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from "axios";
+
 import Constants from "expo-constants";
-import { Alert } from "react-native";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 
-// Tipos para melhor tipagem
-interface ApiConfig {
-  baseURL: string;
-  secret: string;
+import { Alert } from "react-native";
+import { router } from "expo-router";
+
+import { useAuthStore } from "@/store/auth";
+import { useNotificationsStore } from "@/store/notifications";
+import { useRegisterStore } from "@/store/register_new";
+
+import { generateSignature } from "@/utils";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_SECRET = process.env.EXPO_PUBLIC_SECRET;
+
+if (!API_URL || !API_SECRET) {
+  throw new Error("API environment variables are missing.");
 }
 
-interface ApiHeaders {
-  "Content-Type": string;
-  "X-Signature": string;
-  "X-UUID": string;
-  "X-Timestamp": string;
-  Authorization?: string;
-  "X-PUSH"?: string;
-  "X-UserAgent": string;
-  "X-Version-app": string;
-  Accept: string;
+const DEVICE_UUID_KEY = "device_uuid";
+const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+
+interface RetryRequestConfig extends AxiosRequestConfig {
+  _retry?: boolean;
 }
 
-// Configuração da API
-const apiConfig: ApiConfig = {
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "",
-  secret: process.env.EXPO_PUBLIC_SECRET || "",
-};
-
-console.log("apiConfig", apiConfig);
-
-// Validação das variáveis de ambiente
-if (!apiConfig.baseURL || !apiConfig.secret) {
-  throw new Error("Variáveis de ambiente da API não configuradas corretamente");
-}
-
-// Função para obter ou gerar UUID único do dispositivo
-const getDeviceUUID = async (): Promise<string> => {
-  try {
-    let uuid = await SecureStore.getItemAsync("device_uuid");
-    if (!uuid) {
-      uuid = Crypto.randomUUID();
-      await SecureStore.setItemAsync("device_uuid", uuid);
-    }
-    return uuid;
-  } catch (error) {
-    console.error("Erro ao gerenciar UUID do dispositivo:", error);
-    return Crypto.randomUUID();
-  }
-};
-
-// Função para gerar headers dinâmicos
-const generateHeaders = async (): Promise<Partial<ApiHeaders>> => {
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-
-  try {
-    const uuid = await getDeviceUUID();
-    const signature = await generateSignature(
-      uuid,
-      apiConfig.secret,
-      timestamp,
-    );
-
-    return {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-Signature": signature,
-      "X-UUID": uuid,
-      "X-Timestamp": timestamp,
-      "X-UserAgent": "mobile",
-      "X-Version-app": Constants.expoConfig?.version ?? "1.0.0",
-    };
-  } catch (error) {
-    console.error("Erro ao gerar assinatura:", error);
-    throw new Error("Falha na autenticação da API");
-  }
-};
-
-// Criação da instância do axios
-const api = axios.create({
-  baseURL: apiConfig.baseURL,
-  timeout: 30000, // 30 segundos de timeout
+const api: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  timeout: 30000,
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
 });
 
-// Interceptor de requisição melhorado
-api.interceptors.request.use(
-  async (config: any) => {
-    try {
-      // Gera headers dinâmicos para cada requisição
-      const dynamicHeaders = await generateHeaders();
+/* -------------------------------------------------------------------------- */
+/*                               DEVICE UUID                                  */
+/* -------------------------------------------------------------------------- */
 
-      // Garante que headers não seja undefined antes do merge
-      config.headers = {
-        ...(config.headers || {}),
-        ...dynamicHeaders,
-      };
+async function getDeviceUUID(): Promise<string> {
+  try {
+    const storedUUID = await SecureStore.getItemAsync(DEVICE_UUID_KEY);
 
-      // Adiciona token de autenticação se disponível
-      const token =
-        useAuthStore.getState().token || useAuthStore.getState().tokenRegister;
-
-      if (token) {
-        (config.headers as any).Authorization = `Bearer ${token}`;
-      }
-
-      // Adiciona token de push
-      const pushToken = useNotificationsStore.getState().pushToken;
-      (config.headers as any)["X-PUSH"] = pushToken || "";
-
-      return config;
-    } catch (error) {
-      console.error("Erro no interceptor de requisição:", error);
-      return Promise.reject(error);
+    if (storedUUID) {
+      return storedUUID;
     }
-  },
-  (error: AxiosError) => {
-    console.error("Erro na configuração da requisição:", error);
-    return Promise.reject(error);
-  },
-);
 
-// Interceptor de resposta melhorado
-// Dentro de: api.interceptors.response.use(...)
-(api.interceptors.response.use as any)(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  async (error: any) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
+    const newUUID = Crypto.randomUUID();
+
+    await SecureStore.setItemAsync(DEVICE_UUID_KEY, newUUID);
+
+    return newUUID;
+  } catch (error) {
+    console.error("UUID Error:", error);
+
+    return Crypto.randomUUID();
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               AUTH HEADERS                                 */
+/* -------------------------------------------------------------------------- */
+
+async function createSecurityHeaders() {
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+
+  const uuid = await getDeviceUUID();
+
+  const signature = await generateSignature(uuid, API_SECRET!, timestamp);
+
+  return {
+    "X-Signature": signature,
+    "X-UUID": uuid,
+    "X-Timestamp": timestamp,
+    "X-UserAgent": "mobile",
+    "X-Version-app": APP_VERSION,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                STORE HELPERS                               */
+/* -------------------------------------------------------------------------- */
+
+function getAuthToken() {
+  const authStore = useAuthStore.getState();
+  const registerStore = useRegisterStore.getState();
+
+  return authStore.token || registerStore.token;
+}
+
+function getPushToken() {
+  return useNotificationsStore.getState().pushToken;
+}
+
+function logoutUser() {
+  useAuthStore.getState().logout();
+
+  router.replace("/login");
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               ALERT HELPERS                                */
+/* -------------------------------------------------------------------------- */
+
+function showSessionExpiredAlert() {
+  Alert.alert("Sessão expirada", "Por favor, faça login novamente.", [
+    {
+      text: "OK",
+      onPress: logoutUser,
+    },
+  ]);
+}
+
+function showServerErrorAlert() {
+  Alert.alert(
+    "Erro do servidor",
+    "Ocorreu um erro interno. Tente novamente mais tarde.",
+  );
+}
+
+function showTimeoutAlert() {
+  Alert.alert("Timeout", "A requisição demorou muito para responder.");
+}
+
+function showConnectionErrorAlert() {
+  Alert.alert("Erro de conexão", "Verifique sua internet e tente novamente.");
+}
+
+/* -------------------------------------------------------------------------- */
+/*                            REQUEST INTERCEPTOR                             */
+/* -------------------------------------------------------------------------- */
+
+api.interceptors.request.use(
+  async (config) => {
+    const securityHeaders = await createSecurityHeaders();
+
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      ...securityHeaders,
+      "X-PUSH": getPushToken() || "",
     };
 
-    const token = useAuthStore.getState().token;
-
-    if (!token) {
-      useAuthStore.getState().logout();
-      return Promise.reject(error);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (
-      error.response?.status === 401 &&
-      error.response.data.message !== "Unauthorised."
-    ) {
-      // Evita loop infinito de retry
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
-        Alert.alert("Sessão expirada", "Por favor, faça login novamente.", [
-          {
-            text: "OK",
-            onPress: () => {
-              useAuthStore.getState().logout();
-              router.replace("/login");
-            },
-          },
-        ]);
-      }
-    } else if (error.response && error.response.status >= 500) {
-      Alert.alert(
-        "Erro do servidor",
-        "Ocorreu um erro interno. Tente novamente mais tarde.",
-      );
+/* -------------------------------------------------------------------------- */
+/*                            RESPONSE INTERCEPTOR                            */
+/* -------------------------------------------------------------------------- */
+
+api.interceptors.response.use(
+  (response: AxiosResponse) => response,
+
+  async (error: AxiosError<any>) => {
+    const originalRequest = error.config as RetryRequestConfig;
+
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+
+    const hasToken = !!getAuthToken();
+
+    if (
+      status === 401 &&
+      hasToken &&
+      message !== "Unauthorised." &&
+      !originalRequest?._retry
+    ) {
+      originalRequest._retry = true;
+
+      showSessionExpiredAlert();
+    } else if (status && status >= 500) {
+      showServerErrorAlert();
     } else if (error.code === "ECONNABORTED") {
-      Alert.alert(
-        "Timeout",
-        "A requisição demorou muito para responder. Verifique sua conexão.",
-      );
+      showTimeoutAlert();
     } else if (!error.response) {
-      Alert.alert(
-        "Erro de conexão",
-        "Verifique sua conexão com a internet e tente novamente.",
-      );
+      showConnectionErrorAlert();
     }
 
     return Promise.reject(error);
   },
 );
 
-// Função utilitária para retry automático
-export const apiWithRetry = async <T>(
-  requestFn: () => Promise<AxiosResponse<T>>,
-  maxRetries: number = 3,
-  delay: number = 1000,
-): Promise<AxiosResponse<T>> => {
-  let lastError: AxiosError;
+/* -------------------------------------------------------------------------- */
+/*                                  RETRY                                     */
+/* -------------------------------------------------------------------------- */
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+export async function apiWithRetry<T>(
+  requestFn: () => Promise<AxiosResponse<T>>,
+  retries = 3,
+  baseDelay = 1000,
+): Promise<AxiosResponse<T>> {
+  let lastError: AxiosError | null = null;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
     try {
       return await requestFn();
     } catch (error) {
       lastError = error as AxiosError;
 
-      // Não faz retry para erros 4xx (exceto 408 - timeout)
-      if (
-        lastError.response?.status &&
-        lastError.response.status >= 400 &&
-        lastError.response.status < 500 &&
-        lastError.response.status !== 408
-      ) {
+      const status = lastError.response?.status;
+
+      const isClientError =
+        status && status >= 400 && status < 500 && status !== 408;
+
+      if (isClientError) {
         throw lastError;
       }
 
-      if (attempt === maxRetries) {
-        throw lastError;
-      }
+      const delay = baseDelay * 2 ** attempt;
 
-      // Delay exponencial
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay * Math.pow(2, attempt - 1)),
-      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
-  throw lastError!;
-};
+  throw lastError;
+}
 
-// Função para verificar saúde da API
-export const checkApiHealth = async (): Promise<boolean> => {
+/* -------------------------------------------------------------------------- */
+/*                                HEALTH CHECK                                */
+/* -------------------------------------------------------------------------- */
+
+export async function checkApiHealth(): Promise<boolean> {
   try {
     await api.get("/health");
+
     return true;
-  } catch (error) {
-    console.error("API health check failed:", error);
+  } catch {
     return false;
   }
-};
+}
 
 export default api;

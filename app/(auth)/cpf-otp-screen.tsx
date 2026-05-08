@@ -81,7 +81,6 @@ const CPFOTPScreen: React.FC = () => {
       register(res.data.data.token, {
         cpf: res.data.data.cpf,
         nome: res.data.data.nome,
-        pixKey: "",
       });
 
       router.push("/(auth)/change-password-screen");

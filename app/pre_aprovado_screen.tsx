@@ -1,34 +1,34 @@
 import ChamadaVideoScreen from "@/components/pre_aprovado/chamada_video_screen";
 import TermsFinalScreen from "@/components/pre_aprovado/terms_final_screen";
 import api from "@/services/api";
-import { useAuthStore } from "@/store/auth";
-import { convertData, Etapas } from "@/utils";
+import { convertData } from "@/utils";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Network from "expo-network";
 import { tratarEstado } from "@/utils/validation";
+import { useRegisterStore } from "@/store/register_new";
 
 const PreAprovado: React.FC = () => {
-  const { userRegister } = useAuthStore();
+  const { data: registerData } = useRegisterStore();
   const [loadingAccept, setLoadingAccept] = useState(false);
 
   const acceptTerms = async () => {
     setLoadingAccept(true);
     try {
       const ip = await Network.getIpAddressAsync();
-      console.log("userRegister", userRegister);
+
       const payload = {
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
-        sign_info_city: userRegister?.cidade ?? "São Paulo",
-        sign_info_state: tratarEstado(userRegister?.estado || "SP"),
+        sign_info_city: registerData?.cidade ?? "São Paulo",
+        sign_info_state: tratarEstado(registerData?.estado || "SP"),
         sign_info_country: "BR",
       };
 
-      const { data } = await api.post("v1/client/acept-term", payload);
-      console.log("data", data);
+      await api.post("v1/client/acept-term", payload);
+
       Alert.alert(
         "Sucesso",
         "Contrato aceito com sucesso. Faça login novamente para continuar.",
@@ -48,7 +48,7 @@ const PreAprovado: React.FC = () => {
   };
 
   // sa chamada de video for 0 (que não foi feito a chamada de video) chamar a tela de chamada de video
-  if (userRegister?.chamada_video === 1) {
+  if (registerData?.chamada_video === 1) {
     return <ChamadaVideoScreen />;
   }
 
@@ -71,7 +71,7 @@ const PreAprovado: React.FC = () => {
   //   )
 
   // se chamada de video for 1 (que foi feito a chamada de video)
-  if (userRegister?.chamada_video === 0) {
+  if (registerData?.chamada_video === 0) {
     return (
       <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>

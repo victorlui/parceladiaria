@@ -72,7 +72,7 @@ const ProfileTab: React.FC = () => {
           <InfoRow
             icon="call-outline"
             label="Chave PIX"
-            value={user?.pixKey || ""}
+            value={user?.pix || ""}
           />
         </SectionCard>
 
