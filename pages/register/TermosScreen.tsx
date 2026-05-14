@@ -6,7 +6,7 @@ import api from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf, maskPhone } from "@/utils/mask";
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   BackHandler,
   StyleSheet,
@@ -14,52 +14,79 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import PulsingImageLoader from "./components/PulsingImageLoader";
 import FinalScreenComponent from "./components/FinalScreenComponent";
 import { useRegisterQuery } from "./query/useRegisterQuerys";
 import { Etapas } from "@/utils";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
 
 const TermosScreen: React.FC = () => {
   const { mutate, isPending, isSuccess } = useRegisterQuery();
-  const { step, setStep, clean } = useRegisterStore();
-  const { data } = useRegisterStore();
+  const { setStep, clean, data, token, hydrated } = useRegisterStore();
+  const navigation = useNavigation();
+
   const [isLoading, setIsLoading] = useState(false);
   const [terms, setTerms] = useState("");
   const [accepted, setAccepted] = useState(false);
+  const isLeaving = useRef(false);
+  const hasLoadedTerms = useRef(false);
+
+  const onBackPress = useCallback(() => {
+    if (isLeaving.current) return true;
+    isLeaving.current = true;
+    setStep(8);
+    router.replace("/(register)/step1");
+    return true;
+  }, [setStep]);
+
+  const loadTerms = useCallback(async () => {
+    if (hasLoadedTerms.current) return;
+    if (terms.trim().length > 0) {
+      hasLoadedTerms.current = true;
+      return;
+    }
+    if (!hydrated || !token) return;
+
+    setIsLoading(true);
+    try {
+      const response = await api.get("termos/Proposta_condicionada");
+      const content = response?.data?.termo?.content || "";
+      setTerms(content);
+      hasLoadedTerms.current = true;
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hydrated, terms, token]);
 
   useFocusEffect(
     useCallback(() => {
-      const onBackPress = () => {
-        router.replace("/(register)/step1");
-        setStep(7);
-        return true;
-      };
+      loadTerms();
 
-      const subscription = BackHandler.addEventListener(
+      const hardwareSub = BackHandler.addEventListener(
         "hardwareBackPress",
         onBackPress,
       );
 
-      return () => subscription.remove();
-    }, [step]), // eslint-disable-line react-hooks/exhaustive-deps
+      const beforeRemoveSub = navigation.addListener(
+        "beforeRemove",
+        (e: any) => {
+          const actionType = e?.data?.action?.type;
+          if (actionType !== "POP" && actionType !== "GO_BACK") return;
+          if (isLeaving.current) return;
+          e.preventDefault();
+          onBackPress();
+        },
+      );
+
+      return () => {
+        hardwareSub.remove();
+        beforeRemoveSub();
+      };
+    }, [loadTerms, navigation, onBackPress]),
   );
-
-  useEffect(() => {
-    const getTerms = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await api.get("termos/Proposta_condicionada");
-
-        setTerms(data.termo.content || "");
-      } catch (error) {
-        console.log("error", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getTerms();
-  }, []);
 
   const onSubmit = async () => {
     if (!accepted) {
@@ -83,7 +110,7 @@ const TermosScreen: React.FC = () => {
     router.replace("/login");
   };
 
-  if (isLoading || isPending) {
+  if ((isLoading && terms.trim().length === 0) || isPending) {
     return (
       <PulsingImageLoader
         source={require("@/assets/images/logo-verde.png")}

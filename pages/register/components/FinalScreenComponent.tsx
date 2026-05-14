@@ -1,8 +1,10 @@
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
+import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, StatusBar, StyleSheet, Text, View } from "react-native";
+import { PIX_OPTIONS, PixType } from "../utils/pix";
 
 const { width } = Dimensions.get("window");
 
@@ -11,6 +13,11 @@ interface Props {
 }
 
 const FinalScreenComponent: React.FC<Props> = ({ complete }) => {
+  const { data } = useRegisterStore();
+  const pixLabel = data?.chave
+    ? PIX_OPTIONS[data.chave as PixType]?.label ?? "Chave Pix"
+    : "Chave Pix";
+
   const completeRegistration = () => {
     complete();
   };
@@ -33,6 +40,20 @@ const FinalScreenComponent: React.FC<Props> = ({ complete }) => {
         <Text style={styles.description}>
           Seu cadastro foi enviado com sucesso .
         </Text>
+
+        {data?.pix ? (
+          <View style={styles.infoBox}>
+            <FontAwesome
+              name="qrcode"
+              size={18}
+              color={Colors.green.secondary}
+            />
+
+            <Text style={styles.infoText}>
+              {pixLabel}: {data.pix}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.infoBox}>
           <FontAwesome

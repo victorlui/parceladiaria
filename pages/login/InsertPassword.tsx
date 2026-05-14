@@ -35,10 +35,10 @@ const InsertPasswordScreen: React.FC = () => {
   const hasShownError = useRef(false);
 
   useEffect(() => {
-    if (loginMutation.isError && !hasShownError.current) {
-      hasShownError.current = true;
-      showError("Atenção", "Senha incorreta");
-    }
+    // if (loginMutation.isError && !hasShownError.current) {
+    //   hasShownError.current = true;
+    //   showError("Atenção", "Senha incorreta");
+    // }
     if (!loginMutation.error) {
       hasShownError.current = false;
     }

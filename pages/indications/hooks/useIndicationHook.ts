@@ -26,7 +26,6 @@ export function useIndicationHook() {
   const newIndications = useMemo(() => indications?.data, [indications]);
 
   async function getIndications() {
-    setLoadingTermo(true);
     try {
       const response = await api.get("/v1/affiliate");
       const data = response.data?.data;
@@ -86,6 +85,7 @@ export function useIndicationHook() {
   }
 
   async function getTermos() {
+    setLoadingTermo(true);
     try {
       const response = await api.get("/termos/Termos_afiliado");
       setTermos(response.data.termo.content);
@@ -98,6 +98,11 @@ export function useIndicationHook() {
 
   const toggleAccepted = useCallback(() => {
     setAccepted((prev) => !prev);
+  }, []);
+
+  const clearTermos = useCallback(() => {
+    setTermos(null);
+    setAccepted(false);
   }, []);
 
   async function acceptTermos() {
@@ -174,5 +179,7 @@ export function useIndicationHook() {
     changePixKey,
     updateSaqueAtual,
     updateTotalLoans,
+    getTermos,
+    clearTermos,
   };
 }

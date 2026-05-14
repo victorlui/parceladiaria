@@ -12,6 +12,7 @@ import Step7Component from "./components/Step7Component";
 import Step8Components from "./components/Step8Components";
 import StepCNPJComponents from "./components/StepCNPJComponent";
 import StetTipoComercioComponent from "./components/StetTipoComercioComponent";
+import AffiliateCode from "./AffiliateCode";
 
 const Step1Register: React.FC = () => {
   const {
@@ -26,6 +27,7 @@ const Step1Register: React.FC = () => {
     handleNextStep8,
     handleNextStepCNPJ,
     handleNextStepBussinesType,
+    handleNextStepAffiliateCode,
     isLoading,
   } = useRegisterHooks();
 
@@ -35,7 +37,7 @@ const Step1Register: React.FC = () => {
     hasConfirmAddress: confirmAddress,
   });
 
-  const currentStep = steps[step];
+  const currentStep = steps[step] ?? steps[0];
   return (
     <LayoutRegister
       title={currentStep.title ?? "Olá! Vamos começar."}
@@ -44,33 +46,49 @@ const Step1Register: React.FC = () => {
         "Para iniciar seu cadastro, informe seu CPF e data de nascimento."
       }
     >
+      {/* Gravando cpf e data de nascimento  */}
       {step === 0 && (
         <Step1Component onNext={handleNextStep1} isLoading={isLoading} />
       )}
 
+      {/* Gravando senha   */}
       {step === 1 && (
         <Step2Component onNext={handleNextStep2} isLoading={isLoading} />
       )}
 
+      {/* Gravando telefone e registrando no sistema   */}
       {step === 2 && (
         <Step3Component onNext={handleNextStep3} isLoading={isLoading} />
       )}
 
+      {/** Comerciante gravando código de afiliado */}
       {step === 3 && (
+        <AffiliateCode
+          onNext={handleNextStepAffiliateCode}
+          isLoading={isLoading}
+        />
+      )}
+
+      {/* Gravando profissão  se for comerciante vai para o passo 9 se não vai para o passo 5  */}
+      {step === 4 && (
         <Step4Component onNext={handleNextStep4} isLoading={isLoading} />
       )}
 
-      {step === 4 && <Step5Component onNext={handleNextStep5} />}
+      {/* Gravando limite   */}
+      {step === 5 && <Step5Component onNext={handleNextStep5} />}
 
-      {step === 5 && (
+      {/* Gravando email   */}
+      {step === 6 && (
         <Step6Component onNext={handleNextStep6} isLoading={isLoading} />
       )}
 
-      {step === 6 && (
+      {/* Gravando pix */}
+      {step === 7 && (
         <Step7Component onNext={handleNextStep7} isLoading={isLoading} />
       )}
 
-      {step === 7 && (
+      {/* Gravando endereço   */}
+      {step === 8 && (
         <Step8Components
           onNext={handleNextStep8}
           isLoading={isLoading}
@@ -80,12 +98,12 @@ const Step1Register: React.FC = () => {
       )}
 
       {/** Comerciante gravando cnpj */}
-      {step === 8 && (
+      {step === 9 && (
         <StepCNPJComponents onNext={handleNextStepCNPJ} isLoading={isLoading} />
       )}
 
       {/** Comerciante gravando tipo de comércio */}
-      {step === 9 && (
+      {step === 10 && (
         <StetTipoComercioComponent
           onNext={handleNextStepBussinesType}
           isLoading={isLoading}

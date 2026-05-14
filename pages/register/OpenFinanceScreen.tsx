@@ -1,15 +1,21 @@
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
-import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
-import { router, useFocusEffect } from "expo-router";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
 import { AlertCircle, Landmark, Lock, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
 import {
   ActivityIndicator,
   AppState,
+  BackHandler,
   Linking,
   Text,
   TouchableOpacity,
@@ -28,9 +34,21 @@ type FlowState =
   | "skip";
 
 const OpenFinanceScreen: React.FC = () => {
-  const { data: registerData } = useRegisterStore();
-  const { logout } = useAuthStore();
+  const {
+    data: registerData,
+    token: registerToken,
+    etapa,
+    step,
+    setStep,
+    setData,
+    setEtapa,
+    hydrated,
+  } = useRegisterStore();
   const { AlertDisplay, showWarningPress } = useAlerts();
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const params = useLocalSearchParams<{ from?: string }>();
+  const from = typeof params.from === "string" ? params.from : undefined;
 
   const [flowState, setFlowState] = useState<FlowState>("checking");
 
@@ -39,32 +57,216 @@ const OpenFinanceScreen: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState("Verificando status...");
 
   const appState = useRef(AppState.currentState);
+  const hasGoneToTerms = useRef(false);
+  const isLeaving = useRef(false);
+
+  const navigateToStep1 = useCallback(() => {
+    if (isLeaving.current) return true;
+    isLeaving.current = true;
+    setStep(8);
+    router.replace("/(register)/step1");
+    return true;
+  }, [setStep]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hydrated) return;
+
+      const hardwareSub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        navigateToStep1,
+      );
+
+      const beforeRemoveSub = navigation.addListener(
+        "beforeRemove",
+        (e: any) => {
+          const actionType = e?.data?.action?.type;
+          if (actionType !== "POP" && actionType !== "GO_BACK") return;
+          if (isLeaving.current) return;
+          e.preventDefault();
+          navigateToStep1();
+        },
+      );
+
+      return () => {
+        hardwareSub.remove();
+        beforeRemoveSub();
+      };
+    }, [hydrated, navigation, navigateToStep1]),
+  );
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!registerToken) {
+      useRegisterStore.getState().clean();
+      router.replace("/(register)/step1");
+      return;
+    }
+    const allowed =
+      step >= 8 ||
+      etapa === Etapas.OPEN_FINANCE ||
+      etapa === Etapas.ACEITANDO_TERMOS ||
+      etapa === Etapas.FINALIZADO ||
+      registerData?.etapa === Etapas.OPEN_FINANCE ||
+      registerData?.etapa === Etapas.ACEITANDO_TERMOS ||
+      registerData?.etapa === Etapas.FINALIZADO;
+    if (!allowed) {
+      router.replace("/(register)/step1");
+      return;
+    }
+  }, [etapa, hydrated, registerToken, registerData?.etapa, step]);
+
+  const handleLogout = useCallback(() => {
+    showWarningPress(
+      "Conexão perdida",
+      "Não foi possível continuar. Vamos reiniciar seu cadastro.",
+      () => {
+        useRegisterStore.getState().clean();
+        router.replace("/(register)/step1");
+      },
+    );
+  }, [showWarningPress]);
+
+  const goToTerms = useCallback(async () => {
+    if (isLeaving.current) return;
+    if (hasGoneToTerms.current) return;
+    hasGoneToTerms.current = true;
+
+    try {
+      await api.put("/v1/client/update", {
+        etapa: Etapas.ACEITANDO_TERMOS,
+      });
+      if (isLeaving.current) return;
+
+      setEtapa(Etapas.ACEITANDO_TERMOS);
+      if (registerData) {
+        setData({ ...registerData, etapa: Etapas.ACEITANDO_TERMOS });
+      }
+    } catch (error) {
+      console.log("update etapa error", error);
+    }
+
+    if (isLeaving.current) return;
+    router.replace("/(register)/termos");
+  }, [registerData, setData, setEtapa]);
+
+  const connectKlavi = useCallback(async () => {
+    if (isLeaving.current) return;
+
+    try {
+      setFlowState("connecting");
+
+      const { data } = await api.post("/v1/klavi/connect", {
+        redirect: "expotemplatebase://register-openfinance",
+      });
+
+      if (isLeaving.current) return;
+
+      const url = data?.data?.body?.linkURL;
+
+      if (url) {
+        Linking.openURL(url);
+      } else {
+        setFlowState("idle");
+      }
+    } catch (error: any) {
+      console.log("connect klavi error", error?.response ?? error);
+
+      setFlowState("idle");
+
+      if (error?.response?.status === 401) {
+        handleLogout();
+      }
+    }
+  }, [handleLogout]);
+
+  const checkAnalysisStatus = useCallback(async () => {
+    if (isLeaving.current) return;
+
+    try {
+      const { data } = await api.get("/v1/cliente/check-status");
+      if (isLeaving.current) return;
+
+      const status = data?.status;
+
+      setAttempts(data?.r_attempts || 0);
+
+      if (status === "aprovado") {
+        setFlowState("approved");
+        if (from !== "termos") {
+          await goToTerms();
+        } else {
+          setFlowState("idle");
+        }
+
+        return;
+      }
+
+      if (status === "completed") {
+        return;
+      }
+
+      if (data?.r_attempts > 0) {
+        setFlowState("retry");
+      } else {
+        setFlowState("denied");
+      }
+    } catch (error: any) {
+      console.log("checkAnalysisStatus error", error?.response ?? error);
+
+      if (error?.response?.status === 401) {
+        handleLogout();
+      }
+    }
+  }, [from, goToTerms, handleLogout]);
 
   /**
    * INITIAL FLOW
    */
   useFocusEffect(
     useCallback(() => {
-      async function initialize() {
-        setLoading(true);
+      if (!hydrated || !registerToken) return;
+
+      let cancelled = false;
+      hasGoneToTerms.current = false;
+      setFlowState("checking");
+      setLoading(true);
+
+      (async () => {
+        if (isLeaving.current) return;
 
         try {
+          const shouldAutoAdvance = from !== "termos";
+
           const { data } = await api.get("v1/register/settings");
+          if (cancelled || isLeaving.current) return;
 
           const isDriver =
             registerData?.profissao === "Motoboy" ||
             registerData?.profissao === "Motorista";
 
-          /**
-           * MOTORISTA / MOTOBOY
-           */
           if (isDriver) {
-            const { data: klaviData } = await api.get("/v1/klavi");
+            const connectEnabled =
+              data?.data?.openfinance?.motorista?.connect;
 
+            if (!connectEnabled) {
+              if (shouldAutoAdvance) {
+                await goToTerms();
+              } else {
+                setFlowState("idle");
+              }
+              return;
+            }
+            const { data: klaviData } = await api.get("/v1/klavi");
+            if (cancelled || isLeaving.current) return;
             setAttempts(klaviData?.r_attempts || 0);
 
             if (klaviData?.status === "aprovado") {
-              await goToTerms();
+              if (shouldAutoAdvance) {
+                await goToTerms();
+              } else {
+                setFlowState("idle");
+              }
               return;
             }
 
@@ -77,24 +279,30 @@ const OpenFinanceScreen: React.FC = () => {
             return;
           }
 
-          /**
-           * COMERCIANTE
-           */
           if (registerData?.profissao === "Comerciante") {
             const connectEnabled =
               data?.data?.openfinance?.comerciante?.connect;
 
             if (!connectEnabled) {
-              await goToTerms();
+              if (shouldAutoAdvance) {
+                await goToTerms();
+              } else {
+                setFlowState("idle");
+              }
               return;
             }
 
             const { data: klaviData } = await api.get("/v1/klavi");
+            if (cancelled || isLeaving.current) return;
 
             setAttempts(klaviData?.r_attempts || 0);
 
             if (klaviData?.status === "aprovado") {
-              await goToTerms();
+              if (shouldAutoAdvance) {
+                await goToTerms();
+              } else {
+                setFlowState("idle");
+              }
               return;
             }
 
@@ -107,21 +315,36 @@ const OpenFinanceScreen: React.FC = () => {
             return;
           }
 
-          /**
-           * OUTRAS PROFISSÕES
-           */
-          await goToTerms();
+          if (shouldAutoAdvance) {
+            await goToTerms();
+          } else {
+            setFlowState("idle");
+          }
         } catch (error: any) {
           console.log("initialize error", error?.response ?? error);
 
-          setFlowState("idle");
+          if (!cancelled && !isLeaving.current) {
+            setFlowState("idle");
+          }
         } finally {
-          setLoading(false);
+          if (!cancelled && !isLeaving.current) {
+            setLoading(false);
+          }
         }
-      }
+      })();
 
-      initialize();
-    }, [registerData?.profissao]),
+      return () => {
+        cancelled = true;
+      };
+    }, [
+      etapa,
+      hydrated,
+      registerToken,
+      registerData?.etapa,
+      registerData?.profissao,
+      from,
+      goToTerms,
+    ]),
   );
 
   /**
@@ -152,7 +375,7 @@ const OpenFinanceScreen: React.FC = () => {
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (flowState === "analyzing") {
+    if (isFocused && flowState === "analyzing") {
       setLoadingMessage("Analisando seus dados bancários...");
 
       checkAnalysisStatus();
@@ -163,108 +386,12 @@ const OpenFinanceScreen: React.FC = () => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [flowState]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /**
-   * GO TO TERMS
-   */
-  async function goToTerms() {
-    try {
-      await api.put("/v1/client/update", {
-        etapa: Etapas.ACEITANDO_TERMOS,
-      });
-      router.push("/(register)/termos");
-    } catch (error) {
-      console.log("update etapa error", error);
-    }
-
-    router.replace("/(register)/termos");
-  }
-
-  /**
-   * CONNECT KLAVI
-   */
-  async function connectKlavi() {
-    try {
-      setFlowState("connecting");
-
-      const { data } = await api.post("/v1/klavi/connect", {
-        redirect: "expotemplatebase://register-openfinance",
-      });
-
-      const url = data?.data?.body?.linkURL;
-
-      if (url) {
-        Linking.openURL(url);
-      } else {
-        setFlowState("idle");
-      }
-    } catch (error: any) {
-      console.log("connect klavi error", error?.response ?? error);
-
-      setFlowState("idle");
-
-      if (error?.response?.status === 401) {
-        handleLogout();
-      }
-    }
-  }
-
-  /**
-   * CHECK ANALYSIS STATUS
-   */
-  async function checkAnalysisStatus() {
-    try {
-      const { data } = await api.get("/v1/cliente/check-status");
-
-      const status = data?.status;
-
-      setAttempts(data?.r_attempts || 0);
-
-      if (status === "aprovado") {
-        setFlowState("approved");
-
-        await goToTerms();
-
-        return;
-      }
-
-      if (status === "completed") {
-        return;
-      }
-
-      if (data?.r_attempts > 0) {
-        setFlowState("retry");
-      } else {
-        setFlowState("denied");
-      }
-    } catch (error: any) {
-      console.log("checkAnalysisStatus error", error?.response ?? error);
-
-      if (error?.response?.status === 401) {
-        handleLogout();
-      }
-    }
-  }
-
-  /**
-   * LOGOUT
-   */
-  function handleLogout() {
-    showWarningPress(
-      "Conexão perdida",
-      "Você foi desconectado. Faça login novamente",
-      () => {
-        logout();
-        router.replace("/login");
-      },
-    );
-  }
+  }, [checkAnalysisStatus, flowState, isFocused]);
 
   /**
    * LOADING SCREEN
    */
-  if (loading || flowState === "checking") {
+  if (loading) {
     return (
       <PulsingImageLoader
         source={require("@/assets/images/logo-verde.png")}

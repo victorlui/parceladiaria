@@ -68,7 +68,7 @@ export async function updateUserService({ request }: RequestProps): Promise<{
 }> {
   try {
     const { data } = await api.put("/v1/client/update", request);
-
+    console.log("data", data);
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
     console.log("error update service", error.response);

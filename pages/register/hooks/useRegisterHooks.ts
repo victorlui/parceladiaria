@@ -13,29 +13,29 @@ import { Address } from "../types/address";
 
 export function useRegisterHooks() {
   const { showWarning, showError } = useAlerts();
-  const { setData, data, setToken, step, setStep } = useRegisterStore();
-  const { mutate, isPending } = useRegisterQuery();
+  const { setData, data, setToken, token, step, setStep } = useRegisterStore();
+  const { mutateAsync } = useRegisterQuery();
   const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation();
 
   const onBackPress = useCallback(() => {
-    if (step === 0) {
+    if (step <= 0) {
       router.replace("/login");
       return true;
     }
 
-    if (step === 8) {
-      setStep(3);
+    if (step === 9) {
+      setStep(4);
       return true;
     }
 
-    if (step === 4 && data?.profissao === "Comerciante") {
-      setStep(9);
+    if (step === 5 && data?.profissao === "Comerciante") {
+      setStep(10);
       return true;
     }
 
-    setStep(step - 1);
+    setStep(Math.max(0, step - 1));
     return true;
   }, [data?.profissao, setStep, step]);
 
@@ -71,13 +71,22 @@ export function useRegisterHooks() {
     try {
       const formattedBirthDate = formatarData(birthDate);
 
-      const { data } = await api.get(
+      if (!formattedBirthDate) {
+        showError("Atenção", "Data de nascimento inválida");
+        return;
+      }
+
+      setData({
+        ...(data || {}),
+        cpf,
+        nascimento: formattedBirthDate,
+      });
+
+      const { data: cpfSearch } = await api.get(
         `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
       );
 
-      console.log("data", data);
-
-      if (data?.data?.status === "recusado") {
+      if (cpfSearch?.data?.status === "recusado") {
         showError("Atenção", "Data de Nascimento inválida");
         return;
       }
@@ -137,19 +146,50 @@ export function useRegisterHooks() {
   const handleNextStep3 = async (phone: string) => {
     Keyboard.dismiss();
     setIsLoading(true);
+
     try {
-      const registerData = {
-        cpf: data?.cpf,
-        phone: phone.replace(/\D/g, ""),
-        password: data?.password,
+      const cleanedPhone = phone.replace(/\D/g, "");
+      const hasToken = !!token;
+
+      if (!data?.cpf || (!data?.password && !hasToken)) {
+        showError(
+          "Atenção",
+          "Dados do cadastro incompletos. Reinicie o cadastro.",
+        );
+        return;
+      }
+
+      const newData = {
+        ...data,
       };
 
-      const response = await api.post("/auth/register", registerData);
+      if (!hasToken) {
+        const registerData = {
+          cpf: data.cpf,
+          phone: cleanedPhone,
+          password: data.password,
+        };
 
-      setToken(response.data.data.token);
+        const response = await api.post("/auth/register", registerData);
+
+        setToken(response.data.data.token);
+
+        newData.nome = response.data.data.name;
+        newData.status = response.data.data.status;
+      } else {
+        await mutateAsync({
+          request: {
+            etapa: Etapas.AFILIADO_CODE,
+            phone: cleanedPhone,
+            whatsapp: cleanedPhone,
+          },
+        });
+      }
+
       setData({
-        nome: response.data.data.name,
-        status: response.data.data.status,
+        ...newData,
+        phone: cleanedPhone,
+        whatsapp: cleanedPhone,
       });
       setStep(3);
       return;
@@ -163,21 +203,50 @@ export function useRegisterHooks() {
     }
   };
 
+  // gravando código de afiliado
+  const handleNextStepAffiliateCode = async (code: string) => {
+    Keyboard.dismiss();
+    setIsLoading(true);
+    try {
+      const request = {
+        etapa: Etapas.REGISTRANDO_PROFISSAO,
+        afiliado: code,
+      };
+
+      await mutateAsync({ request });
+      setData({
+        ...data,
+        afiliado: code,
+      });
+      setIsLoading(false);
+      setStep(4);
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // gravando profissao
   const handleNextStep4 = async (item: any) => {
     Keyboard.dismiss();
     setIsLoading(true);
 
     try {
-      let etapa = item.id === "comerciante" ? Etapas.CNPJ : Etapas.LIMITE;
+      const etapa = item.id === "comerciante" ? Etapas.CNPJ : Etapas.LIMITE;
+      const nextStep = etapa === Etapas.CNPJ ? 9 : 5;
 
       const request = {
         etapa,
         profissao: item.label,
       };
 
-      mutate({ request });
-      setStep(etapa === Etapas.CNPJ ? 8 : 4);
+      await mutateAsync({ request });
+      setData({
+        ...data,
+        profissao: item.label,
+      });
+      setIsLoading(false);
+      setStep(nextStep);
       return;
     } catch {
       showError("Atenção", "Erro ao continuar");
@@ -191,13 +260,14 @@ export function useRegisterHooks() {
     Keyboard.dismiss();
     setIsLoading(true);
     try {
-      mutate({
+      await mutateAsync({
         request: {
-          cnpj: cnpj,
+          cnpj,
           etapa: Etapas.INFORMANDO_TIPO_COMERCIO,
         },
       });
-      setStep(9);
+      setIsLoading(false);
+      setStep(10);
       return;
     } catch {
       showError("Atenção", "Erro ao continuar");
@@ -211,13 +281,15 @@ export function useRegisterHooks() {
     Keyboard.dismiss();
     setIsLoading(true);
     try {
-      mutate({
+      await mutateAsync({
         request: {
           tipo_comercio: businesType,
           etapa: Etapas.LIMITE,
         },
       });
-      setStep(4);
+      setIsLoading(false);
+      setStep(5);
+      return;
     } catch {
       showError("Atenção", "Erro ao continuar");
     } finally {
@@ -230,7 +302,7 @@ export function useRegisterHooks() {
     Keyboard.dismiss();
     setIsLoading(true);
     try {
-      setStep(5);
+      setStep(6);
       return;
     } finally {
       setIsLoading(false);
@@ -243,16 +315,18 @@ export function useRegisterHooks() {
     setIsLoading(true);
     try {
       const request = {
-        email: email,
+        email,
         etapa: Etapas.REGISTRANDO_PIX,
       };
+
+      await mutateAsync({ request });
       setData({
         ...data,
         email,
         etapa: Etapas.REGISTRANDO_PIX,
       });
-      mutate({ request });
-      setStep(6);
+      setIsLoading(false);
+      setStep(7);
       return;
     } finally {
       setIsLoading(false);
@@ -266,18 +340,19 @@ export function useRegisterHooks() {
     try {
       const request = {
         chave: selected,
-        pix: pix,
+        pix,
         etapa: Etapas.REGISTRANDO_ENDERECO,
       };
 
+      await mutateAsync({ request });
       setData({
         ...data,
         chave: selected,
         pix,
         etapa: Etapas.REGISTRANDO_ENDERECO,
       });
-      mutate({ request: request });
-      setStep(7);
+      setIsLoading(false);
+      setStep(8);
       return;
     } finally {
       setIsLoading(false);
@@ -294,6 +369,7 @@ export function useRegisterHooks() {
         etapa: Etapas.OPEN_FINANCE,
       };
 
+      await mutateAsync({ request: payload });
       setData({
         ...data,
         endereco: address.endereco,
@@ -304,8 +380,8 @@ export function useRegisterHooks() {
         cep: address.cep,
         etapa: Etapas.OPEN_FINANCE,
       });
-      mutate({ request: payload });
-      router.push("/(register)/openfinance");
+      setIsLoading(false);
+      router.replace("/(register)/openfinance");
       return;
     } finally {
       setIsLoading(false);
@@ -328,7 +404,8 @@ export function useRegisterHooks() {
     handleNextStep8,
     handleNextStepCNPJ,
     handleNextStepBussinesType,
-    isLoading: isPending || isLoading,
+    handleNextStepAffiliateCode,
+    isLoading,
     step,
     handleNextStep,
   };

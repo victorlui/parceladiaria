@@ -8,7 +8,8 @@ type Props = {
   accepted: boolean;
   loadingAccept: boolean;
   toggleAccepted: () => void;
-  acceptTermos: () => Promise<void>;
+  acceptTermos: () => void;
+  isReading?: boolean;
 };
 
 export const TermosFooter = React.memo(function TermosFooter({
@@ -16,22 +17,28 @@ export const TermosFooter = React.memo(function TermosFooter({
   loadingAccept,
   toggleAccepted,
   acceptTermos,
+  isReading = false,
 }: Props) {
-
   return (
     <View style={styles.footer}>
-      <View style={styles.checkboxRow}>
-        <Pressable style={styles.checkbox} onPress={toggleAccepted}>
-          {accepted && (
-            <FontAwesome name="check" size={14} color={Colors.green.primary} />
-          )}
-        </Pressable>
-        <Text style={styles.checkboxText}>
-          Li e aceito os Termos e Condições
-        </Text>
-      </View>
+      {!isReading && (
+        <View style={styles.checkboxRow}>
+          <Pressable style={styles.checkbox} onPress={toggleAccepted}>
+            {accepted && (
+              <FontAwesome
+                name="check"
+                size={14}
+                color={Colors.green.primary}
+              />
+            )}
+          </Pressable>
+          <Text style={styles.checkboxText}>
+            Li e aceito os Termos e Condições
+          </Text>
+        </View>
+      )}
       <ButtonComponent
-        disabled={!accepted || loadingAccept}
+        disabled={!isReading && (!accepted || loadingAccept)}
         iconLeft={null}
         title="Continuar"
         onPress={acceptTermos}

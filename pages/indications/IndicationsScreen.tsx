@@ -27,6 +27,8 @@ import { useAlerts } from "@/components/useAlert";
 import api from "@/services/api";
 import { router } from "expo-router";
 import { useConfirmPixStore } from "@/store/confirm-pix";
+import PulsingImageLoader from "../register/components/PulsingImageLoader";
+import { setNativeProps } from "react-native-reanimated";
 
 const TermosBody = React.memo(function TermosBody({
   termos,
@@ -60,12 +62,15 @@ const IndicationsScreen: React.FC = () => {
     acceptTermos,
     changePixKey,
     updateSaqueAtual,
+    getTermos,
+    clearTermos,
   } = useIndicationHook();
   const { AlertDisplay, showSuccess, showWarning } = useAlerts();
   const { setData } = useConfirmPixStore();
   const [visible, setVisible] = useState(false);
   const [code, setCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [termosVisible, setTermosVisible] = useState<boolean>(false);
 
   const saldo = indications?.data?.saldo ?? 0;
   const minimo = indications?.data?.valor_minimo_saque ?? 0;
@@ -123,7 +128,18 @@ const IndicationsScreen: React.FC = () => {
   }
 
   if (loadingTermo || loadingLoans) {
-    return <LoadingScreen />;
+    return (
+      <PulsingImageLoader
+        source={require("@/assets/images/logo-verde.png")}
+        text={
+          loadingTermo
+            ? "Caregando termos"
+            : loadingLoans
+              ? "Caregando dados"
+              : ""
+        }
+      />
+    );
   }
 
   const ButtonBack = () => {
@@ -338,10 +354,27 @@ const IndicationsScreen: React.FC = () => {
     );
   }
 
-  if (indications && termos && !loadingTermo) {
+  if (termosVisible) {
     return (
       <SafeAreaView style={styles.container}>
-        <ButtonBack />
+        <TermosBody termos={termos || ""} />
+        <TermosFooter
+          isReading={true}
+          accepted={accepted}
+          loadingAccept={loadingAccept}
+          toggleAccepted={toggleAccepted}
+          acceptTermos={() => {
+            setTermosVisible(false);
+            clearTermos();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (indications && termos && !loadingTermo && !termosVisible) {
+    return (
+      <SafeAreaView style={styles.container}>
         <TermosBody termos={termos} />
         <TermosFooter
           accepted={accepted}
@@ -437,9 +470,7 @@ const IndicationsScreen: React.FC = () => {
                 color={Colors.green.text}
                 style={styles.howItWorksIcon}
               />
-              <Text style={styles.howItWorksText}>
-                Se aprovado, assim que quitar o contrato
-              </Text>
+              <Text style={styles.howItWorksText}>Se for aprovado</Text>
             </View>
 
             <View style={styles.howItWorksItem}>
@@ -455,6 +486,29 @@ const IndicationsScreen: React.FC = () => {
               </Text>
             </View>
           </View>
+
+          <TouchableOpacity
+            onPress={() => {
+              setTermosVisible(true);
+              getTermos();
+            }}
+            style={{
+              borderWidth: 1,
+              borderColor: Colors.borderColor,
+              padding: 12,
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 8,
+              flexDirection: "row",
+              gap: 8,
+            }}
+          >
+            <Ionicons name="document" size={20} color={Colors.black} />
+            <Text style={{ color: Colors.black, fontWeight: "bold" }}>
+              Reler termos do programa
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View

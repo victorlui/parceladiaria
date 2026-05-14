@@ -57,6 +57,7 @@ export enum StatusCadastro {
   ANALISE = "analise",
   FINALIZADO = "Finalizado",
   FINALIZADO_APP = "finalizado",
+  PENDENTE = "pendente",
 }
 
 export enum Etapas {
@@ -64,6 +65,7 @@ export enum Etapas {
   LIMITE = "Limite",
   CNPJ = "Registrando CNPJ",
   FINALIZADO = "Finalizado",
+  AFILIADO_CODE = "AFILIADO_CODE",
   APP_ANALISE = "analise",
   REGISTRANDO_PROFISSAO = "Informando Profissão",
   REGISTRANDO_EMAIL = "registrando_email",
@@ -82,6 +84,7 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.LIMITE]: "/(register)/step1",
   [Etapas.REGISTRANDO_PROFISSAO]: "/(register)/step1",
   [Etapas.REGISTRANDO_EMAIL]: "/(register)/step1",
+  [Etapas.AFILIADO_CODE]: "/(register)/step1",
 
   [Etapas.CNPJ]: "/(register)/step1",
   [Etapas.INFORMANDO_TIPO_COMERCIO]: "/(register)/step1",

@@ -16,6 +16,10 @@ const PUBLIC_ROUTES = [
   "/login",
   "/insert-password",
   "/reset_password",
+  // (register)
+  "/step1",
+  "/openfinance",
+  "/termos",
   // (auth)
   "/change-password-screen",
   "/cpf-otp-screen",
@@ -119,7 +123,13 @@ export default function RootLayout() {
     if (isLoading || hasRedirected.current) return;
     if (!pathname) return;
 
-    if (PUBLIC_ROUTES.includes(pathname)) return;
+    const isPublicRoute =
+      PUBLIC_ROUTES.includes(pathname) ||
+      PUBLIC_ROUTES.some((route) => pathname.startsWith(`${route}/`)) ||
+      pathname.startsWith("/(auth)/") ||
+      pathname.startsWith("/(register)/");
+
+    if (isPublicRoute) return;
 
     if (!token && !user) {
       hasRedirected.current = true;

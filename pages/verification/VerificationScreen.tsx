@@ -4,7 +4,6 @@ import LogoComponent from "@/components/ui/Logo";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
-import { useRegisterAuthStore } from "@/store/register";
 import { useVerificationStore } from "@/store/validation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -25,7 +24,7 @@ import { useRegisterStore } from "@/store/register_new";
 
 const VerificationScreen: React.FC = () => {
   const router = useRouter();
-  const { showSuccess, showError, AlertDisplay } = useAlerts();
+  const { showSuccess, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
   const { data } = useVerificationStore();
   const { data: registerStoreData } = useRegisterStore();
@@ -59,10 +58,19 @@ const VerificationScreen: React.FC = () => {
         otp: code,
       });
 
-      showSuccess("Sucesso", "Código validado com sucesso");
-      loginMutation.mutate({
-        cpf: data?.cpf || "",
-        password: registerStoreData?.password || "",
+      if (!registerStoreData?.password) {
+        showError(
+          "Atenção",
+          "Não foi possível recuperar a senha para concluir o login.",
+        );
+        return;
+      }
+
+      showSuccess("Sucesso", "Código validado com sucesso", () => {
+        loginMutation.mutate({
+          cpf: data?.cpf || "",
+          password: registerStoreData.password || "",
+        });
       });
     } catch (error: any) {
       showError(
@@ -121,7 +129,6 @@ const VerificationScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AlertDisplay />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

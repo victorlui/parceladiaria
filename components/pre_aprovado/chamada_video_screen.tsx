@@ -3,6 +3,7 @@ import { Colors } from "@/constants/Colors";
 import {
   Alert,
   Linking,
+  PermissionsAndroid,
   Platform,
   StyleSheet,
   Text,
@@ -16,23 +17,78 @@ import { WebView } from "react-native-webview";
 
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
+import { useRegisterStore } from "@/store/register_new";
 
 const ChamadaVideoScreen: React.FC = () => {
-  const { logout, user, userRegister } = useAuthStore((state) => state);
-  const [hasPermissions, setHasPermissions] = React.useState<boolean | null>(
-    null,
-  );
+  const { logout } = useAuthStore((state) => state);
+  const { data: registerData } = useRegisterStore();
+  const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
+
   const [call, setCall] = useState<{
     expira_minutos: number;
     url: string;
   } | null>(null);
+
   const callExpiryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+
   const requestPermissions = React.useCallback(async () => {
     try {
-      await Linking.openSettings();
-    } catch {
+      // ANDROID
+      if (Platform.OS === "android") {
+        const cameraPermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Permissão da câmera",
+            message:
+              "Precisamos acessar sua câmera para realizar a videochamada.",
+            buttonPositive: "Permitir",
+            buttonNegative: "Cancelar",
+          },
+        );
+
+        const microphonePermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: "Permissão do microfone",
+            message:
+              "Precisamos acessar seu microfone para realizar a videochamada.",
+            buttonPositive: "Permitir",
+            buttonNegative: "Cancelar",
+          },
+        );
+
+        const granted =
+          cameraPermission === PermissionsAndroid.RESULTS.GRANTED &&
+          microphonePermission === PermissionsAndroid.RESULTS.GRANTED;
+
+        setHasPermissions(granted);
+
+        if (!granted) {
+          Alert.alert(
+            "Permissões necessárias",
+            "Permita câmera e microfone para continuar.",
+            [
+              {
+                text: "Abrir configurações",
+                onPress: () => Linking.openSettings(),
+              },
+              {
+                text: "Cancelar",
+                style: "cancel",
+              },
+            ],
+          );
+        }
+
+        return;
+      }
+
+      // IOS
+      setHasPermissions(true);
+    } catch (error) {
+      console.log("Erro permissões:", error);
       setHasPermissions(false);
     }
   }, []);
@@ -46,46 +102,75 @@ const ChamadaVideoScreen: React.FC = () => {
       clearTimeout(callExpiryTimeoutRef.current);
       callExpiryTimeoutRef.current = null;
     }
+
     logout();
     router.replace("/login");
   };
 
   const fetchChamada = React.useCallback(async () => {
-    const cpf = user?.cpf || userRegister?.cpf;
     const { data } = await axios.post(
       "https://cadastroparceladiaria.com.br/api/chamada-app",
       {
-        cpf,
-        nome: user?.nome || userRegister?.nome || "",
-        telefone: user?.phone || userRegister?.phone || "",
+        cpf: registerData?.cpf || "",
+        nome: registerData?.nome || "",
+        telefone: registerData?.whatsapp || "",
       },
       {
+        timeout: 30000,
         headers: {
           "Content-Type": "application/json",
         },
       },
     );
-    return data as { expira_minutos: number; url: string };
-  }, [
-    user?.cpf,
-    userRegister?.cpf,
-    user?.nome,
-    user?.phone,
-    userRegister?.nome,
-    userRegister?.phone,
-  ]);
+
+    return data as {
+      expira_minutos: number;
+      url: string;
+    };
+  }, [registerData?.cpf, registerData?.nome, registerData?.whatsapp]);
 
   const onRequestChamada = React.useCallback(async () => {
     try {
+      if (!hasPermissions) {
+        await requestPermissions();
+        return;
+      }
+
       const data = await fetchChamada();
       setCall(data);
-    } catch {
-      Alert.alert(
-        "Não foi possível iniciar a chamada",
-        "Tente novamente em instantes.",
-      );
+    } catch (error) {
+      let description = "Tente novamente em instantes.";
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const serverMessage = (error.response?.data as any)?.message;
+
+        if (typeof serverMessage === "string" && serverMessage.trim()) {
+          description = serverMessage;
+        } else if (status) {
+          description = `Erro ${status}. Tente novamente em instantes.`;
+        } else if (error.code === "ECONNABORTED") {
+          description = "Timeout. Verifique sua internet e tente novamente.";
+        } else if (!error.response) {
+          description =
+            "Erro de conexão. Verifique sua internet e tente novamente.";
+        }
+
+        console.log("Erro ao iniciar chamada (axios):", {
+          status,
+          code: error.code,
+          data: error.response?.data,
+        });
+      } else {
+        console.log("Erro ao iniciar chamada:", error);
+        if (error instanceof Error && error.message) {
+          description = error.message;
+        }
+      }
+
+      Alert.alert("Não foi possível iniciar a chamada", description);
     }
-  }, [fetchChamada]);
+  }, [fetchChamada, hasPermissions, requestPermissions]);
 
   const onRefreshChamadaAfterExpiry = React.useCallback(async () => {
     try {
@@ -93,6 +178,7 @@ const ChamadaVideoScreen: React.FC = () => {
       setCall(data);
     } catch {
       setCall(null);
+
       Alert.alert(
         "Link expirado",
         "O link expirou e não foi possível gerar um novo agora. Tente novamente.",
@@ -115,6 +201,7 @@ const ChamadaVideoScreen: React.FC = () => {
         "Link expirado",
         "O link da chamada expirou. Gerando um novo link agora.",
       );
+
       onRefreshChamadaAfterExpiry();
     }, expirationMs);
 
@@ -139,34 +226,16 @@ const ChamadaVideoScreen: React.FC = () => {
               domStorageEnabled
               allowsInlineMediaPlayback
               mediaPlaybackRequiresUserAction={false}
-              injectedJavaScriptBeforeContentLoaded={`
-    (function() {
-      const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
-        navigator.mediaDevices
-      );
-
-      navigator.mediaDevices.getUserMedia = async function(constraints) {
-        console.log('constraints originais', constraints);
-
-        // força apenas vídeo
-        return originalGetUserMedia({
-          video: true,
-          audio: true,
-        });
-      };
-    })();
-
-    true;
-  `}
               allowsFullscreenVideo
               mixedContentMode="always"
-              mediaCapturePermissionGrantType="grantIfSameHostElsePrompt"
+              mediaCapturePermissionGrantType="grant"
               androidLayerType="hardware"
               setSupportMultipleWindows={false}
+              cacheEnabled={false}
+              thirdPartyCookiesEnabled
+              sharedCookiesEnabled
               onPermissionRequest={(event: any) => {
-                if (Platform.OS === "android") {
-                  event.grant(event.resources);
-                }
+                event.grant(event.resources);
               }}
             />
           ) : (
@@ -174,10 +243,11 @@ const ChamadaVideoScreen: React.FC = () => {
               <Text style={styles.permissionTitle}>
                 Não foi possível acessar a câmera/microfone
               </Text>
+
               <Text style={styles.permissionSubtitle}>
-                Autorize as permissões e tente novamente. Se continuar falhando,
-                abra no navegador do celular.
+                Autorize as permissões e tente novamente.
               </Text>
+
               <TouchableOpacity
                 onPress={requestPermissions}
                 style={styles.primaryButton}
@@ -192,6 +262,7 @@ const ChamadaVideoScreen: React.FC = () => {
           <Text style={styles.infoText}>
             Não saia desta tela até o final da chamada para evitar desconexão.
           </Text>
+
           <TouchableOpacity onPress={onExit} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Sair</Text>
           </TouchableOpacity>
@@ -212,6 +283,7 @@ const ChamadaVideoScreen: React.FC = () => {
 
           <View style={styles.preAprovadoPill}>
             <View style={styles.preAprovadoPillDot} />
+
             <Text style={styles.preAprovadoPillText}>PRÉ-APROVADO</Text>
           </View>
 
@@ -221,9 +293,7 @@ const ChamadaVideoScreen: React.FC = () => {
 
           <Text style={styles.subtitlePreAprovado}>
             Está tudo certo até aqui. Como última etapa, precisamos realizar uma
-            chamada de vídeo rápida para confirmar algumas informações. Clique
-            no link abaixo para falar com um especialista. Nosso time estará
-            pronto para te atender.
+            chamada de vídeo rápida para confirmar algumas informações.
           </Text>
 
           <View style={styles.timeContainer}>
@@ -242,10 +312,12 @@ const ChamadaVideoScreen: React.FC = () => {
                   color={Colors.green.primary}
                   style={{ marginLeft: 18 }}
                 />
+
                 <Text style={styles.timeTitle}>
                   Atendimento em horário comercial
                 </Text>
               </View>
+
               <Text style={styles.timeText}>De 08:30 às 18:00</Text>
             </View>
           </View>
@@ -257,11 +329,14 @@ const ChamadaVideoScreen: React.FC = () => {
             style={styles.whatsappButton}
           >
             <FontAwesome name="whatsapp" size={20} color={Colors.white} />
+
             <Text style={styles.whatsappButtonText}>
               Falar com um Atendente
             </Text>
+
             <FontAwesome name="arrow-right" size={16} color={Colors.white} />
           </TouchableOpacity>
+
           <TouchableOpacity onPress={onExit} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Sair</Text>
           </TouchableOpacity>
@@ -276,28 +351,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F7FCFA",
   },
+
   webviewContainer: {
     flex: 1,
     overflow: "hidden",
   },
+
   permissionContainer: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
     gap: 12,
   },
+
   permissionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: Colors.black,
     textAlign: "center",
   },
+
   permissionSubtitle: {
     fontSize: 14,
     color: Colors.gray.text,
     textAlign: "center",
     lineHeight: 20,
   },
+
   footer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -306,27 +386,32 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.borderColor,
     backgroundColor: Colors.white,
   },
+
   infoText: {
     color: Colors.gray.text,
     textAlign: "center",
     fontSize: 12,
   },
+
   secondaryButtonText: {
     color: Colors.gray.text,
     fontWeight: "bold",
     fontSize: 16,
   },
+
   primaryButton: {
     backgroundColor: Colors.green.button,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
   },
+
   primaryButtonText: {
     color: Colors.white,
     fontWeight: "bold",
     fontSize: 16,
   },
+
   secondaryButton: {
     backgroundColor: Colors.white,
     borderColor: Colors.borderColor,
@@ -335,6 +420,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
+
   preAprovadoContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -342,6 +428,7 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 24,
   },
+
   preAprovadoPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -351,29 +438,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     gap: 6,
   },
+
   preAprovadoPillDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: Colors.green.primary,
   },
+
   preAprovadoPillText: {
     color: Colors.green.primary,
     fontWeight: "bold",
     fontSize: 12,
   },
+
   preAprovadoTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: Colors.black,
     textAlign: "center",
   },
+
   subtitlePreAprovado: {
     fontSize: 14,
     color: Colors.gray.text,
     textAlign: "center",
     lineHeight: 20,
   },
+
   timeContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -386,17 +478,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: "100%",
   },
+
   timeTitle: {
     color: Colors.gray.text,
     fontSize: 14,
     textAlign: "center",
   },
+
   timeText: {
     fontSize: 14,
     fontWeight: "bold",
     color: Colors.black,
     textAlign: "center",
   },
+
   whatsappButton: {
     backgroundColor: Colors.green.button,
     paddingVertical: 16,
@@ -407,6 +502,7 @@ const styles = StyleSheet.create({
     gap: 12,
     width: "100%",
   },
+
   whatsappButtonText: {
     color: Colors.white,
     fontWeight: "bold",

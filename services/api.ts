@@ -93,7 +93,7 @@ function getAuthToken() {
   const authStore = useAuthStore.getState();
   const registerStore = useRegisterStore.getState();
 
-  return authStore.token || registerStore.token;
+  return registerStore.token || authStore.token;
 }
 
 function getPushToken() {
@@ -101,7 +101,20 @@ function getPushToken() {
 }
 
 function logoutUser() {
-  useAuthStore.getState().logout();
+  const authStore = useAuthStore.getState();
+  const registerStore = useRegisterStore.getState();
+
+  if (registerStore.token) {
+    registerStore.clean();
+    router.replace("/(register)/step1");
+    return;
+  }
+
+  if (authStore.token) {
+    authStore.logout();
+    router.replace("/login");
+    return;
+  }
 
   router.replace("/login");
 }
@@ -111,7 +124,7 @@ function logoutUser() {
 /* -------------------------------------------------------------------------- */
 
 function showSessionExpiredAlert() {
-  Alert.alert("Sessão expirada", "Por favor, faça login novamente.", [
+  Alert.alert("Sessão expirada", "Sua sessão expirou.", [
     {
       text: "OK",
       onPress: logoutUser,

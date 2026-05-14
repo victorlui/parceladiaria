@@ -13,7 +13,7 @@ import { Colors } from "@/constants/Colors";
 import { useAlerts } from "@/components/useAlert";
 import ItemDivergente from "./components/ItemDivergente";
 import SendDocument, { type Selected } from "./components/SendDocument";
-import { upladoDocumentService } from "./service/upload";
+import { uploadDocumentService } from "./service/upload";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import { updateUserService } from "@/services/register";
@@ -42,7 +42,7 @@ const DivergenciaScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const url = await upladoDocumentService(selected);
+      const url = await uploadDocumentService(selected);
       const selectedForPreview: Selected = { ...selected, uri: url };
 
       setSelectedFiles((prev) => ({

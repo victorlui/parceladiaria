@@ -18,6 +18,10 @@ export const getSteps = (ctx: StepContext = {}) => [
     title: "Seu número de telefone",
     subtitle: "Para começar, informe seu número.",
   },
+  {
+    title: "Código de afiliado",
+    subtitle: "Se você tiver um código, informe seu abaixo o código.",
+  },
 
   {
     title: "Sua profissão",

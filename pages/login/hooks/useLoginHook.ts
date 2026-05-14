@@ -13,23 +13,27 @@ import { router } from "expo-router";
 
 const stepMap: Partial<Record<Etapas, number>> = {
   [Etapas.INICIO]: 3,
-  [Etapas.LIMITE]: 4,
-  [Etapas.REGISTRANDO_PIX]: 6,
-  [Etapas.REGISTRANDO_ENDERECO]: 7,
-  [Etapas.CNPJ]: 8,
-  [Etapas.INFORMANDO_TIPO_COMERCIO]: 9,
+  [Etapas.AFILIADO_CODE]: 3,
+  [Etapas.REGISTRANDO_PROFISSAO]: 4,
+  [Etapas.LIMITE]: 5,
+  [Etapas.REGISTRANDO_EMAIL]: 6,
+  [Etapas.REGISTRANDO_PIX]: 7,
+  [Etapas.REGISTRANDO_ENDERECO]: 8,
+  [Etapas.CNPJ]: 9,
+  [Etapas.INFORMANDO_TIPO_COMERCIO]: 10,
 };
 
 export function useLoginHook() {
   const { showError } = useAlerts();
-  const { setStep, setToken, setData } = useRegisterStore();
+  const { setStep, setToken, setData, clean, setEtapa } = useRegisterStore();
 
   const checkCPFMutation = useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
     onSuccess: ({ data: { type }, message }) => {
       if (!type && message === "Sem cadastro") {
+        clean();
         setStep(0);
-        router.push("/(register)/step1");
+        router.replace("/(register)/step1");
         return;
       }
 
@@ -47,7 +51,7 @@ export function useLoginHook() {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data: any) => {
-      console.log("data sucesso login", data);
+      console.log("data login", data);
       if ((data as any)?.needs_otp === true) {
         useVerificationStore.getState().handleData({
           needs_otp: true,
@@ -67,41 +71,64 @@ export function useLoginHook() {
         setData(data?.data);
         setToken(data?.token);
 
-        console.log("status", status);
+        const goToRegisterStep1 = (nextStep: number) => {
+          setStep(nextStep);
+          router.replace("/(register)/step1");
+        };
 
-        if (status === StatusCadastro.DIVERGENTE) {
-          router.replace("/divergencia_screen");
-          return;
-        } else if (status === StatusCadastro.PRE_APROVADO) {
-          router.replace("/pre_aprovado_screen");
-          return;
-        } else if (status === StatusCadastro.RECUSADO) {
-          router.replace("/recusado_screen");
-          return;
-        } else if (status === StatusCadastro.REANALISE) {
-          router.replace("/reanalise_screen");
-          return;
-        } else if (status === StatusCadastro.ANALISE) {
-          router.replace("/analise_screen");
-          return;
-        } else {
+        if (status === StatusCadastro.PENDENTE) {
+          if (etapa === Etapas.ACEITANDO_TERMOS) {
+            setEtapa(Etapas.ACEITANDO_TERMOS);
+            setStep(8);
+            router.replace("/(register)/termos");
+            return;
+          }
+
           if (etapa === Etapas.OPEN_FINANCE) {
-            router.push("/(register)/openfinance");
+            setEtapa(Etapas.OPEN_FINANCE);
+            setStep(8);
+            router.replace("/(register)/openfinance");
             return;
           }
 
           const step = stepMap[etapa as Etapas];
 
-          if (step) {
-            setStep(step);
-            router.replace("/(register)/step1");
-            return;
+          if (step !== undefined) {
+            goToRegisterStep1(step);
           }
 
-          setStep(0);
-          router.replace("/(register)/step1");
           return;
         }
+
+        if (
+          etapa === Etapas.OPEN_FINANCE &&
+          status === StatusCadastro.RECUSADO
+        ) {
+          router.replace("/recusado_screen");
+          return;
+        }
+
+        if (etapa === Etapas.FINALIZADO) {
+          const routeByStatus: Partial<Record<StatusCadastro, string>> = {
+            [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
+            [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
+            [StatusCadastro.RECUSADO]: "/recusado_screen",
+            [StatusCadastro.REANALISE]: "/reanalise_screen",
+            [StatusCadastro.ANALISE]: "/analise_screen",
+            [StatusCadastro.APROVADO]: "/pre_aprovado_screen",
+          };
+
+          const route: any = routeByStatus[status as StatusCadastro];
+          if (route) {
+            router.replace(route);
+          }
+
+          return;
+        }
+
+        const step = stepMap[etapa as Etapas];
+        goToRegisterStep1(step ?? 0);
+        return;
       }
 
       if (type === "client") {
