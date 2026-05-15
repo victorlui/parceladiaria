@@ -13,7 +13,7 @@ const AlertsTextPix: React.FC = () => {
     >
       {[
         "A chave PIX não pode estar vinculada a um CNPJ",
-        "Use apenas chaves PIX de pessoas físicas (CPF)",
+        "Use apenas chaves PIX de pessoa física (CPF) em seu nome",
       ].map((text) => (
         <View key={text} style={styles.warningRow}>
           <FontAwesome5 name="exclamation-triangle" size={14} color="#D97706" />

@@ -6,7 +6,7 @@ import api from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TextInput } from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
 
 type Props = {
   onNext: (affiliateCode: string) => void | Promise<void>;
@@ -21,6 +21,12 @@ const AffiliateCode: React.FC<Props> = ({ onNext, isLoading }) => {
   const [affiliateCode, setAffiliateCode] = React.useState(
     data?.afiliado || "",
   );
+
+  const handleSkip = async () => {
+    setAffiliateCode("");
+    await onNext("");
+  };
+
   const onSubmit = async () => {
     if (!affiliateCode) {
       onNext("");
@@ -61,9 +67,35 @@ const AffiliateCode: React.FC<Props> = ({ onNext, isLoading }) => {
         onPress={() => onSubmit()}
         loading={isLoading || loading}
         iconLeft={null}
+        disabled={isLoading || loading || !affiliateCode}
       />
+
+      <TouchableOpacity
+        style={styles.transparentButton}
+        onPress={handleSkip}
+        disabled={isLoading || loading}
+      >
+        <Text style={styles.transparentButtonText}>
+          Não tenho código, continuar
+        </Text>
+      </TouchableOpacity>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  transparentButton: {
+    marginTop: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  transparentButtonText: {
+    color: Colors.green.button,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+});
 
 export default AffiliateCode;

@@ -23,6 +23,8 @@ const Step1Component: React.FC<Props> = ({ onNext, isLoading }) => {
     data?.nascimento ? data.nascimento.split("-").reverse().join("/") : "",
   );
 
+  console.log('data', data)
+
   const onSubmit = () => {
     onNext(cpf, birthDate);
   };

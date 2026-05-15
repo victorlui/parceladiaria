@@ -18,10 +18,10 @@ import {
   BackHandler,
   Linking,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import PulsingImageLoader from "./components/PulsingImageLoader";
+import ButtonComponent from "@/components/ui/Button";
 
 type FlowState =
   | "checking"
@@ -258,6 +258,7 @@ const OpenFinanceScreen: React.FC = () => {
               return;
             }
             const { data: klaviData } = await api.get("/v1/klavi");
+            console.log("klaviData comerciante", klaviData);
             if (cancelled || isLeaving.current) return;
             setAttempts(klaviData?.r_attempts || 0);
 
@@ -282,7 +283,7 @@ const OpenFinanceScreen: React.FC = () => {
           if (registerData?.profissao === "Comerciante") {
             const connectEnabled =
               data?.data?.openfinance?.comerciante?.connect;
-
+  
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
                 await goToTerms();
@@ -294,7 +295,7 @@ const OpenFinanceScreen: React.FC = () => {
 
             const { data: klaviData } = await api.get("/v1/klavi");
             if (cancelled || isLeaving.current) return;
-
+            console.log("klaviData comerciante", klaviData);
             setAttempts(klaviData?.r_attempts || 0);
 
             if (klaviData?.status === "aprovado") {
@@ -449,14 +450,15 @@ const OpenFinanceScreen: React.FC = () => {
               momento.
             </Text>
 
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center rounded-xl border border-teal-800 bg-white py-4"
+            <ButtonComponent
+              title="Sair"
+              outline
+              iconLeft={null}
+              iconRight={null}
               onPress={() => {
                 router.replace("/login");
               }}
-            >
-              <Text className="text-lg font-semibold text-teal-800">Sair</Text>
-            </TouchableOpacity>
+            />
           </View>
         );
 
@@ -479,19 +481,17 @@ const OpenFinanceScreen: React.FC = () => {
               Não conseguimos aprovar com a conta conectada.
             </Text>
 
-            <Text className="mb-10 text-center text-sm font-semibold text-gray-500">
+            <Text className="mb-10 text-center text-sm font-semibold text-gray-500" style={{ marginBottom: 24 }}>
               Conecte outra conta bancária (de preferência onde você tem maior
               movimentação).
             </Text>
 
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center rounded-xl bg-teal-800 py-4"
+            <ButtonComponent
+              title="Conectar outra conta"
+              iconLeft={null}
+              iconRight={null}
               onPress={connectKlavi}
-            >
-              <Text className="text-lg font-semibold text-white">
-                Conectar outra conta
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         );
 
@@ -511,19 +511,17 @@ const OpenFinanceScreen: React.FC = () => {
               Você tem {attempts} tentativas restantes.
             </Text>
 
-            <Text className="mb-10 text-center text-base leading-6 text-gray-500">
+            <Text className="mb-10 text-center text-base leading-6 text-gray-500" style={{ marginBottom: 24 }}>
               Conecte sua melhor conta para podermos oferecer um crédito
               adequado para você.
             </Text>
 
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center rounded-xl bg-teal-800 py-4"
+            <ButtonComponent
+              title="Conectar Conta"
+              iconLeft={null}
+              iconRight={null}
               onPress={connectKlavi}
-            >
-              <Text className="text-lg font-semibold text-white">
-                Conectar Conta
-              </Text>
-            </TouchableOpacity>
+            />
 
             <View className="mt-6 flex-row items-center">
               <Lock size={14} color="#9ca3af" style={{ marginRight: 6 }} />

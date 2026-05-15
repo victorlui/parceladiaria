@@ -25,13 +25,12 @@ const stepMap: Partial<Record<Etapas, number>> = {
 
 export function useLoginHook() {
   const { showError } = useAlerts();
-  const { setStep, setToken, setData, clean, setEtapa } = useRegisterStore();
+  const { setStep, setToken, setData, setEtapa } = useRegisterStore();
 
   const checkCPFMutation = useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
-    onSuccess: ({ data: { type }, message }) => {
+    onSuccess: ({ data: { type }, message }, variables) => {
       if (!type && message === "Sem cadastro") {
-        clean();
         setStep(0);
         router.replace("/(register)/step1");
         return;
@@ -68,8 +67,14 @@ export function useLoginHook() {
       const status = data?.data.status;
 
       if (type === "lead") {
-        setData(data?.data);
         setToken(data?.token);
+        const response = await api.get(`/v1/client`);
+        console.log("data lead", response.data.data);
+        setData({
+          ...data?.data,
+          primeira_analise: response.data.data.primeira_analise ?? 0,
+        });
+        
 
         const goToRegisterStep1 = (nextStep: number) => {
           setStep(nextStep);

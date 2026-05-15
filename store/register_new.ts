@@ -8,6 +8,7 @@ interface RegisterAuth extends Omit<ApiUserData, "cpf"> {
   cpf?: string | null;
   password?: string | null;
   afiliado?: string | null;
+  primeira_analise?: number | null;
 }
 
 type Register = {
