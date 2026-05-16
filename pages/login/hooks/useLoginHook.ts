@@ -69,10 +69,10 @@ export function useLoginHook() {
       if (type === "lead") {
         setToken(data?.token);
         const response = await api.get(`/v1/client`);
-        console.log("data lead", response.data.data);
+        console.log("data lead", response.data.data.data);
         setData({
           ...data?.data,
-          primeira_analise: response.data.data.primeira_analise ?? 0,
+          primeira_analise: response.data.data.data.primeira_analise ?? 0,
         });
         
 

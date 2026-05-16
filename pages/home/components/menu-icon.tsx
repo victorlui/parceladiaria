@@ -67,6 +67,7 @@ const MenuIcon: React.FC = () => {
         setLoading(true);
         try {
           const response = await renewStatus();
+          console.log("response", response.data);
           const loans = await getLoans();
           updateTotalLoans(loans.length);
           setTotalLoans(loans.length);

@@ -4,7 +4,8 @@ export async function renewStatus() {
   try {
     const response = await api.get("v1/renew/rules");
     return response;
-  } catch (error) {
+  } catch (error:any) {
+    console.log("error rules", error.response);
     throw error;
   }
 }

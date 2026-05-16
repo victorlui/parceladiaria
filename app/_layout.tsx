@@ -159,7 +159,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AlertDisplay />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false ,fullScreenGestureEnabled:true}}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />

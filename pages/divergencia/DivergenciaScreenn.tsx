@@ -16,6 +16,7 @@ import SendDocument, { type Selected } from "./components/SendDocument";
 import { uploadDocumentService } from "./service/upload";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
+import Openfinance from "./Openfinance";
 import { updateUserService } from "@/services/register";
 import { Etapas } from "@/utils";
 import { router } from "expo-router";
@@ -31,15 +32,22 @@ const DivergenciaScreen: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { key: string; selected?: Selected }>
   >({});
-  const totalDocumentos = divergencias.length;
-  const enviados = Object.keys(selectedFiles).length;
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
   const onSelect = (item: any) => {
     setItem(item);
   };
 
-  const isAllSelected = enviados === totalDocumentos;
+  const totalDocumentos = divergencias.length;
+  const enviados = divergencias.filter((documentKey: string) => {
+    if (documentKey === "openfinance") {
+      return selectedFiles.openfinance?.key === "connected";
+    }
+    return Boolean(selectedFiles[documentKey]?.key);
+  }).length;
+
+  const isAllSelected =
+    divergencias.length > 0 && enviados === totalDocumentos;
 
   const checkProgress = 0.75;
   const checkRingSize = 64;
@@ -86,6 +94,9 @@ const DivergenciaScreen: React.FC = () => {
     setLoadingSubmit(true);
     try {
       for (const [key, file] of Object.entries(selectedFiles)) {
+        if (key === "openfinance") {
+          continue;
+        }
         const uploadedUrl = file.key;
         if (!uploadedUrl) {
           continue;
@@ -136,7 +147,22 @@ const DivergenciaScreen: React.FC = () => {
     );
   }
 
-  if (item && item !== "face") {
+  if (item && item === "openfinance") {
+    return (
+      <Openfinance
+        back={() => setItem("")}
+        onConnected={() => {
+          setSelectedFiles((prev) => ({
+            ...prev,
+            openfinance: { key: "connected" },
+          }));
+          showSuccess("Sucesso", "Open Finance conectado com sucesso.");
+        }}
+      />
+    );
+  }
+
+  if (item && item !== "face" && item !== "openfinance") {
     return (
       <SendDocument
         item={item}
@@ -157,6 +183,8 @@ const DivergenciaScreen: React.FC = () => {
     );
   }
 
+
+
   const renderDocumentRequests = () => {
     return divergencias.map((documentKey: string, index: number) => {
       return (
@@ -170,6 +198,8 @@ const DivergenciaScreen: React.FC = () => {
     });
   };
 
+  console.log("isPrimeiraAnalise", isPrimeiraAnalise);
+
   return (
     <SafeAreaView style={styles.container}>
       <AlertDisplay />
@@ -178,7 +208,7 @@ const DivergenciaScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {isPrimeiraAnalise ? (
+        {!isPrimeiraAnalise ? (
           <>
             <Text style={styles.title}>Documentos Divergentes</Text>
             <Text style={styles.subtitle}>
@@ -254,7 +284,7 @@ const DivergenciaScreen: React.FC = () => {
               Preencha os dados e envie os documentos solicitados abaixo
             </Text>
 
-            {data?.primeira_analise === 0 && (
+            {!isPrimeiraAnalise && (
               <View style={styles.observacoesContainer}>
                 <Text style={styles.observacoesTitle}>Observações</Text>
                 <Text style={styles.observacoesText}>{data?.observacoes}</Text>

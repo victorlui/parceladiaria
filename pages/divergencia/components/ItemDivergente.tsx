@@ -13,6 +13,8 @@ interface Props {
 const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
   const iconInfo = getIconInfo(item);
   const displayName = documentDisplayNames[item] || item;
+  const isOpenFinance = item === "openfinance";
+  const isSelected = Boolean(selectedUri);
 
   return (
     <View style={styles.card}>
@@ -25,25 +27,41 @@ const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: selectedUri ? "#10B981" : "#EA580C" },
+              { backgroundColor: isSelected ? "#10B981" : "#EA580C" },
             ]}
           />
           <Text
             style={[
               styles.statusText,
-              { color: selectedUri ? "#10B981" : "#EA580C" },
+              { color: isSelected ? "#10B981" : "#EA580C" },
             ]}
           >
-            {selectedUri ? "Arquivo Selecionado" : "Divergente - Reenviar"}
+            {isSelected
+              ? isOpenFinance
+                ? "Conectado"
+                : "Arquivo Selecionado"
+              : isOpenFinance
+                ? "Pendente - Conectar"
+                : "Divergente - Reenviar"}
           </Text>
         </View>
       </View>
       <TouchableOpacity
-        style={[styles.sendButton, selectedUri && styles.sendButtonSelected]}
+        disabled={isOpenFinance && isSelected}
+        style={[
+          styles.sendButton,
+          isSelected && styles.sendButtonSelected,
+          isOpenFinance && isSelected && styles.sendButtonDisabled,
+        ]}
         onPress={() => onSelect(item)}
       >
-        <Text style={styles.sendButtonText}>
-          {selectedUri ? "Alterar" : "Enviar"}
+        <Text
+          style={[
+            styles.sendButtonText,
+            isOpenFinance && isSelected && styles.sendButtonTextDisabled,
+          ]}
+        >
+          {isSelected ? (isOpenFinance ? "Conectado" : "Alterar") : isOpenFinance ? "Conectar" : "Enviar"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -102,10 +120,16 @@ const styles = StyleSheet.create({
   sendButtonSelected: {
     backgroundColor: "#0284C7",
   },
+  sendButtonDisabled: {
+    backgroundColor: "#E5E7EB",
+  },
   sendButtonText: {
     color: "#FFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  sendButtonTextDisabled: {
+    color: "#9CA3AF",
   },
   closeButton: {
     position: "absolute",
