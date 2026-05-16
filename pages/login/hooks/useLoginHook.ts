@@ -166,7 +166,7 @@ export function useLoginHook() {
       }
     },
     onError: (error: any) => {
-      showError("Ops!", error.message || "Ocorreu um erro inesperado.");
+      showError("Ops!", "Senha incorreta" );
     },
   });
 

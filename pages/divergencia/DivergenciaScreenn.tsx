@@ -313,7 +313,7 @@ const DivergenciaScreen: React.FC = () => {
                 styles.textButtonDisabled,
             ]}
           >
-            Enviar tudo e continuar
+            {isPrimeiraAnalise ? "Concluir cadastro" : "Enviar novamente"}
           </Text>
         </TouchableOpacity>
       </View>
