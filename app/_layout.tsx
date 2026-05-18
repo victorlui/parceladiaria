@@ -1,6 +1,6 @@
 import { Stack, router, usePathname } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import "../global.css";
@@ -15,7 +15,6 @@ import { useLiveUpdate } from "@/hooks/useLiveUpdate";
 const PUBLIC_ROUTES = [
   "/login",
   "/insert-password",
-  "/reset_password",
   // (register)
   "/step1",
   "/openfinance",
@@ -59,6 +58,7 @@ export default function RootLayout() {
   const { restoreToken, isLoading, user, token } = useAuthStore();
   const { AlertDisplay } = useAlerts();
   const hasRedirected = useRef(false);
+  const [didRestoreToken, setDidRestoreToken] = useState(false);
   useLiveUpdate();
   // ✅ HOOKS DEVEM FICAR NO TOPO (ordem fixa)
   useForceInAppUpdate();
@@ -100,9 +100,23 @@ export default function RootLayout() {
     }
   }, []);
 
-  // 🔐 Restaurar token
+  // 🔐 Restaurar token (bloqueia guard enquanto não terminar)
   useEffect(() => {
-    restoreToken().catch((e) => console.error("Erro ao restaurar token:", e));
+    let isActive = true;
+
+    (async () => {
+      try {
+        await restoreToken();
+      } catch (e) {
+        console.error("Erro ao restaurar token:", e);
+      } finally {
+        if (isActive) setDidRestoreToken(true);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
   }, [restoreToken]);
 
   // 🧭 Mapa de status → rota
@@ -118,9 +132,11 @@ export default function RootLayout() {
     [],
   );
 
+  const isBootstrapping = isLoading || !didRestoreToken;
+
   // 🚦 Auth Guard (deep link SAFE)
   useEffect(() => {
-    if (isLoading || hasRedirected.current) return;
+    if (isBootstrapping || hasRedirected.current) return;
     if (!pathname) return;
 
     const isPublicRoute =
@@ -129,15 +145,15 @@ export default function RootLayout() {
       pathname.startsWith("/(auth)/") ||
       pathname.startsWith("/(register)/");
 
-    if (isPublicRoute) return;
-
     if (!token && !user) {
+      if (isPublicRoute) return;
       hasRedirected.current = true;
       router.replace("/login");
       return;
     }
 
     if (user?.isLoggedIn) {
+      if (!isPublicRoute && pathname !== "/") return;
       const route =
         !user.status || !(user.status in statusRedirectMap)
           ? "/(tabs)/home"
@@ -145,10 +161,10 @@ export default function RootLayout() {
       hasRedirected.current = true;
       router.replace(route as any);
     }
-  }, [isLoading, token, user, pathname]);
+  }, [isBootstrapping, token, user, pathname, statusRedirectMap]);
 
   // ⏳ Loading inicial (evita splash travada)
-  if (isLoading) {
+  if (isBootstrapping) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
@@ -163,18 +179,10 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
-
         <Stack.Screen name="login" />
         <Stack.Screen name="insert-password" />
-        <Stack.Screen name="register" />
         <Stack.Screen name="chat" />
-
         <Stack.Screen name="(register)" />
-        <Stack.Screen name="(register_new)" />
-
-        <Stack.Screen name="(comerciante)" />
-        <Stack.Screen name="(motorista_new)" />
-
         <Stack.Screen name="verification" />
         <Stack.Screen name="face_recognition" />
         <Stack.Screen name="recusado_screen" />
@@ -183,7 +191,7 @@ export default function RootLayout() {
         <Stack.Screen name="reanalise_screen" />
         <Stack.Screen name="pre_aprovado_screen" />
         <Stack.Screen name="analise_screen" />
-        <Stack.Screen name="reset_password" />
+
       </Stack>
     </QueryClientProvider>
   );

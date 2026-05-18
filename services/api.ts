@@ -157,11 +157,11 @@ api.interceptors.request.use(
 
     const token = getAuthToken();
 
-    config.headers = {
+    Object.assign(config.headers, {
       ...config.headers,
       ...securityHeaders,
       "X-PUSH": getPushToken() || "",
-    };
+    });
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

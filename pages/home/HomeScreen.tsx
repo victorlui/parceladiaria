@@ -15,7 +15,7 @@ const HomeScreen: React.FC = () => {
   const { user, token } = useAuthStore();
   const router = useRouter();
 
-  console.log("user", user);
+  
 
   const [modalVisible, setModalVisible] = useState<
     "status" | "refinanciamento" | null

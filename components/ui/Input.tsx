@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef, useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ViewStyle,
   TextStyle,
   Platform,
+  Pressable,
 } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { MaskedTextInput } from "react-native-mask-text";
@@ -54,6 +55,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
   ) => {
     const [focused, setFocused] = useState(false);
     const isInvalid = !!error;
+    const [inputNode, setInputNode] = useState<TextInput | null>(null);
 
     const mask =
       maskType === "cpf"
@@ -71,12 +73,27 @@ const InputComponent = forwardRef<TextInput, InputProps>(
                   : undefined;
 
     const computedMaxLength = maskType === "otp" ? 6 : (mask ? mask.length : maxLength);
+    const handleSetRef = useCallback(
+      (node: any) => {
+        setInputNode(node);
+
+        if (!ref) return;
+        if (typeof ref === "function") {
+          ref(node);
+        } else {
+          (ref as any).current = node;
+        }
+      },
+      [ref],
+    );
 
     return (
       <View style={[styles.wrapper, containerStyle]}>
         {label ? <Text style={styles.label}>{label}</Text> : null}
 
-        <View
+        <Pressable
+          onPress={() => inputNode?.focus?.()}
+          accessibilityRole="button"
           style={[
             styles.inputContainer,
             focused && styles.inputContainerFocused,
@@ -88,7 +105,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
 
           {mask ? (
             <MaskedTextInput
-              ref={ref as any}
+              ref={handleSetRef as any}
               value={value}
               onChangeText={(formatted, rawText) => onChangeText?.(rawText)}
               mask={mask}
@@ -114,7 +131,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
             />
           ) : (
             <TextInput
-              ref={ref}
+              ref={handleSetRef}
               value={value}
               onChangeText={onChangeText}
               placeholder={placeholder}
@@ -140,7 +157,7 @@ const InputComponent = forwardRef<TextInput, InputProps>(
           )}
 
           {rightIcon ? <View style={styles.rightIcon}>{rightIcon}</View> : null}
-        </View>
+        </Pressable>
 
         {isInvalid ? <Text style={styles.error}>{error}</Text> : null}
       </View>
