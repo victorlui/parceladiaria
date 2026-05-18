@@ -4,10 +4,6 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import React, { JSX } from "react";
-import { View } from "react-native";
-
-// import { Container } from './styles';
-
 type IconInfo = {
   icon: JSX.Element;
   bg: string;

@@ -74,7 +74,6 @@ export function useLoginHook() {
           ...data?.data,
           primeira_analise: response.data.data.data.primeira_analise ?? 0,
         });
-        
 
         const goToRegisterStep1 = (nextStep: number) => {
           setStep(nextStep);
@@ -114,6 +113,12 @@ export function useLoginHook() {
         }
 
         if (etapa === Etapas.FINALIZADO) {
+          console.log("status", status);
+          if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
+            console.log("proposta expirada");
+            router.replace("/divergencia_screen");
+            return;
+          }
           const routeByStatus: Partial<Record<StatusCadastro, string>> = {
             [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
             [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
@@ -166,7 +171,7 @@ export function useLoginHook() {
       }
     },
     onError: (error: any) => {
-      showError("Ops!", "Senha incorreta" );
+      showError("Ops!", "Senha incorreta");
     },
   });
 

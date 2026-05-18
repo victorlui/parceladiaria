@@ -18,10 +18,11 @@ import PulsingImageLoader from "../register/components/PulsingImageLoader";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import Openfinance from "./Openfinance";
 import { updateUserService } from "@/services/register";
-import { Etapas } from "@/utils";
+import { Etapas, StatusCadastro } from "@/utils";
 import { router } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
+import ExpiredDocument from "./components/ExpiredDocument";
 
 const DivergenciaScreen: React.FC = () => {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
@@ -181,6 +182,12 @@ const DivergenciaScreen: React.FC = () => {
         onClose={() => setItem("")}
       />
     );
+  }
+
+  if(data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
+    return (
+      <ExpiredDocument />
+    )
   }
 
 

@@ -58,6 +58,7 @@ export enum StatusCadastro {
   FINALIZADO = "Finalizado",
   FINALIZADO_APP = "finalizado",
   PENDENTE = "pendente",
+  PROPOSTA_EXPIRADO = "proposta-expirada",
 }
 
 export enum Etapas {
