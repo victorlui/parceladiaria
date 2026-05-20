@@ -51,7 +51,6 @@ export function useLoginHook() {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data: any) => {
-      console.log("data login", data);
       if ((data as any)?.needs_otp === true) {
         useVerificationStore.getState().handleData({
           needs_otp: true,
@@ -71,7 +70,7 @@ export function useLoginHook() {
       if (type === "lead") {
         setToken(data?.token);
         const response = await api.get(`/v1/client`);
-        console.log("data lead", response.data.data.data);
+
         setData({
           ...data?.data,
           primeira_analise: response.data.data.data.primeira_analise ?? 0,
@@ -115,7 +114,6 @@ export function useLoginHook() {
         }
 
         if (etapa === Etapas.INICIO && status === StatusCadastro.DIVERGENTE) {
-          console.log("Aqui");
           router.replace("/divergencia_screen");
           return;
         }
@@ -150,7 +148,6 @@ export function useLoginHook() {
       if (type === "client") {
         useAuthStore.getState().setToken(data?.token);
         const response = await api.get(`/v1/client/data/info`);
-        console.log("data client mutation", response.data.data);
         const user: ApiUserData = {
           nome: response.data.data.name,
           email: response.data.data.email,

@@ -1,7 +1,14 @@
-import React, { useState } from "react";
 import ButtonComponent from "@/components/ui/Button";
-import LoadingScreen from "@/components/ui/LoadingScreen";
-import RenderTermos from "./components/render-termos";
+import InputComponent from "@/components/ui/Input";
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import api from "@/services/api";
+import { useConfirmPixStore } from "@/store/confirm-pix";
+import { formatCurrencyBRL } from "@/utils/formats";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -14,21 +21,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useIndicationHook } from "./hooks/useIndicationHook";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { TermosFooter } from "./components/termos-footer";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import * as Clipboard from "expo-clipboard";
-import ModalConfirm from "./components/modal-confirm";
-import { formatCurrencyBRL } from "@/utils/formats";
-import InputComponent from "@/components/ui/Input";
-import { useAlerts } from "@/components/useAlert";
-import api from "@/services/api";
-import { router } from "expo-router";
-import { useConfirmPixStore } from "@/store/confirm-pix";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
-import { setNativeProps } from "react-native-reanimated";
+import ModalConfirm from "./components/modal-confirm";
+import RenderTermos from "./components/render-termos";
+import { TermosFooter } from "./components/termos-footer";
+import { useIndicationHook } from "./hooks/useIndicationHook";
 
 const TermosBody = React.memo(function TermosBody({
   termos,
@@ -50,6 +48,7 @@ const TermosBody = React.memo(function TermosBody({
 
 const IndicationsScreen: React.FC = () => {
   const {
+    hasCode,
     foiIndicado,
     indications,
     termos,
@@ -114,11 +113,9 @@ const IndicationsScreen: React.FC = () => {
       const { data } = await api.post("/v1/affiliate/apply-code", {
         codigo: code,
       });
-      console.log("data", data);
       setLoading(false);
       showSuccess("Sucesso", "Código aplicado com sucesso");
     } catch (error: any) {
-      console.log("error", error.response);
       setLoading(false);
       showWarning(
         "Atenção",
@@ -159,7 +156,7 @@ const IndicationsScreen: React.FC = () => {
     );
   };
 
-  if (!foiIndicado && totalLoans > 1 && indications === null) {
+  if ((!foiIndicado && totalLoans > 1 && indications === null) || !hasCode) {
     return (
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
@@ -207,7 +204,7 @@ const IndicationsScreen: React.FC = () => {
     );
   }
 
-  if (!foiIndicado && totalLoans <= 1 && indications === null) {
+  if ((!foiIndicado && totalLoans <= 1 && indications === null) || hasCode) {
     return (
       <SafeAreaView style={styles.container}>
         <ButtonBack />

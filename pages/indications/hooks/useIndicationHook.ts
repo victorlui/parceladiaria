@@ -15,6 +15,7 @@ export function useIndicationHook() {
   const [foiIndicado, setFoiIndicado] = useState<boolean | null>(null);
   const [totalLoans, setTotalLoans] = useState<number>(0);
   const [loadingLoans, setLoadingLoans] = useState<boolean>(false);
+  const [hasCode, setHasCode] = useState<boolean>(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -28,9 +29,16 @@ export function useIndicationHook() {
   async function getIndications() {
     try {
       const response = await api.get("/v1/affiliate");
+
       const data = response.data?.data;
       const hasFoiIndicado =
         !!data && Object.prototype.hasOwnProperty.call(data, "foi_indicado");
+
+      if (data.codigo_disponivel) {
+        setIndications(null);
+        setTermos(null);
+        setHasCode(data.codigo_disponivel);
+      }
 
       if (hasFoiIndicado) {
         setFoiIndicado(Boolean(data?.foi_indicado));
@@ -64,8 +72,8 @@ export function useIndicationHook() {
       }
 
       setTermos(null);
-    } catch (error) {
-      console.log("error", error);
+    } catch {
+      return;
     } finally {
       setLoadingTermo(false);
     }
@@ -174,6 +182,7 @@ export function useIndicationHook() {
     newIndications,
     foiIndicado,
     totalLoans,
+    hasCode,
     toggleAccepted,
     acceptTermos,
     changePixKey,

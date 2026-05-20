@@ -18,7 +18,10 @@ type AuthState = {
   logout: () => void;
   setToken: (token: string) => void;
   setUser: (user: ApiUserData | null) => void;
-  restoreToken: () => Promise<void>;
+  restoreToken: (opts?: {
+    retries?: number;
+    retryDelayMs?: number;
+  }) => Promise<void>;
   setUserRegister: (userRegister: ApiUserData | null) => void;
 };
 
@@ -84,10 +87,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  restoreToken: async () => {
+  restoreToken: async (opts) => {
     set({ isLoading: true });
     try {
-      const [token, user] = await Promise.all([getToken(), getUser()]);
+      const retries = Math.max(0, opts?.retries ?? 0);
+      const retryDelayMs = Math.max(0, opts?.retryDelayMs ?? 350);
+
+      let [token, user] = await Promise.all([getToken(), getUser()]);
+
+      if (!token && retries > 0) {
+        for (let i = 0; i < retries; i++) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+          const [nextToken, nextUser] = await Promise.all([getToken(), getUser()]);
+          token = nextToken;
+          user = nextUser;
+          if (token) break;
+        }
+      }
+
       set({
         token,
         user: token && user ? { ...user, isLoggedIn: true } : user,

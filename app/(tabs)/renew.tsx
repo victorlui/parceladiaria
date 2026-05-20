@@ -1,28 +1,50 @@
+import { Colors } from "@/constants/Colors";
+import ModalNotice from "@/pages/renew/compoents/ModalNotice";
+import { renewStatus } from "@/services/renew";
+import { useRenewStore } from "@/store/renew";
+import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  ScrollView,
   StyleSheet,
-  View,
   Text,
   TouchableOpacity,
-  ScrollView,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import {
-  FontAwesome6,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
-import { router } from "expo-router";
-import { useRenewStore } from "@/store/renew";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import ModalNotice from "@/pages/renew/compoents/ModalNotice";
 
 const RenewScreen: React.FC = () => {
-  const { renew } = useRenewStore();
+  const { renew, setRenew } = useRenewStore();
   const canRenew = !!renew?.can_renew;
   const [noticeVisible, setNoticeVisible] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const run = async () => {
+        setIsLoadingStatus(true);
+        try {
+          const response = await renewStatus();
+          if (!isActive) return;
+          setRenew(response.data.data);
+        } finally {
+          if (isActive) setIsLoadingStatus(false);
+        }
+      };
+
+      run();
+
+      return () => {
+        isActive = false;
+      };
+    }, [setRenew]),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +70,23 @@ const RenewScreen: React.FC = () => {
       cancelled = true;
     };
   }, [canRenew]);
+
+  if (isLoadingStatus && !renew) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#FFF",
+          }}
+        >
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>

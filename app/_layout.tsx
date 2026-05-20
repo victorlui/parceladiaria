@@ -6,10 +6,18 @@ import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import { StatusCadastro } from "@/utils";
 import { QueryClientProvider } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { Stack, router, usePathname } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import {
+  ActivityIndicator,
+  InteractionManager,
+  Platform,
+  Text,
+  View,
+} from "react-native";
+
 import "../global.css";
 
 const PUBLIC_ROUTES = [
@@ -40,25 +48,34 @@ export default function RootLayout() {
 
   const { AlertDisplay } = useAlerts();
 
-  const lastNotificationResponse = Notifications.useLastNotificationResponse();
-
   const [didRestoreToken, setDidRestoreToken] = useState(false);
+  const [didCheckColdStartNotification, setDidCheckColdStartNotification] =
+    useState(false);
+
+  // Controle de UX para exibir o loading durante redirecionamentos por notificação
+  const [isNavigatingNotification, setIsNavigatingNotification] =
+    useState(false);
+
+  // =========================================================
+  // REFS
+  // =========================================================
 
   const pendingNotificationRouteRef = useRef<string | null>(null);
 
-  const didRestoreTokenRef = useRef(false);
-
   const lastHandledNotificationKeyRef = useRef<string | null>(null);
+
+  // Ref para monitorar se a inicialização atual veio de um app totalmente encerrado
+  const isColdStartRef = useRef<boolean>(false);
+
+  // =========================================================
+  // HOOKS
+  // =========================================================
 
   useLiveUpdate();
 
   useForceInAppUpdate();
 
   usePushNotification({ disabled: isLoading });
-
-  useEffect(() => {
-    didRestoreTokenRef.current = didRestoreToken;
-  }, [didRestoreToken]);
 
   // =========================================================
   // NORMALIZA DEEPLINK
@@ -77,24 +94,50 @@ export default function RootLayout() {
       "renew_list",
     ];
 
-    const withoutScheme = url.replace(/^parceladiaria:\/*/i, "");
+    const parsed = Linking.parse(url);
 
-    const [pathPart, queryPart] = withoutScheme.split("?");
+    const rawPath =
+      typeof parsed.path === "string" && parsed.path.length > 0
+        ? parsed.path
+        : typeof parsed.hostname === "string" && parsed.hostname.length > 0
+          ? parsed.hostname
+          : "";
 
-    const pathOnly = (pathPart ?? "").split("#")[0] ?? "";
+    const cleanedRawPath = rawPath.split("#")[0] ?? "";
 
-    const withLeadingSlash = pathOnly.startsWith("/")
-      ? pathOnly
-      : `/${pathOnly}`;
+    const withLeadingSlash = cleanedRawPath.startsWith("/")
+      ? cleanedRawPath
+      : `/${cleanedRawPath}`;
 
-    const collapsedSlashes = withLeadingSlash.replace(/\/{2,}/g, "/");
+    const segments = withLeadingSlash.split("/").filter(Boolean);
 
-    const normalized =
-      queryPart && queryPart.length > 0
-        ? `${collapsedSlashes}?${queryPart}`
-        : collapsedSlashes;
+    if (segments[0] === "--") {
+      segments.shift();
+    }
 
-    const firstSegment = normalized.split("?")[0].split("#")[0].split("/")[1];
+    if (segments.length === 0) return null;
+
+    segments[0] = segments[0].toLowerCase().replace(/-/g, "_");
+
+    const adjustedPath = `/${segments.join("/")}`;
+
+    const queryParams = parsed.queryParams ?? {};
+    const queryString = new URLSearchParams(
+      Object.entries(queryParams).reduce<Record<string, string>>(
+        (acc, [key, value]) => {
+          if (typeof value === "string") acc[key] = value;
+          if (typeof value === "number" || typeof value === "boolean") {
+            acc[key] = String(value);
+          }
+          return acc;
+        },
+        {},
+      ),
+    ).toString();
+
+    const normalized = queryString.length > 0 ? `${adjustedPath}?${queryString}` : adjustedPath;
+
+    const firstSegment = segments[0];
 
     if (firstSegment && TAB_ROUTES.includes(firstSegment)) {
       return `/(tabs)${normalized}`;
@@ -104,31 +147,78 @@ export default function RootLayout() {
   }, []);
 
   // =========================================================
-  // REDIRECT NOTIFICATION
+  // HANDLE NOTIFICATION ROUTE (BLINDADO CONTRA CRASH)
   // =========================================================
 
-  const handleNotificationRoute = useCallback(async (route: string) => {
-    // espera restoreToken terminar
-    if (!didRestoreTokenRef.current) {
-      pendingNotificationRouteRef.current = route;
-      return;
-    }
+  const handleNotificationRoute = useCallback(
+    (route: string) => {
+      if (!route || typeof route !== "string" || route.trim() === "") {
+        console.warn(
+          "[Notification] Rota inválida rejeitada para evitar crash:",
+          route,
+        );
+        return;
+      }
 
-    const { token: currentToken, user: currentUser } = useAuthStore.getState();
+      try {
+        const { token: currentToken, user: currentUser } =
+          useAuthStore.getState();
 
-    const isLogged = !!currentToken && !!currentUser?.isLoggedIn;
+        const isLogged = !!currentToken && !!currentUser?.isLoggedIn;
 
-    // ❌ usuário não logado
-    if (!isLogged) {
-      // vai login
-      router.replace("/login");
+        console.log("HANDLE NOTIFICATION ROUTE", route, "IS LOGGED", isLogged);
 
-      return;
-    }
+        // =====================================================
+        // NÃO LOGADO
+        // =====================================================
 
-    // ✅ usuário logado
-    router.push(route as any);
-  }, []);
+        if (!isLogged) {
+          pendingNotificationRouteRef.current = route;
+
+          if (isLoading || !didRestoreToken) {
+            return;
+          }
+
+          if (pathname !== "/login") {
+            setIsNavigatingNotification(true);
+            router.replace("/login");
+          }
+
+          return;
+        }
+
+        // =====================================================
+        // LOGADO
+        // =====================================================
+
+        setIsNavigatingNotification(true);
+
+        InteractionManager.runAfterInteractions(() => {
+          requestAnimationFrame(() => {
+            try {
+              if (pathname !== route) {
+                router.push(route as any);
+              }
+            } catch (err) {
+              console.error(
+                "[Notification] Erro crítico ao executar router.push (Rota inexistente?):",
+                err,
+              );
+            } finally {
+              setIsNavigatingNotification(false);
+            }
+          });
+        });
+      } catch (globalError) {
+        console.error(
+          "[Notification] Erro geral no handleNotificationRoute:",
+          globalError,
+        );
+        setIsNavigatingNotification(false);
+      }
+    },
+    [pathname, isLoading, didRestoreToken],
+  );
 
   // =========================================================
   // CONFIG GLOBAL NOTIFICATION
@@ -146,50 +236,94 @@ export default function RootLayout() {
   }, []);
 
   // =========================================================
-  // PROCESSA PENDENTE APÓS RESTORE
+  // IOS/ANDROID CLICK LISTENER (APP EM SEGUNDO PLANO / ABERTO)
   // =========================================================
 
   useEffect(() => {
-    if (!didRestoreToken) return;
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        try {
+          const key =
+            `${response.notification.request.identifier}:` +
+            `${response.actionIdentifier}`;
 
-    if (!pendingNotificationRouteRef.current) return;
+          // evita duplicação
+          if (key === lastHandledNotificationKeyRef.current) {
+            return;
+          }
 
-    const route = pendingNotificationRouteRef.current;
+          lastHandledNotificationKeyRef.current = key;
 
-    pendingNotificationRouteRef.current = null;
+          const url = response.notification.request.content.data?.url;
 
-    handleNotificationRoute(route);
-  }, [didRestoreToken, handleNotificationRoute]);
+          const route = normalizeNotificationRoute(url);
+
+          console.log("CLICK ROUTE", route);
+
+          if (!route) return;
+
+          handleNotificationRoute(route);
+        } catch (err) {
+          console.error("notification listener error", err);
+        }
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [normalizeNotificationRoute, handleNotificationRoute]);
 
   // =========================================================
-  // CLICK NOTIFICATION
+  // NOTIFICATION LISTENER (COLD START - APP TOTALMENTE FECHADO)
   // =========================================================
 
   useEffect(() => {
-    if (!lastNotificationResponse) return;
+    let isMounted = true;
 
-    const key =
-      `${lastNotificationResponse.notification.request.identifier}:` +
-      `${lastNotificationResponse.actionIdentifier}`;
+    const bootstrapNotification = async () => {
+      try {
+        const response = await Notifications.getLastNotificationResponseAsync();
 
-    if (key === lastHandledNotificationKeyRef.current) {
-      return;
-    }
+        if (!response || !isMounted) return;
 
-    lastHandledNotificationKeyRef.current = key;
+        const key =
+          `${response.notification.request.identifier}:` +
+          `${response.actionIdentifier}`;
 
-    const url = lastNotificationResponse.notification.request.content.data?.url;
+        if (key === lastHandledNotificationKeyRef.current) {
+          return;
+        }
 
-    const route = normalizeNotificationRoute(url);
+        lastHandledNotificationKeyRef.current = key;
 
-    if (route) {
-      handleNotificationRoute(route);
-    }
-  }, [
-    handleNotificationRoute,
-    lastNotificationResponse,
-    normalizeNotificationRoute,
-  ]);
+        const url = response.notification.request.content.data?.url;
+
+        const route = normalizeNotificationRoute(url);
+
+        console.log("COLD START ROUTE DETECTED", route);
+
+        if (!route) return;
+
+        // Marcamos que houve um cold start por push e bloqueamos a tela temporariamente
+        isColdStartRef.current = true;
+        setIsNavigatingNotification(true);
+        pendingNotificationRouteRef.current = route;
+      } catch (err) {
+        console.error("bootstrapNotification error", err);
+      } finally {
+        if (isMounted) {
+          setDidCheckColdStartNotification(true);
+        }
+      }
+    };
+
+    bootstrapNotification();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizeNotificationRoute]);
 
   // =========================================================
   // CANAL ANDROID
@@ -207,15 +341,20 @@ export default function RootLayout() {
   }, []);
 
   // =========================================================
-  // RESTORE TOKEN
+  // RESTORE TOKEN (COM TRATAMENTO DE CONCORRÊNCIA PARA COLD START)
   // =========================================================
 
   useEffect(() => {
+    if (!didCheckColdStartNotification) return;
+
     let isActive = true;
 
-    (async () => {
+    const execRestore = async () => {
       try {
-        await restoreToken();
+        await restoreToken({
+          retries: isColdStartRef.current ? 1 : 0,
+          retryDelayMs: 350,
+        });
       } catch (e) {
         console.error("Erro restoreToken:", e);
       } finally {
@@ -223,12 +362,14 @@ export default function RootLayout() {
           setDidRestoreToken(true);
         }
       }
-    })();
+    };
+
+    execRestore();
 
     return () => {
       isActive = false;
     };
-  }, [restoreToken]);
+  }, [restoreToken, didCheckColdStartNotification]);
 
   // =========================================================
   // MAP STATUS
@@ -249,7 +390,7 @@ export default function RootLayout() {
   const isBootstrapping = isLoading || !didRestoreToken;
 
   // =========================================================
-  // AUTH GUARD
+  // AUTH GUARD + REDIRECIONAMENTO DE NOTIFICAÇÃO (SEGURO)
   // =========================================================
 
   useEffect(() => {
@@ -257,42 +398,96 @@ export default function RootLayout() {
 
     if (!pathname) return;
 
-    const isPublicRoute =
-      PUBLIC_ROUTES.includes(pathname) ||
-      PUBLIC_ROUTES.some((route) => pathname.startsWith(`${route}/`)) ||
-      pathname.startsWith("/(auth)/") ||
-      pathname.startsWith("/(register)/");
+    try {
+      const isPublicRoute =
+        PUBLIC_ROUTES.includes(pathname) ||
+        PUBLIC_ROUTES.some((route) => pathname.startsWith(`${route}/`)) ||
+        pathname.startsWith("/(auth)/") ||
+        pathname.startsWith("/(register)/");
 
-    // ❌ NÃO LOGADO
-    if (!token && !user) {
-      if (isPublicRoute) return;
+      // =====================================================
+      // NÃO LOGADO
+      // =====================================================
 
-      router.replace("/login");
+      if (!token && !user) {
+        setIsNavigatingNotification(false);
+        if (isPublicRoute) return;
 
-      return;
+        if (pathname !== "/login") {
+          router.replace("/login");
+        }
+
+        return;
+      }
+
+      // =====================================================
+      // LOGADO
+      // =====================================================
+
+      if (user) {
+        // Se houver uma rota pendente salva, consome ela de forma isolada
+        if (pendingNotificationRouteRef.current) {
+          const routeToNavigate = pendingNotificationRouteRef.current;
+          pendingNotificationRouteRef.current = null;
+          isColdStartRef.current = false;
+
+          if (
+            routeToNavigate &&
+            typeof routeToNavigate === "string" &&
+            pathname !== routeToNavigate
+          ) {
+            setIsNavigatingNotification(true);
+            InteractionManager.runAfterInteractions(() => {
+              requestAnimationFrame(() => {
+                try {
+                  router.push(routeToNavigate as any);
+                } catch (err) {
+                  console.error(
+                    "[Notification ColdStart] Falha ao empurrar rota pendente:",
+                    err,
+                  );
+                } finally {
+                  setIsNavigatingNotification(false);
+                }
+              });
+            });
+          } else {
+            setIsNavigatingNotification(false);
+          }
+          return;
+        }
+
+        // Já está em rota privada protegida, não faz nada
+        if (!isPublicRoute && pathname !== "/") {
+          return;
+        }
+
+        const route =
+          !user.status || !(user.status in statusRedirectMap)
+            ? "/(tabs)/home"
+            : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
+
+        if (pathname !== route) {
+          router.replace(route as any);
+        }
+      }
+    } catch (authGuardError) {
+      console.error(
+        "[AuthGuard] Erro interceptado no fluxo de autenticação:",
+        authGuardError,
+      );
+      setIsNavigatingNotification(false);
     }
-
-    // ✅ LOGADO
-    if (user?.isLoggedIn) {
-      if (!isPublicRoute && pathname !== "/") return;
-
-      const route =
-        !user.status || !(user.status in statusRedirectMap)
-          ? "/(tabs)/home"
-          : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
-
-      router.replace(route as any);
-    }
-  }, [isBootstrapping, token, user, pathname, statusRedirectMap, ,]);
+  }, [isBootstrapping, token, user, pathname, statusRedirectMap]);
 
   // =========================================================
-  // LOADING
+  // LOADING DE INICIALIZAÇÃO
   // =========================================================
 
   if (isBootstrapping) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" />
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#000" />
       </View>
     );
   }
@@ -341,6 +536,21 @@ export default function RootLayout() {
         {/* validations */}
         <Stack.Screen name="(validations)" />
       </Stack>
+
+      {/* 
+        Feedback Visual de UX: Bloqueia interações repetidas na árvore de views
+        enquanto a rota recuperada do push/deeplink está carregando.
+      */}
+      {isNavigatingNotification && (
+        <View className="absolute inset-0 bg-black/30 items-center justify-center z-[9999]">
+          <View className="bg-white p-6 rounded-2xl items-center shadow-lg">
+            <ActivityIndicator size="large" color="#000" />
+            <Text className="mt-3 text-sm font-medium text-gray-600">
+              Carregando notificação...
+            </Text>
+          </View>
+        </View>
+      )}
     </QueryClientProvider>
   );
 }
