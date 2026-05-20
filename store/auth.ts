@@ -13,9 +13,9 @@ type AuthState = {
   cpfValid: string | null;
   setCpfValid: (cpfValid: string | null) => void;
   setCanRenew: (can_renew: boolean) => void;
-  login: (token: string, user: ApiUserData | null) => void;
+  login: (token: string, user: ApiUserData | null) => Promise<void>;
   register: (token: string | null, user: ApiUserData | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   setToken: (token: string) => void;
   setUser: (user: ApiUserData | null) => void;
   restoreToken: (opts?: {
@@ -44,9 +44,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ can_renew });
   },
 
-  login: (token, user) => {
-    console.log("login", token, user);
-    saveToken(token, user);
+  login: async (token, user) => {
+    await saveToken(token, user);
     set({ token, user: user ? { ...user, isLoggedIn: true } : null });
   },
 

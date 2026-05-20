@@ -2,7 +2,6 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -27,7 +26,6 @@ const InsertPasswordScreen: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
   const { data, setData } = useRegisterStore();
-  const { logout, user } = useAuthStore();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,10 +33,6 @@ const InsertPasswordScreen: React.FC = () => {
   const hasShownError = useRef(false);
 
   useEffect(() => {
-    // if (loginMutation.isError && !hasShownError.current) {
-    //   hasShownError.current = true;
-    //   showError("Atenção", "Senha incorreta");
-    // }
     if (!loginMutation.error) {
       hasShownError.current = false;
     }
@@ -46,15 +40,13 @@ const InsertPasswordScreen: React.FC = () => {
 
   const onSubmit = async () => {
     Keyboard.dismiss();
+
     if (!password) {
       showWarning("Atenção", "Preencha todos os campos");
       return;
     }
 
     try {
-      if (user) {
-        await logout();
-      }
       setData({
         ...data,
         password,

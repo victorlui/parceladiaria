@@ -56,6 +56,17 @@ export default function RootLayout() {
   const [isNavigatingNotification, setIsNavigatingNotification] =
     useState(false);
 
+  const isPublicPathname = useCallback((path: string) => {
+    if (!path) return true;
+
+    return (
+      PUBLIC_ROUTES.includes(path) ||
+      PUBLIC_ROUTES.some((route) => path.startsWith(`${route}/`)) ||
+      path.startsWith("/(auth)/") ||
+      path.startsWith("/(register)/")
+    );
+  }, []);
+
   // =========================================================
   // REFS
   // =========================================================
@@ -135,7 +146,8 @@ export default function RootLayout() {
       ),
     ).toString();
 
-    const normalized = queryString.length > 0 ? `${adjustedPath}?${queryString}` : adjustedPath;
+    const normalized =
+      queryString.length > 0 ? `${adjustedPath}?${queryString}` : adjustedPath;
 
     const firstSegment = segments[0];
 
@@ -179,7 +191,7 @@ export default function RootLayout() {
             return;
           }
 
-          if (pathname !== "/login") {
+          if (!isPublicPathname(pathname) && pathname !== "/login") {
             setIsNavigatingNotification(true);
             router.replace("/login");
           }
@@ -217,7 +229,7 @@ export default function RootLayout() {
         setIsNavigatingNotification(false);
       }
     },
-    [pathname, isLoading, didRestoreToken],
+    [pathname, isLoading, didRestoreToken, isPublicPathname],
   );
 
   // =========================================================
@@ -399,11 +411,7 @@ export default function RootLayout() {
     if (!pathname) return;
 
     try {
-      const isPublicRoute =
-        PUBLIC_ROUTES.includes(pathname) ||
-        PUBLIC_ROUTES.some((route) => pathname.startsWith(`${route}/`)) ||
-        pathname.startsWith("/(auth)/") ||
-        pathname.startsWith("/(register)/");
+      const isPublicRoute = isPublicPathname(pathname);
 
       // =====================================================
       // NÃO LOGADO
@@ -478,7 +486,14 @@ export default function RootLayout() {
       );
       setIsNavigatingNotification(false);
     }
-  }, [isBootstrapping, token, user, pathname, statusRedirectMap]);
+  }, [
+    isBootstrapping,
+    token,
+    user,
+    pathname,
+    statusRedirectMap,
+    isPublicPathname,
+  ]);
 
   // =========================================================
   // LOADING DE INICIALIZAÇÃO

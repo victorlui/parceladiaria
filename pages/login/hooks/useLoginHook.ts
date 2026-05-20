@@ -26,7 +26,6 @@ const stepMap: Partial<Record<Etapas, number>> = {
 export function useLoginHook() {
   const { showError } = useAlerts();
   const { setStep, setToken, setData, setEtapa } = useRegisterStore();
-  const { setUser } = useAuthStore((state) => state);
 
   const checkCPFMutation = useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
