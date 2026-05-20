@@ -25,6 +25,8 @@ const PUBLIC_ROUTES = [
   "/change-password-screen",
   "/cpf-otp-screen",
   "/otp-screen",
+  "/timeless_face_check",
+  "/validity",
 
   "/verification",
 
