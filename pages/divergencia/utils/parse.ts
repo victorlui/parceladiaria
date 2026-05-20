@@ -2,6 +2,8 @@ import { Selected } from "../components/SendDocument";
 
 export function safeParseArray(str: any) {
   if (!str) return [];
+  if (Array.isArray(str)) return str;
+  if (typeof str !== "string") return [];
   try {
     str = str.replace(/,\s*]$/, "]");
     return JSON.parse(str);

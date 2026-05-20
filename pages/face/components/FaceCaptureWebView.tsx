@@ -1,8 +1,8 @@
+import { Camera } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from "react-native";
-import { Camera } from "expo-camera";
-import WebView from "react-native-webview";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WebView from "react-native-webview";
 
 interface Props {
   visible: boolean;
@@ -16,22 +16,33 @@ const FaceCaptureWebView: React.FC<Props> = ({
   onClose,
 }) => {
   const webviewRef = useRef<WebView>(null);
-  const [cameraGranted, setCameraGranted] = useState(false);
+  const isMountedRef = useRef(true);
+  const [cameraStatus, setCameraStatus] = useState<
+    "loading" | "granted" | "denied"
+  >("loading");
   const successSentRef = useRef(false);
 
   useEffect(() => {
+    isMountedRef.current = true;
     if (visible) {
       successSentRef.current = false;
-      console.log("[FaceCaptureWebView] opened");
+      setCameraStatus("loading");
       requestPermissions();
-    } else {
-      console.log("[FaceCaptureWebView] closed");
     }
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [visible]);
 
   const requestPermissions = async () => {
-    const { status } = await Camera.requestCameraPermissionsAsync();
-    setCameraGranted(status === "granted");
+    try {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      if (!isMountedRef.current) return;
+      setCameraStatus(status === "granted" ? "granted" : "denied");
+    } catch {
+      if (!isMountedRef.current) return;
+      setCameraStatus("denied");
+    }
   };
 
   const handleMessage = (event: any) => {
@@ -55,12 +66,21 @@ const FaceCaptureWebView: React.FC<Props> = ({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
-        {!cameraGranted ? (
+        {cameraStatus !== "granted" ? (
           <View style={styles.loading}>
-            <ActivityIndicator size="large" color="#00ff99" />
-            <Text style={styles.loadingText}>
-              Solicitando acesso à câmera...
-            </Text>
+            {cameraStatus === "loading" ? (
+              <>
+                <ActivityIndicator size="large" color="#00ff99" />
+                <Text style={styles.loadingText}>
+                  Solicitando acesso à câmera...
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.loadingText}>
+                Permissão de câmera negada. Verifique as permissões do app e
+                tente novamente.
+              </Text>
+            )}
           </View>
         ) : (
           <WebView
@@ -68,13 +88,14 @@ const FaceCaptureWebView: React.FC<Props> = ({
             source={{
               uri: "https://face-capture-sdk.victorluizgonzalez.workers.dev",
             }}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            allowsInlineMediaPlayback={true}
+            javaScriptEnabled
+            domStorageEnabled
+            allowsInlineMediaPlayback
             mediaPlaybackRequiresUserAction={false}
             mixedContentMode="always"
             originWhitelist={["*"]}
             androidLayerType="hardware"
+            mediaCapturePermissionGrantType="grantIfSameHostElsePrompt"
             onMessage={handleMessage}
             style={styles.webview}
           />

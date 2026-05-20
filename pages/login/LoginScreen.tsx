@@ -2,6 +2,7 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
+import { useRegisterStore } from "@/store/register_new";
 import { validateCPF } from "@/utils/validation";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
@@ -17,7 +18,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLoginHook } from "./hooks/useLoginHook";
-import { useRegisterStore } from "@/store/register_new";
 
 const LoginScreen: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();

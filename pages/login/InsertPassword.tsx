@@ -3,6 +3,7 @@ import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
+import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -21,13 +22,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLoginHook } from "./hooks/useLoginHook";
-import { useRegisterStore } from "@/store/register_new";
 
 const InsertPasswordScreen: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
   const { data, setData } = useRegisterStore();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,6 +46,7 @@ const InsertPasswordScreen: React.FC = () => {
 
   const onSubmit = async () => {
     Keyboard.dismiss();
+    console.log("user inster password", user);
     logout();
     if (!password) {
       showWarning("Atenção", "Preencha todos os campos");

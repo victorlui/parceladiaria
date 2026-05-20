@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { getToken, getUser, removeToken, saveToken } from "../lib/authStorage";
 import { ApiUserData } from "@/interfaces/login_inteface";
 import { queryClient } from "@/lib/queryClient";
+import { create } from "zustand";
+import { getToken, getUser, removeToken, saveToken } from "../lib/authStorage";
 
 type AuthState = {
   token: string | null;
@@ -27,6 +27,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   userRegister: null,
   tokenRegister: null,
+  postLoginRedirect: null,
   isLoading: true,
   can_renew: false,
   cpfValid: null,
@@ -41,6 +42,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   login: (token, user) => {
+    console.log("login", token, user);
     saveToken(token, user);
     set({ token, user: user ? { ...user, isLoggedIn: true } : null });
   },
@@ -51,28 +53,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setUser: (user) => {
     const token = get().token;
+
     set({ user });
-    saveToken(token!, user);
+    if (token) {
+      saveToken(token, user);
+    }
   },
 
   setToken: (token) => {
+    const prevToken = get().token;
+    if (prevToken && prevToken !== token) {
+      queryClient.clear();
+      set({ token, user: null });
+      saveToken(token, null);
+      return;
+    }
+
     const user = get().user;
     set({ token });
     saveToken(token, user);
   },
 
-  logout: () => {
-    removeToken();
-    queryClient.clear();
-    set({ token: null, user: null });
+  logout: async () => {
+    try {
+      await removeToken();
+      queryClient.clear();
+      set({ token: null, user: null });
+    } catch (error) {
+      console.log("logout", error);
+    }
   },
 
   restoreToken: async () => {
     set({ isLoading: true });
     try {
-      const token = await getToken();
-      const user = await getUser();
-      set({ token, user, isLoading: false });
+      const [token, user] = await Promise.all([getToken(), getUser()]);
+      set({
+        token,
+        user: token && user ? { ...user, isLoggedIn: true } : user,
+        isLoading: false,
+      });
     } catch (error: any) {
       set({ token: null, user: null, isLoading: false });
     }

@@ -21,6 +21,8 @@ export interface ApiUserData {
   etapa?: string;
   face?: string | null;
   fachada?: string | null;
+  email_verificado?: boolean;
+  phone_verificado?: boolean;
   foto_docveiculo?: string | null;
   foto_frente_doc?: string | null;
   foto_perfil_app?: string | null;

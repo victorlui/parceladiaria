@@ -26,6 +26,7 @@ const stepMap: Partial<Record<Etapas, number>> = {
 export function useLoginHook() {
   const { showError } = useAlerts();
   const { setStep, setToken, setData, setEtapa } = useRegisterStore();
+  const { setUser } = useAuthStore((state) => state);
 
   const checkCPFMutation = useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
@@ -54,6 +55,7 @@ export function useLoginHook() {
       if ((data as any)?.needs_otp === true) {
         useVerificationStore.getState().handleData({
           needs_otp: true,
+          first_login: true,
           phone_masked: (data as any)?.phone_masked,
           email_masked: (data as any)?.email_masked,
           cpf: (data as any)?.cpf,
@@ -112,10 +114,14 @@ export function useLoginHook() {
           return;
         }
 
+        if (etapa === Etapas.INICIO && status === StatusCadastro.DIVERGENTE) {
+          console.log("Aqui");
+          router.replace("/divergencia_screen");
+          return;
+        }
+
         if (etapa === Etapas.FINALIZADO) {
-          console.log("status", status);
           if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
-            console.log("proposta expirada");
             router.replace("/divergencia_screen");
             return;
           }
@@ -142,10 +148,9 @@ export function useLoginHook() {
       }
 
       if (type === "client") {
-        console.log("data client login", data?.data);
         useAuthStore.getState().setToken(data?.token);
         const response = await api.get(`/v1/client/data/info`);
-        console.log("data client", response.data.data);
+        console.log("data client mutation", response.data.data);
         const user: ApiUserData = {
           nome: response.data.data.name,
           email: response.data.data.email,
@@ -164,6 +169,8 @@ export function useLoginHook() {
           status_doc: response.data.data.status_doc,
           isLoggedIn: true,
           observacoes: response.data.data.observacoes,
+          email_verificado: response.data.data.email_verificado,
+          phone_verificado: response.data.data.phone_verificado,
         };
         useAuthStore.getState().login(data?.token, user);
         router.replace("/(tabs)/home");
@@ -171,6 +178,11 @@ export function useLoginHook() {
       }
     },
     onError: (error: any) => {
+      const status = error?.status ?? error?.response?.status;
+      if (status === 403 || status === 429) {
+        return;
+      }
+
       showError("Ops!", "Senha incorreta");
     },
   });

@@ -3,6 +3,7 @@ import { create } from "zustand";
 interface AppState {
   data: {
     needs_otp?: boolean;
+    first_login?: boolean;
     phone_masked?: string;
     email_masked?: string;
     cpf?: string;

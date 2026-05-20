@@ -9,8 +9,8 @@ import Constants from "expo-constants";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 
-import { Alert } from "react-native";
 import { router } from "expo-router";
+import { Alert } from "react-native";
 
 import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
@@ -147,6 +147,56 @@ function showConnectionErrorAlert() {
   Alert.alert("Erro de conexão", "Verifique sua internet e tente novamente.");
 }
 
+function showBlockedAlert(message: string) {
+  Alert.alert("Acesso bloqueado", message);
+}
+
+function showForbiddenAlert(message: string) {
+  Alert.alert("Erro", message);
+}
+
+function showRateLimitAlert(message?: string) {
+  Alert.alert(
+    "Limite de requisições",
+    message ?? "Limite de requisições excedido. Tente novamente mais tarde.",
+  );
+}
+
+function getBlockedReasonFromErro(erro?: string): string | undefined {
+  if (!erro) return undefined;
+
+  const normalized = erro.trim();
+
+  if (
+    normalized ===
+    "Você atingiu o limite de tentativas hoje. Tente novamente amanhã."
+  ) {
+    return "Excesso de tentativas de OTP no dia";
+  }
+
+  const match = normalized.match(/#(\d+)/);
+  const code = match?.[1];
+
+  switch (code) {
+    case "990":
+      return "Login via site (origem indevida)";
+    case "991":
+      return "Login-web via app (origem indevida)";
+    case "100":
+      return "Bloqueado (blacklist)";
+    case "0":
+      return "User-Agent inválido/suspeito";
+    case "1":
+      return "Falta header de assinatura";
+    case "2":
+      return "Assinatura expirada (relógio fora)";
+    case "3":
+      return "Assinatura inválida";
+    default:
+      return undefined;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                            REQUEST INTERCEPTOR                             */
 /* -------------------------------------------------------------------------- */
@@ -169,7 +219,10 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    console.log("error request", error);
+    return Promise.reject(error);
+  },
 );
 
 /* -------------------------------------------------------------------------- */
@@ -184,10 +237,12 @@ api.interceptors.response.use(
 
     const status = error.response?.status;
     const message = error.response?.data?.message;
+    const blockMessage =
+      typeof error.response?.data?.erro === "string"
+        ? error.response?.data?.erro
+        : undefined;
 
     const hasToken = !!getAuthToken();
-
-  
 
     if (
       status === 401 &&
@@ -198,6 +253,18 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       showSessionExpiredAlert();
+    } else if (status === 403) {
+      const blockedReason = getBlockedReasonFromErro(blockMessage);
+
+      if (blockedReason) {
+        showBlockedAlert(blockedReason);
+      } else if (blockMessage || message) {
+        showForbiddenAlert(blockMessage ?? message);
+      } else {
+        showForbiddenAlert("Requisição não autorizada.");
+      }
+    } else if (status === 429) {
+      showRateLimitAlert("Muitas requisições na mesma rota");
     } else if (status && status >= 500) {
       showServerErrorAlert();
     } else if (error.code === "ECONNABORTED") {

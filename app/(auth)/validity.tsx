@@ -6,7 +6,7 @@ import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -25,7 +25,7 @@ const Validity: React.FC = () => {
   const { setCpfValid } = useAuthStore((state) => state);
 
   const cpfRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("41490671803");
+  const [cpf, setCpf] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
 

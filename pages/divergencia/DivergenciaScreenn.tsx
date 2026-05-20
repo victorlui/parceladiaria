@@ -1,5 +1,11 @@
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
-import React, { useState } from "react";
+import { Etapas, StatusCadastro } from "@/utils";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -7,27 +13,28 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { useAlerts } from "@/components/useAlert";
+import Svg, { Circle } from "react-native-svg";
+import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
+import PulsingImageLoader from "../register/components/PulsingImageLoader";
+import ExpiredDocument from "./components/ExpiredDocument";
 import ItemDivergente from "./components/ItemDivergente";
 import SendDocument, { type Selected } from "./components/SendDocument";
-import { uploadDocumentService } from "./service/upload";
-import PulsingImageLoader from "../register/components/PulsingImageLoader";
-import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import Openfinance from "./Openfinance";
-import { updateUserService } from "@/services/register";
-import { Etapas, StatusCadastro } from "@/utils";
-import { router } from "expo-router";
-import { FontAwesome5 } from "@expo/vector-icons";
-import Svg, { Circle } from "react-native-svg";
-import ExpiredDocument from "./components/ExpiredDocument";
+import { uploadDocumentService } from "./service/upload";
+import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
 
 const DivergenciaScreen: React.FC = () => {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
   const { data, clean } = useRegisterStore();
-  const divergencias = safeParseArray(data?.divergencias || "[]");
+  const divergencias = safeParseArray(data?.divergencias || "[]")
+    .map((value: any) => {
+      if (typeof value === "string") return value;
+      if (typeof value?.key === "string") return value.key;
+      if (typeof value?.item === "string") return value.item;
+      return "";
+    })
+    .filter((value: string) => Boolean(value));
   const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
   const [item, setItem] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<
@@ -35,8 +42,22 @@ const DivergenciaScreen: React.FC = () => {
   >({});
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
-  const onSelect = (item: any) => {
-    setItem(item);
+
+  const isMountedRef = useRef(true);
+  const isUploadingRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const onSelect = (nextItem: any) => {
+    const next =
+      typeof nextItem === "string" ? nextItem : String(nextItem ?? "");
+    setItem(next);
   };
 
   const totalDocumentos = divergencias.length;
@@ -47,8 +68,7 @@ const DivergenciaScreen: React.FC = () => {
     return Boolean(selectedFiles[documentKey]?.key);
   }).length;
 
-  const isAllSelected =
-    divergencias.length > 0 && enviados === totalDocumentos;
+  const isAllSelected = divergencias.length > 0 && enviados === totalDocumentos;
 
   const checkProgress = 0.75;
   const checkRingSize = 64;
@@ -58,23 +78,112 @@ const DivergenciaScreen: React.FC = () => {
   const checkRingDashoffset =
     checkRingCircumference * (1 - Math.max(0, Math.min(1, checkProgress)));
 
-  const uploadDocument = async (selected: Selected | null) => {
-    if (!selected || !item) return;
+  const normalizeSelected = (value: any): Selected | null => {
+    const rawUri = typeof value?.uri === "string" ? value.uri : "";
+    if (!rawUri) return null;
+
+    const uri = rawUri.trim();
+    if (!uri) return null;
+
+    const nameFromUri =
+      uri.split("?")[0].split("#")[0].split("/").pop()?.trim() || "arquivo";
+    const name =
+      typeof value?.name === "string" && value.name.trim()
+        ? value.name.trim()
+        : nameFromUri;
+
+    const rawMimeType =
+      typeof value?.mimeType === "string" ? value.mimeType.trim() : "";
+    const mimeType =
+      rawMimeType ||
+      (name.toLowerCase().endsWith(".pdf")
+        ? "application/pdf"
+        : name.toLowerCase().endsWith(".mp4") ||
+            name.toLowerCase().endsWith(".mov") ||
+            name.toLowerCase().endsWith(".m4v")
+          ? "video/mp4"
+          : "image/jpeg");
+
+    const type: Selected["type"] =
+      value?.type === "pdf" ||
+      value?.type === "image" ||
+      value?.type === "video"
+        ? value.type
+        : mimeType.includes("pdf")
+          ? "pdf"
+          : mimeType.startsWith("video/")
+            ? "video"
+            : "image";
+
+    return { uri, name, mimeType, type };
+  };
+
+  const extractFaceSelected = (payload: any): Selected | null => {
+    const candidate = payload?.file?.uri
+      ? payload.file
+      : payload?.file?.file?.uri
+        ? payload.file.file
+        : payload?.data?.file?.uri
+          ? payload.data.file
+          : payload?.data?.file?.file?.uri
+            ? payload.data.file.file
+            : null;
+
+    if (!candidate) return null;
+
+    const selected = normalizeSelected({
+      uri: candidate.uri,
+      name: candidate.name || `face_${Date.now()}.jpg`,
+      mimeType: candidate.mimeType || "image/jpeg",
+      type: "image",
+    });
+    return selected;
+  };
+
+  const uploadDocument = async (
+    selected: Selected | null,
+    documentKey?: string,
+  ) => {
+    const currentItem =
+      typeof (documentKey ?? item) === "string"
+        ? (documentKey ?? item)
+        : String(documentKey ?? item ?? "");
+    const normalized = normalizeSelected(selected);
+
+    if (!normalized || !currentItem) {
+      showWarning("Atenção", "Selecione um arquivo válido antes de continuar.");
+      return;
+    }
+
+    if (isUploadingRef.current) return;
+    isUploadingRef.current = true;
 
     setLoading(true);
     try {
-      const url = await uploadDocumentService(selected);
-      const selectedForPreview: Selected = { ...selected, uri: url };
+      const url = await uploadDocumentService(normalized);
+      if (!url || typeof url !== "string") {
+        throw new Error("Não foi possível enviar o arquivo.");
+      }
 
+      await updateUserService({
+        request: { [currentItem]: url },
+      });
+
+      if (!isMountedRef.current) return;
       setSelectedFiles((prev) => ({
         ...prev,
-        [item]: { key: url, selected: selectedForPreview },
+        [currentItem]: { key: url, selected: normalized },
       }));
       setItem("");
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      showError(
+        "Erro",
+        error?.message ||
+          "Não foi possível enviar os documentos. Tente novamente.",
+      );
     } finally {
-      setLoading(false);
+      isUploadingRef.current = false;
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
@@ -92,24 +201,10 @@ const DivergenciaScreen: React.FC = () => {
       return;
     }
 
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setLoadingSubmit(true);
     try {
-      for (const [key, file] of Object.entries(selectedFiles)) {
-        if (key === "openfinance") {
-          continue;
-        }
-        const uploadedUrl = file.key;
-        if (!uploadedUrl) {
-          continue;
-        }
-
-        const mappedKey = key === "ganhos_app" ? "video_perfil_app" : key;
-
-        await updateUserService({
-          request: { [mappedKey]: uploadedUrl },
-        });
-      }
-
       await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
       showSuccess(
         "Sucesso",
@@ -126,71 +221,94 @@ const DivergenciaScreen: React.FC = () => {
           "Não foi possível enviar os documentos. Tente novamente.",
       );
     } finally {
-      setLoadingSubmit(false);
+      isSubmittingRef.current = false;
+      if (isMountedRef.current) setLoadingSubmit(false);
     }
   };
 
   if (loading) {
     return (
-      <PulsingImageLoader
-        source={require("@/assets/images/logo-verde.png")}
-        text="Enviando arquivo..."
-      />
+      <>
+        <AlertDisplay />
+        <PulsingImageLoader
+          source={require("@/assets/images/logo-verde.png")}
+          text="Enviando arquivo..."
+        />
+      </>
     );
   }
 
   if (loadingSubmit) {
     return (
-      <PulsingImageLoader
-        source={require("@/assets/images/logo-verde.png")}
-        text="Enviando documentos..."
-      />
+      <>
+        <AlertDisplay />
+        <PulsingImageLoader
+          source={require("@/assets/images/logo-verde.png")}
+          text="Enviando documentos..."
+        />
+      </>
     );
   }
 
   if (item && item === "openfinance") {
     return (
-      <Openfinance
-        back={() => setItem("")}
-        onConnected={() => {
-          setSelectedFiles((prev) => ({
-            ...prev,
-            openfinance: { key: "connected" },
-          }));
-          showSuccess("Sucesso", "Open Finance conectado com sucesso.");
-        }}
-      />
+      <>
+        <AlertDisplay />
+        <Openfinance
+          back={() => setItem("")}
+          onConnected={() => {
+            setSelectedFiles((prev) => ({
+              ...prev,
+              openfinance: { key: "connected" },
+            }));
+            showSuccess("Sucesso", "Open Finance conectado com sucesso.");
+          }}
+        />
+      </>
     );
   }
 
   if (item && item !== "face" && item !== "openfinance") {
     return (
-      <SendDocument
-        item={item}
-        initialSelected={getInitialSelectedForItem(item, selectedFiles)}
-        back={() => setItem("")}
-        onSubmit={uploadDocument}
-      />
+      <>
+        <AlertDisplay />
+        <SendDocument
+          item={item}
+          initialSelected={getInitialSelectedForItem(item, selectedFiles)}
+          back={() => setItem("")}
+          onSubmit={uploadDocument}
+        />
+      </>
     );
   }
 
   if (item && item === "face") {
     return (
-      <FaceCaptureWebView
-        visible
-        onSuccess={(file: any) => uploadDocument(file.file)}
-        onClose={() => setItem("")}
-      />
+      <>
+        <AlertDisplay />
+        <FaceCaptureWebView
+          visible
+          onSuccess={(payload: any) => {
+            setItem("");
+            const faceSelected = extractFaceSelected(payload);
+            if (!faceSelected) {
+              showError(
+                "Erro",
+                "Não foi possível obter a captura. Tente novamente.",
+              );
+              return;
+            }
+            uploadDocument(faceSelected, "face");
+          }}
+          onClose={() => setItem("")}
+        />
+      </>
     );
   }
 
-  if(data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
-    return (
-      <ExpiredDocument />
-    )
+  if (data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
+    return <ExpiredDocument />;
   }
-
-
 
   const renderDocumentRequests = () => {
     return divergencias.map((documentKey: string, index: number) => {
@@ -205,8 +323,6 @@ const DivergenciaScreen: React.FC = () => {
     });
   };
 
-  console.log("isPrimeiraAnalise", isPrimeiraAnalise);
-
   return (
     <SafeAreaView style={styles.container}>
       <AlertDisplay />
@@ -219,8 +335,8 @@ const DivergenciaScreen: React.FC = () => {
           <>
             <Text style={styles.title}>Documentos Divergentes</Text>
             <Text style={styles.subtitle}>
-              Alguns documentos precisam ser reenviados para concluir a validação.
-              Verifique os itens abaixo e envie novamente.
+              Alguns documentos precisam ser reenviados para concluir a
+              validação. Verifique os itens abaixo e envie novamente.
             </Text>
 
             <View>

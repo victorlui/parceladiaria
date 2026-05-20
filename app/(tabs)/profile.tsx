@@ -1,11 +1,12 @@
-import React from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { useAuthStore } from "@/store/auth";
-import { SafeAreaView } from "react-native-safe-area-context";
 import StatusBar from "@/components/ui/StatusBar";
-import { formatCelular, formatCEP, formatCPF } from "@/utils/formats";
 import { Colors } from "@/constants/Colors";
+import ContactItem from "@/pages/profile/components/ContactItem";
+import { useAuthStore } from "@/store/auth";
+import { formatCelular, formatCEP, formatCPF } from "@/utils/formats";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({
   title,
@@ -72,8 +73,28 @@ const ProfileTab: React.FC = () => {
           <InfoRow
             icon="call-outline"
             label="Chave PIX"
-            value={user?.pix || ""}
+            value={user?.pix || "Não cadastrada"}
           />
+        </SectionCard>
+
+        <SectionCard title="Contato e Segurança">
+          <ContactItem
+            icon="call"
+            type="phone"
+            value={user?.phone || ""}
+            verified={user?.phone_verificado}
+          />
+          <ContactItem
+            icon="mail-outline"
+            type="email"
+            value={user?.email || ""}
+            verified={user?.email_verificado}
+          />
+          <View style={styles.otpNote}>
+            <Text style={styles.otpText}>
+              Em qualquer ação você recebe um código (OTP) para confirmar.
+            </Text>
+          </View>
         </SectionCard>
 
         <SectionCard title="Endereço">
@@ -158,5 +179,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#0F172A",
     fontWeight: "500",
+  },
+
+  otpNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+  },
+  otpText: {
+    flex: 1,
+    textAlign: "center",
+    color: Colors.gray.text,
+    fontSize: 14,
+    lineHeight: 20,
+    maxWidth: 320,
   },
 });

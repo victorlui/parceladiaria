@@ -1,13 +1,13 @@
-import { formatarData } from "@/utils/formats";
-import { useCallback, useState } from "react";
-import { BackHandler, Keyboard } from "react-native";
-import api from "@/services/api";
 import { useAlerts } from "@/components/useAlert";
+import api from "@/services/api";
 import { checkCPF } from "@/services/check-cpf";
 import { useRegisterStore } from "@/store/register_new";
-import { router, useFocusEffect } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
 import { Etapas } from "@/utils";
+import { formatarData } from "@/utils/formats";
+import { useNavigation } from "@react-navigation/native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { BackHandler, Keyboard } from "react-native";
 import { useRegisterQuery } from "../query/useRegisterQuerys";
 import { Address } from "../types/address";
 
@@ -232,18 +232,30 @@ export function useRegisterHooks() {
     setIsLoading(true);
 
     try {
+      const profissao = String(item?.label ?? "").trim();
+
+      if (!profissao) {
+        showError("Atenção", "Selecione uma profissão válida");
+        return;
+      }
+
+      await mutateAsync({
+        request: {
+          etapa: Etapas.REGISTRANDO_PROFISSAO,
+          profissao,
+        },
+      });
+
       const etapa = item.id === "comerciante" ? Etapas.CNPJ : Etapas.LIMITE;
       const nextStep = etapa === Etapas.CNPJ ? 9 : 5;
 
-      const request = {
-        etapa,
-        profissao: item.label,
-      };
+      try {
+        await mutateAsync({ request: { etapa } });
+      } catch {}
 
-      await mutateAsync({ request });
       setData({
         ...data,
-        profissao: item.label,
+        profissao,
       });
       setIsLoading(false);
       setStep(nextStep);

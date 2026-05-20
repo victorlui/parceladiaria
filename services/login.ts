@@ -1,7 +1,7 @@
-import { useNotificationsStore } from "@/store/notifications";
-import api from "./api";
 import { ApiUserResponse } from "@/interfaces/login_inteface";
 import { useAuthStore } from "@/store/auth";
+import { useNotificationsStore } from "@/store/notifications";
+import api from "./api";
 
 export async function login(
   cpf: string,
