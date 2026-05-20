@@ -34,7 +34,7 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "8"
+      "buildNumber": "9"
     },
     "android": {
       "versionCode": 17,
@@ -156,7 +156,7 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.1.2",
+    "runtimeVersion": "1.1.4",
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557",
       "checkAutomatically": "ON_LOAD",
