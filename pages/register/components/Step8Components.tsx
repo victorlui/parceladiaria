@@ -1,9 +1,9 @@
-import React from "react";
-import { Address } from "../types/address";
+import ButtonComponent from "@/components/ui/Button";
+import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { useRegisterAddress } from "../hooks/useRegisterAddress";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import React from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -11,7 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import ButtonComponent from "@/components/ui/Button";
+import { useRegisterAddress } from "../hooks/useRegisterAddress";
+import { Address } from "../types/address";
 
 interface Props {
   onNext: (address: Address) => void | Promise<void>;
@@ -37,33 +38,37 @@ const Step8Components: React.FC<Props> = ({
 
   if (confirmAddress) {
     return (
-      <View style={styles.confirmCard}>
-        <Text style={styles.confirmTitle}>Confirmar endereço</Text>
+      <>
+        <View style={styles.confirmCard}>
+          <Text style={styles.confirmTitle}>Confirmar endereço</Text>
 
-        <View style={styles.addressContainer}>
-          <Text style={styles.addressText}>
-            {form.endereco}, {form.numero || "S/N"}
-          </Text>
+          <View style={styles.addressContainer}>
+            <Text style={styles.addressText}>
+              {form.endereco}, {form.numero || "S/N"}
+            </Text>
 
-          <Text style={styles.addressText}>{form.bairro}</Text>
+            <Text style={styles.addressText}>{form.bairro}</Text>
 
-          <Text style={styles.addressText}>
-            {form.cidade} - {form.estado}
-          </Text>
+            <Text style={styles.addressText}>
+              {form.cidade} - {form.estado}
+            </Text>
 
-          <Text style={styles.addressText}>CEP: {form.cep}</Text>
+            <Text style={styles.addressText}>CEP: {form.cep}</Text>
+          </View>
+
+          <TouchableOpacity style={styles.confirmButton} onPress={onSubmit}>
+            <Text style={styles.confirmButtonText}>Confirmar endereço</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.changeButton}
+            onPress={() => setConfirmAddress(false)}
+          >
+            <Text style={styles.changeButtonText}>Alterar endereço</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.confirmButton} onPress={onSubmit}>
-          <Text style={styles.confirmButtonText}>Confirmar endereço</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.changeButton}
-          onPress={() => setConfirmAddress(false)}
-        >
-          <Text style={styles.changeButtonText}>Alterar endereço</Text>
-        </TouchableOpacity>
-      </View>
+        <ButtonChat />
+      </>
     );
   }
 
@@ -183,6 +188,8 @@ const Step8Components: React.FC<Props> = ({
           form.numero === ""
         }
       />
+
+      <ButtonChat />
     </>
   );
 };

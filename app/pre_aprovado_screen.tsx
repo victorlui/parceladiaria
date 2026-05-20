@@ -1,14 +1,14 @@
 import ChamadaVideoScreen from "@/components/pre_aprovado/chamada_video_screen";
 import TermsFinalScreen from "@/components/pre_aprovado/terms_final_screen";
 import api from "@/services/api";
+import { useRegisterStore } from "@/store/register_new";
 import { convertData } from "@/utils";
+import { tratarEstado } from "@/utils/validation";
+import * as Network from "expo-network";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Network from "expo-network";
-import { tratarEstado } from "@/utils/validation";
-import { useRegisterStore } from "@/store/register_new";
 
 const PreAprovado: React.FC = () => {
   const { data: registerData } = useRegisterStore();

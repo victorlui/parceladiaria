@@ -1,4 +1,5 @@
 import ButtonComponent from "@/components/ui/Button";
+import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { validateCNPJ } from "@/utils/validation";
@@ -43,6 +44,8 @@ const StepCNPJComponents: React.FC<StepCNPJProps> = ({ onNext, isLoading }) => {
         disabled={isLoading || !CNPJ || !!validateCNPJ(CNPJ)}
         onPress={submit}
       />
+
+      <ButtonChat />
     </>
   );
 };

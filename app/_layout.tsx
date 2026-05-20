@@ -39,6 +39,8 @@ const PUBLIC_ROUTES = [
   "/verification",
 
   "/divergencia_screen",
+
+  "/chat",
 ];
 
 export default function RootLayout() {
@@ -135,7 +137,8 @@ export default function RootLayout() {
       ),
     ).toString();
 
-    const normalized = queryString.length > 0 ? `${adjustedPath}?${queryString}` : adjustedPath;
+    const normalized =
+      queryString.length > 0 ? `${adjustedPath}?${queryString}` : adjustedPath;
 
     const firstSegment = segments[0];
 

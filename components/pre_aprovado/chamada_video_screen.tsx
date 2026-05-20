@@ -1,5 +1,7 @@
-import React, { useRef, useState } from "react";
 import { Colors } from "@/constants/Colors";
+import { useAuthStore } from "@/store/auth";
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Linking,
@@ -11,13 +13,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuthStore } from "@/store/auth";
-import { router } from "expo-router";
 import { WebView } from "react-native-webview";
 
+import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
-import { useRegisterStore } from "@/store/register_new";
+import ButtonChat from "../ui/ButtonChat";
 
 const ChamadaVideoScreen: React.FC = () => {
   const { logout } = useAuthStore((state) => state);
@@ -322,6 +323,8 @@ const ChamadaVideoScreen: React.FC = () => {
             </View>
           </View>
         </View>
+
+        <ButtonChat botton={320} />
 
         <View style={{ gap: 10 }}>
           <TouchableOpacity

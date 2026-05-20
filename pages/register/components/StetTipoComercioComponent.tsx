@@ -1,4 +1,5 @@
 import ButtonComponent from "@/components/ui/Button";
+import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -47,6 +48,8 @@ const StetTipoComercioComponent: React.FC<StetTipoComercioProps> = ({
         disabled={isLoading || !businessType}
         onPress={submit}
       />
+
+      <ButtonChat />
     </>
   );
 };

@@ -1,4 +1,5 @@
 import ButtonComponent from "@/components/ui/Button";
+import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { useRegisterStore } from "@/store/register_new";
@@ -44,6 +45,8 @@ const Step6Component: React.FC<Props> = ({ onNext, isLoading }) => {
         loading={isLoading}
         iconLeft={null}
       />
+
+      <ButtonChat />
     </>
   );
 };

@@ -1,4 +1,9 @@
+import ButtonComponent from "@/components/ui/Button";
+import ButtonChat from "@/components/ui/ButtonChat";
+import InputComponent from "@/components/ui/Input";
+import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
+import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
@@ -11,10 +16,6 @@ import {
 } from "react-native";
 import { PIX_OPTIONS, PixType, PixValue } from "../utils/pix";
 import AlertsTextPix from "./AlertsTextPix";
-import { useRegisterStore } from "@/store/register_new";
-import ButtonComponent from "@/components/ui/Button";
-import InputComponent from "@/components/ui/Input";
-import { useAlerts } from "@/components/useAlert";
 
 interface Props {
   onNext: (pixValue: any, selected: PixType | null) => void | Promise<void>;
@@ -83,6 +84,8 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           iconRight={null}
           loading={isLoading}
         />
+
+        <ButtonChat />
       </>
     );
   }
@@ -123,6 +126,8 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           iconRight={null}
           loading={isLoading}
         />
+
+        <ButtonChat />
       </>
     );
   }
@@ -148,6 +153,8 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           </View>
         </TouchableOpacity>
       ))}
+
+      <ButtonChat />
     </>
   );
 };

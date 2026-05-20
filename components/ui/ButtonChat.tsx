@@ -4,9 +4,13 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, View } from "react-native";
 
-const ButtonChat: React.FC = () => {
+interface Prop {
+  botton?: number;
+}
+
+const ButtonChat: React.FC<Prop> = ({ botton = 100 }) => {
   return (
-    <View style={{ position: "absolute", bottom: 20, right: 20 }}>
+    <View style={{ position: "absolute", bottom: botton, right: 20 }}>
       <Pressable
         style={{
           backgroundColor: Colors.green.primary,

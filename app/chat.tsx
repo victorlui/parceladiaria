@@ -1,11 +1,13 @@
-import React from "react";
-import { MenuIAChat } from "@menuia/react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
+import { useRegisterStore } from "@/store/register_new";
+import { MenuIAChat } from "@menuia/react-native";
+import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Chat: React.FC = () => {
   const { user, userRegister } = useAuthStore();
+  const { data } = useRegisterStore();
   const { pushToken } = useNotificationsStore.getState();
 
   const currentUser = user || userRegister;
@@ -13,7 +15,7 @@ const Chat: React.FC = () => {
   let widgetId = "75968a3e-7e74-41af-9bd2-453797409da8";
 
   if (currentUser?.type === "lead") {
-    widgetId = "75968a3e-7e74-41af-9bd2-453797409da8";
+    widgetId = "b1a40bb3-47ef-437d-b32a-925af5ff6810";
   }
 
   if (currentUser?.type === "client") {
@@ -30,11 +32,11 @@ const Chat: React.FC = () => {
         inline
         primaryColor="#32e10e"
         metadata={{
-          name: currentUser?.nome || "",
-          email: currentUser?.email || "",
-          phone: currentUser?.whatsapp || "",
+          name: data?.nome || "",
+          email: data?.email || "",
+          phone: data?.whatsapp || "",
         }}
-        customFields={{ cpf: currentUser?.cpf || "" }}
+        customFields={{ cpf: data?.cpf || "" }}
         expoPushToken={pushToken || ""}
       />
     </SafeAreaView>
