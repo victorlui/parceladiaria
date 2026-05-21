@@ -1,7 +1,5 @@
-import { useRegisterHooks } from "./hooks/useRegisterHooks";
 import { useState } from "react";
-import { getSteps } from "./utils/steps";
-import LayoutRegister from "@/layouts/layout-register";
+import AffiliateCode from "./AffiliateCode";
 import Step1Component from "./components/Step1Component";
 import Step2Component from "./components/Step2Component";
 import Step3Component from "./components/Step3Component";
@@ -12,7 +10,9 @@ import Step7Component from "./components/Step7Component";
 import Step8Components from "./components/Step8Components";
 import StepCNPJComponents from "./components/StepCNPJComponent";
 import StetTipoComercioComponent from "./components/StetTipoComercioComponent";
-import AffiliateCode from "./AffiliateCode";
+import { useRegisterHooks } from "./hooks/useRegisterHooks";
+import LayoutRegister from "./layouts/layout-register";
+import { getSteps } from "./utils/steps";
 
 const Step1Register: React.FC = () => {
   const {
@@ -28,6 +28,7 @@ const Step1Register: React.FC = () => {
     handleNextStepCNPJ,
     handleNextStepBussinesType,
     handleNextStepAffiliateCode,
+    handlePrevStep,
     isLoading,
   } = useRegisterHooks();
 
@@ -45,6 +46,8 @@ const Step1Register: React.FC = () => {
         currentStep.subtitle ??
         "Para iniciar seu cadastro, informe seu CPF e data de nascimento."
       }
+      showBackButton={step > 0}
+      onBack={handlePrevStep}
     >
       {/* Gravando cpf e data de nascimento  */}
       {step === 0 && (

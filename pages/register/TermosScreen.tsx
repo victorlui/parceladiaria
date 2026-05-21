@@ -1,7 +1,6 @@
 import CreditProposalScreen from "@/components/CreditProposal";
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
-import LayoutRegister from "@/layouts/layout-register";
 import api from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf, maskPhone } from "@/utils/mask";
@@ -14,12 +13,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import LayoutRegister from "./layouts/layout-register";
 
-import PulsingImageLoader from "./components/PulsingImageLoader";
-import FinalScreenComponent from "./components/FinalScreenComponent";
-import { useRegisterQuery } from "./query/useRegisterQuerys";
 import { Etapas } from "@/utils";
 import { router, useFocusEffect, useNavigation } from "expo-router";
+import FinalScreenComponent from "./components/FinalScreenComponent";
+import PulsingImageLoader from "./components/PulsingImageLoader";
+import { useRegisterQuery } from "./query/useRegisterQuerys";
 
 const TermosScreen: React.FC = () => {
   const { mutate, isPending, isSuccess } = useRegisterQuery();
@@ -127,6 +127,8 @@ const TermosScreen: React.FC = () => {
     <LayoutRegister
       title="Quase Lá!"
       subtitle="Para finalizar, confira os detalhes e aceite o contrato"
+      showBackButton
+      onBack={onBackPress}
     >
       <View style={styles.propostaContainer}>
         <Text style={[styles.propostaTitle, { marginBottom: 0 }]}>

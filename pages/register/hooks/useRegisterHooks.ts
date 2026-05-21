@@ -417,6 +417,7 @@ export function useRegisterHooks() {
     handleNextStepCNPJ,
     handleNextStepBussinesType,
     handleNextStepAffiliateCode,
+    handlePrevStep: onBackPress,
     isLoading,
     step,
     handleNextStep,

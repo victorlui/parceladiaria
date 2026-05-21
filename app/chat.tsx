@@ -10,9 +10,9 @@ const Chat: React.FC = () => {
   const { data } = useRegisterStore();
   const { pushToken } = useNotificationsStore.getState();
 
-  const currentUser = user || userRegister;
+  const currentUser = user || userRegister || data;
 
-  let widgetId = "75968a3e-7e74-41af-9bd2-453797409da8";
+  let widgetId = "b1a40bb3-47ef-437d-b32a-925af5ff6810";
 
   if (currentUser?.type === "lead") {
     widgetId = "b1a40bb3-47ef-437d-b32a-925af5ff6810";
@@ -28,15 +28,15 @@ const Chat: React.FC = () => {
       style={{ flex: 1, backgroundColor: "black" }}
     >
       <MenuIAChat
-        widgetId={widgetId}
+        widgetId={widgetId || ""}
         inline
         primaryColor="#32e10e"
         metadata={{
-          name: data?.nome || "",
-          email: data?.email || "",
-          phone: data?.whatsapp || "",
+          name: currentUser?.nome || "",
+          email: currentUser?.email || "",
+          phone: currentUser?.whatsapp || "",
         }}
-        customFields={{ cpf: data?.cpf || "" }}
+        customFields={{ cpf: currentUser?.cpf || "" }}
         expoPushToken={pushToken || ""}
       />
     </SafeAreaView>

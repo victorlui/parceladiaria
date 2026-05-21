@@ -8,7 +8,7 @@ interface Prop {
   botton?: number;
 }
 
-const ButtonChat: React.FC<Prop> = ({ botton = 100 }) => {
+const ButtonChat: React.FC<Prop> = ({ botton = 10 }) => {
   return (
     <View style={{ position: "absolute", bottom: botton, right: 20 }}>
       <Pressable
