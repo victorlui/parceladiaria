@@ -66,6 +66,8 @@ export function useLoginHook() {
       const etapa = data?.data.etapa;
       const status = data?.data.status;
 
+      console.log("data login", data);
+
       if (type === "lead") {
         setToken(data?.token);
         const response = await api.get(`/v1/client`);
@@ -145,7 +147,6 @@ export function useLoginHook() {
       }
 
       if (type === "client") {
-        useAuthStore.getState().setToken(data?.token);
         const response = await api.get(`/v1/client/data/info`);
         const user: ApiUserData = {
           nome: response.data.data.name,

@@ -37,10 +37,13 @@ const PUBLIC_ROUTES = [
   "/validity",
 
   "/verification",
-
+  "/pre_aprovado_screen",
+  "/reanalise_screen",
+  "/analise_screen",
   "/divergencia_screen",
 
   "/chat",
+  "/recusado_screen",
 ];
 
 export default function RootLayout() {
@@ -79,6 +82,7 @@ export default function RootLayout() {
 
   // Ref para monitorar se a inicialização atual veio de um app totalmente encerrado
   const isColdStartRef = useRef<boolean>(false);
+  const authRedirectTargetRef = useRef<string | null>(null);
 
   // =========================================================
   // HOOKS
@@ -180,7 +184,7 @@ export default function RootLayout() {
 
         const isLogged = !!currentToken && !!currentUser?.isLoggedIn;
 
-        console.log("HANDLE NOTIFICATION ROUTE", route, "IS LOGGED", isLogged);
+        console.log("NOTIFICATION_REDIRECT", { route, isLogged });
 
         // =====================================================
         // NÃO LOGADO
@@ -272,7 +276,7 @@ export default function RootLayout() {
 
           const route = normalizeNotificationRoute(url);
 
-          console.log("CLICK ROUTE", route);
+          console.log("NOTIFICATION_REDIRECT", { source: "click", route });
 
           if (!route) return;
 
@@ -315,7 +319,7 @@ export default function RootLayout() {
 
         const route = normalizeNotificationRoute(url);
 
-        console.log("COLD START ROUTE DETECTED", route);
+        console.log("NOTIFICATION_REDIRECT", { source: "cold_start", route });
 
         if (!route) return;
 
@@ -403,6 +407,18 @@ export default function RootLayout() {
 
   const isBootstrapping = isLoading || !didRestoreToken;
 
+  useEffect(() => {
+    console.log("ROUTE_CHANGED", { pathname });
+  }, [pathname]);
+
+  useEffect(() => {
+    console.log("AUTH_CHANGED", {
+      hasToken: !!token,
+      hasUser: !!user,
+      isLoggedIn: !!user?.isLoggedIn,
+    });
+  }, [token, user]);
+
   // =========================================================
   // AUTH GUARD + REDIRECIONAMENTO DE NOTIFICAÇÃO (SEGURO)
   // =========================================================
@@ -415,6 +431,10 @@ export default function RootLayout() {
     try {
       const isPublicRoute = isPublicPathname(pathname);
 
+      if (authRedirectTargetRef.current === pathname) {
+        authRedirectTargetRef.current = null;
+      }
+
       // =====================================================
       // NÃO LOGADO
       // =====================================================
@@ -423,7 +443,12 @@ export default function RootLayout() {
         setIsNavigatingNotification(false);
         if (isPublicRoute) return;
 
-        if (pathname !== "/login") {
+        if (
+          pathname !== "/login" &&
+          authRedirectTargetRef.current !== "/login"
+        ) {
+          console.log("REDIRECT_TO_AUTH", { from: pathname, to: "/login" });
+          authRedirectTargetRef.current = "/login";
           router.replace("/login");
         }
 
@@ -450,6 +475,11 @@ export default function RootLayout() {
             InteractionManager.runAfterInteractions(() => {
               requestAnimationFrame(() => {
                 try {
+                  console.log("NOTIFICATION_REDIRECT", {
+                    source: "pending",
+                    from: pathname,
+                    to: routeToNavigate,
+                  });
                   router.push(routeToNavigate as any);
                 } catch (err) {
                   console.error(
@@ -467,6 +497,13 @@ export default function RootLayout() {
           return;
         }
 
+        if (
+          authRedirectTargetRef.current &&
+          pathname !== authRedirectTargetRef.current
+        ) {
+          return;
+        }
+
         // Já está em rota privada protegida, não faz nada
         if (!isPublicRoute && pathname !== "/") {
           return;
@@ -477,7 +514,9 @@ export default function RootLayout() {
             ? "/(tabs)/home"
             : statusRedirectMap[user.status as keyof typeof statusRedirectMap];
 
-        if (pathname !== route) {
+        if (pathname !== route && authRedirectTargetRef.current !== route) {
+          console.log("REDIRECT_TO_APP", { from: pathname, to: route });
+          authRedirectTargetRef.current = route;
           router.replace(route as any);
         }
       }
