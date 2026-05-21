@@ -149,29 +149,33 @@ export function useLoginHook() {
       }
 
       if (type === "client") {
+        useAuthStore.getState().setToken(data?.token);
         const response = await api.get(`/v1/client/data/info`);
+        const userData = response.data.data;
         const user: ApiUserData = {
-          nome: response.data.data.name,
-          email: response.data.data.email,
-          cpf: response.data.data.cpf,
-          cidade: response.data.data.city,
-          bairro: response.data.data.neighborhood,
-          status: response.data.data.status,
-          estado: response.data.data.uf,
-          endereco: response.data.data.address,
-          msg_painel: response.data.data.msg_painel,
-          msg_status: response.data.data.msg_status,
-          lastLoan: data?.data.lastLoan,
-          zip_code: response.data.data.zip_code,
-          phone: response.data.data.phone,
-          pix: response.data.data.chave_pix ?? "",
-          status_doc: response.data.data.status_doc,
+          nome: userData.name,
+          email: userData.email,
+          cpf: userData.cpf,
+          cidade: userData.city,
+          bairro: userData.neighborhood,
+          status: userData.status,
+          estado: userData.uf,
+          endereco: userData.address,
+          msg_painel: userData.msg_painel,
+          msg_status: userData.msg_status,
+          lastLoan: data?.data?.lastLoan,
+          zip_code: userData.zip_code,
+          phone: userData.phone,
+          pix: userData.chave_pix ?? "",
+          status_doc: userData.status_doc,
           isLoggedIn: true,
-          observacoes: response.data.data.observacoes,
-          email_verificado: response.data.data.email_verificado,
-          phone_verificado: response.data.data.phone_verificado,
+          observacoes: userData.observacoes,
+          email_verificado: userData.email_verificado,
+          phone_verificado: userData.phone_verificado,
         };
-        useAuthStore.getState().login(data?.token, user);
+
+        await useAuthStore.getState().login(data?.token, user);
+
         router.replace("/(tabs)/home");
         return;
       }
@@ -181,8 +185,11 @@ export function useLoginHook() {
       if (status === 403 || status === 429) {
         return;
       }
-
-      const errorMessage = error?.message || "Senha incorreta";
+      console.log("error", error.data);
+      const errorMessage =
+        (error.data && error.data.data.error) ||
+        error?.message ||
+        "Senha incorreta";
       showError("Ops!", errorMessage);
     },
   });
