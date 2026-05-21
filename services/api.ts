@@ -106,7 +106,7 @@ function logoutUser() {
 
   if (registerStore.token) {
     registerStore.clean();
-    router.replace("/(register)/step1");
+    router.replace("/login");
     return;
   }
 

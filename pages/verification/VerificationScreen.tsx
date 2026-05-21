@@ -20,14 +20,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLoginHook } from "../login/hooks/useLoginHook";
-import { useRegisterStore } from "@/store/register_new";
 
 const VerificationScreen: React.FC = () => {
   const router = useRouter();
   const { showSuccess, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
   const { data } = useVerificationStore();
-  const { data: registerStoreData } = useRegisterStore();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
@@ -58,7 +56,7 @@ const VerificationScreen: React.FC = () => {
         otp: code,
       });
 
-      if (!registerStoreData?.password) {
+      if (!data?.password) {
         showError(
           "Atenção",
           "Não foi possível recuperar a senha para concluir o login.",
@@ -66,12 +64,13 @@ const VerificationScreen: React.FC = () => {
         return;
       }
 
-      showSuccess("Sucesso", "Código validado com sucesso", () => {
-        loginMutation.mutate({
-          cpf: data?.cpf || "",
-          password: registerStoreData.password || "",
-        });
-      });
+      showSuccess(
+        "Sucesso",
+        "Código validado com sucesso. Entre novamente",
+        () => {
+          router.replace("/login");
+        },
+      );
     } catch (error: any) {
       showError(
         "Atenção",

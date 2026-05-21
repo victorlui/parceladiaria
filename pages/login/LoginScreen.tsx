@@ -33,14 +33,16 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-    if (!validateCPF(cpf)) {
+    const rawCpf = cpf.replace(/\D/g, "");
+    if (!validateCPF(rawCpf)) {
       showError("Atenção", "CPF inválido");
       return;
     }
-    setData({ cpf });
-    setCpf(cpf);
+    console.log("rawCpf", rawCpf);
+    setData({ cpf: rawCpf });
+    setCpf(rawCpf);
     checkCPFMutation.mutate({
-      cpf,
+      cpf: rawCpf,
     });
   };
 
