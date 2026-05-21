@@ -47,7 +47,7 @@ const PUBLIC_ROUTES = [
 export default function RootLayout() {
   const pathname = usePathname() ?? "";
 
-  const { restoreToken, isLoading, user, token, hasHydrated } = useAuthStore();
+  const { restoreToken, isLoading, user, token } = useAuthStore();
 
   const { AlertDisplay } = useAlerts();
 
@@ -403,7 +403,7 @@ export default function RootLayout() {
     [],
   );
 
-  const isBootstrapping = isLoading || !didRestoreToken || !hasHydrated;
+  const isBootstrapping = isLoading || !didRestoreToken;
 
   useEffect(() => {
     console.log("ROUTE_CHANGED", { pathname });
@@ -416,11 +416,6 @@ export default function RootLayout() {
       isLoggedIn: !!user?.isLoggedIn,
     });
   }, [token, user]);
-
-  useEffect(() => {
-    if (!hasHydrated || !didRestoreToken) return;
-    console.log("HYDRATED", { hasHydrated, didRestoreToken });
-  }, [hasHydrated, didRestoreToken]);
 
   // =========================================================
   // AUTH GUARD + REDIRECIONAMENTO DE NOTIFICAÇÃO (SEGURO)

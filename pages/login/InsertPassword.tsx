@@ -47,13 +47,14 @@ const InsertPasswordScreen: React.FC = () => {
     }
 
     try {
-      setData({
-        ...data,
-        password,
-      });
+      const cleanPassword = password.trim();
+      const rawCpf = (data?.cpf ?? "").replace(/\D/g, "");
+      console.log("cleanPassword", cleanPassword);
+      console.log("rawCpf", rawCpf);
+
       loginMutation.mutate({
-        cpf: data?.cpf ?? "",
-        password,
+        cpf: rawCpf,
+        password: cleanPassword,
       });
     } catch {
       showWarning("Atenção", "CPF inválido");

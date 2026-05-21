@@ -29,7 +29,7 @@ export function useLoginHook() {
 
   const checkCPFMutation = useMutation({
     mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
-    onSuccess: ({ data: { type }, message }, variables) => {
+    onSuccess: ({ data: { type }, message }) => {
       if (!type && message === "Sem cadastro") {
         setStep(0);
         router.replace("/(register)/step1");
@@ -49,7 +49,8 @@ export function useLoginHook() {
   const loginMutation = useMutation({
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
-    onSuccess: async (data: any) => {
+    onSuccess: async (data: any, variables) => {
+      console.log("data login", data, variables);
       if ((data as any)?.needs_otp === true) {
         useVerificationStore.getState().handleData({
           needs_otp: true,
@@ -57,6 +58,7 @@ export function useLoginHook() {
           phone_masked: (data as any)?.phone_masked,
           email_masked: (data as any)?.email_masked,
           cpf: (data as any)?.cpf,
+          password: variables.password,
         });
         router.replace("/verification");
         return;
@@ -180,7 +182,8 @@ export function useLoginHook() {
         return;
       }
 
-      showError("Ops!", "Senha incorreta");
+      const errorMessage = error?.message || "Senha incorreta";
+      showError("Ops!", errorMessage);
     },
   });
 
