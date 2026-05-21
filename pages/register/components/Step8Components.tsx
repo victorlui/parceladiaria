@@ -66,8 +66,6 @@ const Step8Components: React.FC<Props> = ({
             <Text style={styles.changeButtonText}>Alterar endereço</Text>
           </TouchableOpacity>
         </View>
-
-        <ButtonChat />
       </>
     );
   }

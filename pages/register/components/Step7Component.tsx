@@ -74,16 +74,18 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           loading={isLoading}
         />
 
-        <ButtonComponent
-          title="Não, corrigir"
-          onPress={() => {
-            setConfirm(false);
-          }}
-          outline
-          iconLeft="close"
-          iconRight={null}
-          loading={isLoading}
-        />
+        {data?.[PIX_OPTIONS[selected].label as PixValue] === "CPF" && (
+          <ButtonComponent
+            title="Não, corrigir"
+            onPress={() => {
+              setConfirm(false);
+            }}
+            outline
+            iconLeft="close"
+            iconRight={null}
+            loading={isLoading}
+          />
+        )}
 
         <ButtonChat />
       </>
@@ -153,8 +155,6 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           </View>
         </TouchableOpacity>
       ))}
-
-      <ButtonChat />
     </>
   );
 };

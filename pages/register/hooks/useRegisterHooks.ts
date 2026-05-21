@@ -76,8 +76,14 @@ export function useRegisterHooks() {
         return;
       }
 
+      const isNewUser = data?.cpf && data.cpf !== cpf;
+
+      if (isNewUser) {
+        setToken(null);
+      }
+
       setData({
-        ...(data || {}),
+        ...(isNewUser ? {} : data || {}),
         cpf,
         nascimento: formattedBirthDate,
       });
@@ -162,6 +168,7 @@ export function useRegisterHooks() {
       const newData = {
         ...data,
       };
+      console.log("hasToken", token);
 
       if (!hasToken) {
         const registerData = {
@@ -176,15 +183,14 @@ export function useRegisterHooks() {
 
         newData.nome = response.data.data.name;
         newData.status = response.data.data.status;
-      } else {
-        await mutateAsync({
-          request: {
-            etapa: Etapas.AFILIADO_CODE,
-            phone: cleanedPhone,
-            whatsapp: cleanedPhone,
-          },
-        });
       }
+
+      await mutateAsync({
+        request: {
+          etapa: Etapas.AFILIADO_CODE,
+          phone: cleanedPhone,
+        },
+      });
 
       setData({
         ...newData,
@@ -194,10 +200,15 @@ export function useRegisterHooks() {
       setStep(3);
       return;
     } catch (error: any) {
-      showWarning(
-        "Erro ao continuar",
-        error.response?.data?.message || "Erro ao verificar código",
-      );
+      console.log("error", error.response?.data?.message || error.message);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        showError("Atenção", error.response.data.message);
+      }
+      return;
     } finally {
       setIsLoading(false);
     }

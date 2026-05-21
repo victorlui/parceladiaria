@@ -1,5 +1,5 @@
-import api from "./api";
 import { Etapas } from "@/utils";
+import api from "./api";
 
 // etapa para criar a senha
 export async function registerService(
@@ -68,10 +68,8 @@ export async function updateUserService({ request }: RequestProps): Promise<{
 }> {
   try {
     const { data } = await api.put("/v1/client/update", request);
-    console.log("data", data);
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
-    console.log("error update service", error.response);
     if (error.response) {
       throw {
         status: error.response.status,

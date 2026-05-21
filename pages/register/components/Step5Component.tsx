@@ -1,6 +1,5 @@
 import ModalTerms from "@/components/config/modal-terms";
 import ButtonComponent from "@/components/ui/Button";
-import ButtonChat from "@/components/ui/ButtonChat";
 import RingLoader from "@/components/ui/RingLoader";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
@@ -132,8 +131,6 @@ const Step5Component: React.FC<Props> = ({ onNext }) => {
           />
         </>
       )}
-
-      <ButtonChat />
     </>
   );
 };

@@ -2,20 +2,22 @@ import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 
 interface Prop {
   botton?: number;
 }
 
-const ButtonChat: React.FC<Prop> = ({ botton = 10 }) => {
+const ButtonChat: React.FC<Prop> = ({
+  botton = Platform.OS === "ios" ? 50 : 10,
+}) => {
   return (
-    <View style={{ position: "absolute", bottom: botton, right: 20 }}>
+    <View style={{ position: "absolute", bottom: botton, right: 40 }}>
       <Pressable
         style={{
           backgroundColor: Colors.green.primary,
-          width: 50,
-          height: 50,
+          width: Platform.OS === "ios" ? 70 : 50,
+          height: Platform.OS === "ios" ? 70 : 50,
           borderRadius: 50,
           alignItems: "center",
           justifyContent: "center",
@@ -24,7 +26,11 @@ const ButtonChat: React.FC<Prop> = ({ botton = 10 }) => {
           router.push("/chat");
         }}
       >
-        <Ionicons name="chatbox-ellipses-outline" size={28} color="#fff" />
+        <Ionicons
+          name="chatbox-ellipses-outline"
+          size={Platform.OS === "ios" ? 32 : 28}
+          color="#fff"
+        />
       </Pressable>
     </View>
   );

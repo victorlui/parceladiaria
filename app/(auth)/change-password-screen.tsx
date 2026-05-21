@@ -1,5 +1,12 @@
+import ButtonComponent from "@/components/ui/Button";
+import InputComponent from "@/components/ui/Input";
+import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import React, { useEffect, useRef, useState } from "react";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -15,13 +22,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import InputComponent from "@/components/ui/Input";
-import { FontAwesome } from "@expo/vector-icons";
-import ButtonComponent from "@/components/ui/Button";
-import { useAlerts } from "@/components/useAlert";
-import { router } from "expo-router";
-import api from "@/services/api";
-import { useAuthStore } from "@/store/auth";
 
 const ChangePassword: React.FC = () => {
   const { AlertDisplay, showSuccess, showError, hideAlert } = useAlerts();
@@ -204,7 +204,7 @@ const ChangePassword: React.FC = () => {
                 }}
               >
                 <Text style={{ fontSize: 16, color: Colors.gray.text }}>
-                  Já tem uma conta?{" "}
+                  Já tem uma conta?
                 </Text>
                 <TouchableOpacity onPress={navigationRegister}>
                   <Text
