@@ -37,8 +37,11 @@ const PUBLIC_ROUTES = [
   "/validity",
 
   "/verification",
-
+  "/pre_aprovado_screen",
+  "/reanalise_screen",
+  "/analise_screen",
   "/divergencia_screen",
+  "/recusado_screen",
 ];
 
 export default function RootLayout() {
@@ -497,7 +500,10 @@ export default function RootLayout() {
           return;
         }
 
-        if (authRedirectTargetRef.current && pathname !== authRedirectTargetRef.current) {
+        if (
+          authRedirectTargetRef.current &&
+          pathname !== authRedirectTargetRef.current
+        ) {
           return;
         }
 
