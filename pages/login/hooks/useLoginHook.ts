@@ -145,7 +145,6 @@ export function useLoginHook() {
       }
 
       if (type === "client") {
-        useAuthStore.getState().setToken(data?.token);
         const response = await api.get(`/v1/client/data/info`);
         const user: ApiUserData = {
           nome: response.data.data.name,

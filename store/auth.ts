@@ -8,6 +8,7 @@ type AuthState = {
   user: ApiUserData | null;
   userRegister: ApiUserData | null;
   tokenRegister: string | null;
+  hasHydrated: boolean;
   isLoading: boolean;
   can_renew: boolean;
   cpfValid: string | null;
@@ -23,6 +24,7 @@ type AuthState = {
     retryDelayMs?: number;
   }) => Promise<void>;
   setUserRegister: (userRegister: ApiUserData | null) => void;
+  postLoginRedirect?: string | null;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -31,6 +33,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   userRegister: null,
   tokenRegister: null,
   postLoginRedirect: null,
+  hasHydrated: false,
   isLoading: true,
   can_renew: false,
   cpfValid: null,
@@ -45,8 +48,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   login: async (token, user) => {
-    await saveToken(token, user);
     set({ token, user: user ? { ...user, isLoggedIn: true } : null });
+    try {
+      await saveToken(token, user);
+    } catch (_e) {}
   },
 
   register: (token, user) => {
@@ -97,20 +102,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!token && retries > 0) {
         for (let i = 0; i < retries; i++) {
           await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
-          const [nextToken, nextUser] = await Promise.all([getToken(), getUser()]);
+          const [nextToken, nextUser] = await Promise.all([
+            getToken(),
+            getUser(),
+          ]);
           token = nextToken;
           user = nextUser;
           if (token) break;
         }
       }
 
+      const current = get();
+      const nextToken = token ?? current.token;
+      const nextUser = nextToken ? (user ?? current.user) : null;
+
       set({
-        token,
-        user: token && user ? { ...user, isLoggedIn: true } : user,
+        token: nextToken,
+        user:
+          nextToken && nextUser ? { ...nextUser, isLoggedIn: true } : nextUser,
         isLoading: false,
+        hasHydrated: true,
       });
     } catch (error: any) {
-      set({ token: null, user: null, isLoading: false });
+      set({ token: null, user: null, isLoading: false, hasHydrated: true });
     }
   },
 }));
