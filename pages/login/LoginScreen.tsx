@@ -65,7 +65,7 @@ const LoginScreen: React.FC = () => {
             style={styles.logo}
           />
         </View>
-        <Text style={styles.title}>Parcela Diária login</Text>
+        <Text style={styles.title}>Parcela Diária</Text>
         <Text style={styles.subtitle}>Insira seu CPF para continuar</Text>
 
         <View style={styles.formContainer}>

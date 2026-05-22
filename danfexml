@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe>
+    <infNFe Id="NFe35260599888777000166550010000056781000056789" versao="4.00">
+
+      <ide>
+        <cUF>35</cUF>
+        <cNF>00005678</cNF>
+        <natOp>Venda de Produtos</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>5678</nNF>
+        <dhEmi>2026-05-22T14:20:00-03:00</dhEmi>
+        <tpNF>1</tpNF>
+        <idDest>1</idDest>
+        <cMunFG>3550308</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>9</cDV>
+        <tpAmb>2</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>1</indFinal>
+        <indPres>1</indPres>
+        <procEmi>0</procEmi>
+        <verProc>2.1.0</verProc>
+      </ide>
+
+      <emit>
+        <CNPJ>99888777000166</CNPJ>
+        <xNome>TECH STORE BRASIL LTDA</xNome>
+        <xFant>TECH STORE</xFant>
+
+        <enderEmit>
+          <xLgr>Rua Tecnologia</xLgr>
+          <nro>500</nro>
+          <xBairro>Centro</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>São Paulo</xMun>
+          <UF>SP</UF>
+          <CEP>01010000</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>1133334444</fone>
+        </enderEmit>
+
+        <IE>987654321123</IE>
+        <CRT>3</CRT>
+      </emit>
+
+      <dest>
+        <CPF>32165498700</CPF>
+        <xNome>MARCOS SILVA</xNome>
+
+        <enderDest>
+          <xLgr>Av Brasil</xLgr>
+          <nro>1200</nro>
+          <xBairro>Jardins</xBairro>
+          <cMun>3550308</cMun>
+          <xMun>São Paulo</xMun>
+          <UF>SP</UF>
+          <CEP>01430000</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>11977778888</fone>
+        </enderDest>
+
+        <indIEDest>9</indIEDest>
+        <email>cliente@teste.com.br</email>
+      </dest>
+
+      <!-- ITEM 1 -->
+      <det nItem="1">
+        <prod>
+          <cProd>001</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>Notebook Gamer RTX</xProd>
+          <NCM>84713012</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>6500.00</vUnCom>
+          <vProd>6500.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>6500.00</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>6500.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>1170.00</vICMS>
+            </ICMS00>
+          </ICMS>
+
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>6500.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>107.25</vPIS>
+            </PISAliq>
+          </PIS>
+
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>6500.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>494.00</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+
+      <!-- ITEM 2 -->
+      <det nItem="2">
+        <prod>
+          <cProd>002</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>Mouse Gamer RGB</xProd>
+          <NCM>84716053</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>2.0000</qCom>
+          <vUnCom>150.00</vUnCom>
+          <vProd>300.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>2.0000</qTrib>
+          <vUnTrib>150.00</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>300.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>54.00</vICMS>
+            </ICMS00>
+          </ICMS>
+
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>300.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>4.95</vPIS>
+            </PISAliq>
+          </PIS>
+
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>300.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>22.80</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+
+      <!-- ITEM 3 -->
+      <det nItem="3">
+        <prod>
+          <cProd>003</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>Teclado Mecânico</xProd>
+          <NCM>84716052</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>1.0000</qCom>
+          <vUnCom>450.00</vUnCom>
+          <vProd>450.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>1.0000</qTrib>
+          <vUnTrib>450.00</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>450.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>81.00</vICMS>
+            </ICMS00>
+          </ICMS>
+
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>450.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>7.43</vPIS>
+            </PISAliq>
+          </PIS>
+
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>450.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>34.20</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+
+      <!-- ITEM 4 -->
+      <det nItem="4">
+        <prod>
+          <cProd>004</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>Monitor 27 Polegadas</xProd>
+          <NCM>85285220</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>2.0000</qCom>
+          <vUnCom>1200.00</vUnCom>
+          <vProd>2400.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>2.0000</qTrib>
+          <vUnTrib>1200.00</vUnTrib>
+          <indTot>1</indTot>
+        </prod>
+
+        <imposto>
+          <ICMS>
+            <ICMS00>
+              <orig>0</orig>
+              <CST>00</CST>
+              <modBC>3</modBC>
+              <vBC>2400.00</vBC>
+              <pICMS>18.00</pICMS>
+              <vICMS>432.00</vICMS>
+            </ICMS00>
+          </ICMS>
+
+          <PIS>
+            <PISAliq>
+              <CST>01</CST>
+              <vBC>2400.00</vBC>
+              <pPIS>1.65</pPIS>
+              <vPIS>39.60</vPIS>
+            </PISAliq>
+          </PIS>
+
+          <COFINS>
+            <COFINSAliq>
+              <CST>01</CST>
+              <vBC>2400.00</vBC>
+              <pCOFINS>7.60</pCOFINS>
+              <vCOFINS>182.40</vCOFINS>
+            </COFINSAliq>
+          </COFINS>
+        </imposto>
+      </det>
+
+      <total>
+        <ICMSTot>
+          <vBC>9650.00</vBC>
+          <vICMS>1737.00</vICMS>
+          <vICMSDeson>0.00</vICMSDeson>
+          <vFCP>0.00</vFCP>
+          <vBCST>0.00</vBCST>
+          <vST>0.00</vST>
+          <vFCPST>0.00</vFCPST>
+          <vFCPSTRet>0.00</vFCPSTRet>
+          <vProd>9650.00</vProd>
+          <vFrete>50.00</vFrete>
+          <vSeg>0.00</vSeg>
+          <vDesc>100.00</vDesc>
+          <vII>0.00</vII>
+          <vIPI>0.00</vIPI>
+          <vIPIDevol>0.00</vIPIDevol>
+          <vPIS>159.23</vPIS>
+          <vCOFINS>733.40</vCOFINS>
+          <vOutro>0.00</vOutro>
+          <vNF>9600.00</vNF>
+        </ICMSTot>
+      </total>
+
+      <transp>
+        <modFrete>1</modFrete>
+      </transp>
+
+      <pag>
+        <detPag>
+          <indPag>0</indPag>
+          <tPag>03</tPag>
+          <vPag>9600.00</vPag>
+        </detPag>
+      </pag>
+
+      <infAdic>
+        <infCpl>NF-e de teste com múltiplos itens para OCR e validação de parser XML.</infCpl>
+      </infAdic>
+
+    </infNFe>
+  </NFe>
+
+  <protNFe versao="4.00">
+    <infProt>
+      <tpAmb>2</tpAmb>
+      <verAplic>SP_NFE_PL009</verAplic>
+      <chNFe>35260599888777000166550010000056781000056789</chNFe>
+      <dhRecbto>2026-05-22T14:21:00-03:00</dhRecbto>
+      <nProt>135260000000999</nProt>
+      <digVal>XYZ123456789TESTE</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>

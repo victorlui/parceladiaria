@@ -37,7 +37,7 @@
       "buildNumber": "9"
     },
     "android": {
-      "versionCode": 17,
+      "versionCode": 18,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
