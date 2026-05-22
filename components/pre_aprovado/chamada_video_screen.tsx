@@ -18,7 +18,6 @@ import { WebView } from "react-native-webview";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
-import ButtonChat from "../ui/ButtonChat";
 
 const ChamadaVideoScreen: React.FC = () => {
   const { logout } = useAuthStore((state) => state);
@@ -324,7 +323,7 @@ const ChamadaVideoScreen: React.FC = () => {
           </View>
         </View>
 
-        <ButtonChat botton={320} />
+        {/* <ButtonChat botton={320} /> */}
 
         <View style={{ gap: 10 }}>
           <TouchableOpacity

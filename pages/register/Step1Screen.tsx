@@ -1,4 +1,3 @@
-import ButtonChat from "@/components/ui/ButtonChat";
 import { useState } from "react";
 import AffiliateCode from "./AffiliateCode";
 import Step1Component from "./components/Step1Component";
@@ -118,7 +117,7 @@ const Step1Register: React.FC = () => {
           />
         )}
       </LayoutRegister>
-      {step > 4 && <ButtonChat />}
+      {/* {step > 4 && <ButtonChat />} */}
     </>
   );
 };

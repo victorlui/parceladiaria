@@ -1,4 +1,3 @@
-import ButtonChat from "@/components/ui/ButtonChat";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { updateUserService } from "@/services/register";
@@ -441,7 +440,7 @@ const DivergenciaScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-      <ButtonChat botton={140} />
+      {/* <ButtonChat botton={140} /> */}
     </SafeAreaView>
   );
 };
