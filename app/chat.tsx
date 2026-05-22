@@ -3,6 +3,7 @@ import { useNotificationsStore } from "@/store/notifications";
 import { useRegisterStore } from "@/store/register_new";
 import { MenuIAChat } from "@menuia/react-native";
 import React from "react";
+import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Chat: React.FC = () => {
@@ -25,20 +26,22 @@ const Chat: React.FC = () => {
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
-      style={{ flex: 1, backgroundColor: "black" }}
+      style={{ flex: 1, backgroundColor: "#0a0a14" }}
     >
-      <MenuIAChat
-        widgetId={widgetId || ""}
-        inline
-        primaryColor="#32e10e"
-        metadata={{
-          name: currentUser?.nome || "",
-          email: currentUser?.email || "",
-          phone: currentUser?.whatsapp || "",
-        }}
-        customFields={{ cpf: currentUser?.cpf || "" }}
-        expoPushToken={pushToken || ""}
-      />
+      <View style={{ flex: 1, opacity: 0.99 }} collapsable={false}>
+        <MenuIAChat
+          widgetId={widgetId || ""}
+          inline
+          primaryColor="#32e10e"
+          metadata={{
+            name: currentUser?.nome || "",
+            email: currentUser?.email || "",
+            phone: currentUser?.whatsapp || "",
+          }}
+          customFields={{ cpf: currentUser?.cpf || "" }}
+          expoPushToken={pushToken || ""}
+        />
+      </View>
     </SafeAreaView>
   );
 };

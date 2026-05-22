@@ -1,8 +1,8 @@
+import api from "@/services/api";
+import { useRegisterStore } from "@/store/register_new";
 import React from "react";
 import { TextInput } from "react-native";
 import { Address } from "../types/address";
-import api from "@/services/api";
-import { useRegisterStore } from "@/store/register_new";
 
 type AddressRefs = {
   [K in keyof Address]: React.RefObject<TextInput | null>;
@@ -49,8 +49,19 @@ export function useRegisterAddress() {
   const handleChange = (field: keyof Address) => async (text: string) => {
     updateField(field, text);
 
-    if (field === "cep" && !data?.cep) {
-      await searchCep(text);
+    if (field === "cep") {
+      const cleanCep = text.replace(/\D/g, "");
+      if (cleanCep.length === 8) {
+        await searchCep(text);
+      } else {
+        const cepError = validateCep(cleanCep);
+        if (cepError) {
+          setErrors((prev) => ({
+            ...prev,
+            cep: cepError,
+          }));
+        }
+      }
     }
   };
 
@@ -89,10 +100,15 @@ export function useRegisterAddress() {
       console.log(data);
       setForm((prev) => ({
         ...prev,
-        endereco: data?.data?.logradouro ?? "",
-        bairro: data?.data?.bairro ?? "",
-        estado: data?.data?.uf ?? "",
-        cidade: data?.data?.localidade ?? "",
+        endereco: data?.data?.logradouro ?? data?.logradouro ?? "",
+        bairro: data?.data?.bairro ?? data?.bairro ?? "",
+        estado: data?.data?.uf ?? data?.uf ?? "",
+        cidade:
+          data?.data?.localidade ??
+          data?.localidade ??
+          data?.cidade ??
+          data?.city ??
+          "",
       }));
 
       refs.numero?.current?.focus();

@@ -183,7 +183,7 @@ function getBlockedReasonFromErro(erro?: string): string | undefined {
     case "991":
       return "Login-web via app (origem indevida)";
     case "100":
-      return "Bloqueado (blacklist)";
+      return "Tente novamente em 24 Horas";
     case "0":
       return "User-Agent inválido/suspeito";
     case "1":

@@ -15,6 +15,8 @@ import {
 } from "react-native";
 import LayoutRegister from "./layouts/layout-register";
 
+import ButtonChat from "@/components/ui/ButtonChat";
+import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import FinalScreenComponent from "./components/FinalScreenComponent";
@@ -23,7 +25,8 @@ import { useRegisterQuery } from "./query/useRegisterQuerys";
 
 const TermosScreen: React.FC = () => {
   const { mutate, isPending, isSuccess } = useRegisterQuery();
-  const { setStep, clean, data, token, hydrated } = useRegisterStore();
+  const { setStep, clean, data, token, hydrated, setData, setToken } =
+    useRegisterStore();
   const navigation = useNavigation();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -105,16 +108,87 @@ const TermosScreen: React.FC = () => {
     }
   };
 
-  const completeRegistration = () => {
-    clean();
-    router.replace("/login");
+  const [loading, setLoading] = useState(false);
+  const completeRegistration = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/v1/client");
+      const dataClient =
+        response.data?.data?.data || response.data?.data || response.data;
+      if (dataClient?.type === "client") {
+        const infoResponse = await api.get("/v1/client/data/info");
+        const userData = infoResponse.data.data;
+        const user = {
+          nome: userData.name,
+          email: userData.email,
+          cpf: userData.cpf,
+          cidade: userData.city,
+          bairro: userData.neighborhood,
+          status: userData.status,
+          estado: userData.uf,
+          endereco: userData.address,
+          msg_painel: userData.msg_painel,
+          msg_status: userData.msg_status,
+          lastLoan: dataClient?.lastLoan,
+          zip_code: userData.zip_code,
+          phone: userData.phone,
+          pix: userData.chave_pix ?? "",
+          status_doc: userData.status_doc,
+          isLoggedIn: true,
+          observacoes: userData.observacoes,
+          email_verificado: userData.email_verificado,
+          phone_verificado: userData.phone_verificado,
+        };
+        const token = useRegisterStore.getState().token || "";
+        await useAuthStore.getState().login(token, user);
+        router.replace("/(tabs)/home");
+      } else {
+        const status = dataClient?.status;
+        const routeByStatus: Record<string, any> = {
+          divergente: "/divergencia_screen",
+          recusado: "/recusado_screen",
+          aprovado: "/pre_aprovado_screen",
+          "pre-aprovado": "/pre_aprovado_screen",
+          analise: "/analise_screen",
+          reanalise: "/reanalise_screen",
+          "proposta-expirada": "/divergencia_screen",
+        };
+
+        setData({
+          ...dataClient,
+          primeira_analise: response.data?.data?.data?.primeira_analise ?? 0,
+        });
+        setToken(useRegisterStore.getState().token || "");
+
+        const targetRoute =
+          status && routeByStatus[status] ? routeByStatus[status] : null;
+
+        if (targetRoute) {
+          router.replace(targetRoute);
+        } else {
+          useRegisterStore.getState().clean();
+          router.replace("/login");
+        }
+      }
+    } catch (error) {
+      useRegisterStore.getState().clean();
+      router.replace("/login");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if ((isLoading && terms.trim().length === 0) || isPending) {
+  if (loading || (isLoading && terms.trim().length === 0) || isPending) {
     return (
       <PulsingImageLoader
         source={require("@/assets/images/logo-verde.png")}
-        text={isLoading ? "Carregando termos..." : "Aguarde..."}
+        text={
+          loading
+            ? "Carregando..."
+            : isLoading
+              ? "Carregando termos..."
+              : "Aguarde..."
+        }
       />
     );
   }
@@ -124,56 +198,61 @@ const TermosScreen: React.FC = () => {
   }
 
   return (
-    <LayoutRegister
-      title="Quase Lá!"
-      subtitle="Para finalizar, confira os detalhes e aceite o contrato"
-      showBackButton
-      onBack={onBackPress}
-    >
-      <View style={styles.propostaContainer}>
-        <Text style={[styles.propostaTitle, { marginBottom: 0 }]}>
-          Proposta para
-        </Text>
-        <Text style={styles.propostaTitle}>
-          {data?.nome
-            ?.split(" ")
-            .map((part, index) =>
-              index === 0 ? part : part.charAt(0).toUpperCase() + ".",
-            )
-            .join(" ")}
-        </Text>
-        <Text style={styles.propostaText}>CPF: {maskCpf(data?.cpf || "")}</Text>
-        <Text style={styles.propostaText}>
-          Telefone: {maskPhone(data?.phone || data?.whatsapp || "")}
-        </Text>
-      </View>
-      <View style={{ marginHorizontal: 25, width: "100%" }}>
-        <CreditProposalScreen terms={terms} />
-      </View>
-      <TouchableOpacity
-        onPress={() => setAccepted((prev) => !prev)}
-        style={styles.checkboxRow}
+    <>
+      <LayoutRegister
+        title="Quase Lá!"
+        subtitle="Para finalizar, confira os detalhes e aceite o contrato"
+        showBackButton
+        onBack={onBackPress}
       >
-        <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
-          {accepted && (
-            <FontAwesome name="check" size={14} color={Colors.white} />
-          )}
-        </View>
-        <View>
-          <Text style={styles.checkboxText}>
-            Li e concordo com as condições acima.
+        <View style={styles.propostaContainer}>
+          <Text style={[styles.propostaTitle, { marginBottom: 0 }]}>
+            Proposta para
           </Text>
-          <Text style={styles.termsLink}>26x R$ 30,30 por dia</Text>
+          <Text style={styles.propostaTitle}>
+            {data?.nome
+              ?.split(" ")
+              .map((part, index) =>
+                index === 0 ? part : part.charAt(0).toUpperCase() + ".",
+              )
+              .join(" ")}
+          </Text>
+          <Text style={styles.propostaText}>
+            CPF: {maskCpf(data?.cpf || "")}
+          </Text>
+          <Text style={styles.propostaText}>
+            Telefone: {maskPhone(data?.phone || data?.whatsapp || "")}
+          </Text>
         </View>
-      </TouchableOpacity>
-      <ButtonComponent
-        iconLeft={null}
-        iconRight={"checkmark"}
-        title="Finalizar Cadastro"
-        onPress={onSubmit}
-        disabled={!accepted}
-      />
-    </LayoutRegister>
+        <View style={{ marginHorizontal: 25, width: "100%" }}>
+          <CreditProposalScreen terms={terms} />
+        </View>
+        <TouchableOpacity
+          onPress={() => setAccepted((prev) => !prev)}
+          style={styles.checkboxRow}
+        >
+          <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
+            {accepted && (
+              <FontAwesome name="check" size={14} color={Colors.white} />
+            )}
+          </View>
+          <View>
+            <Text style={styles.checkboxText}>
+              Li e concordo com as condições acima.
+            </Text>
+            <Text style={styles.termsLink}>26x R$ 30,30 por dia</Text>
+          </View>
+        </TouchableOpacity>
+        <ButtonComponent
+          iconLeft={null}
+          iconRight={"checkmark"}
+          title="Finalizar Cadastro"
+          onPress={onSubmit}
+          disabled={!accepted}
+        />
+      </LayoutRegister>
+      <ButtonChat />
+    </>
   );
 };
 

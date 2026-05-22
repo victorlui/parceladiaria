@@ -7,7 +7,7 @@ import { formatDateToBR } from "@/utils/formats";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const RecusadoScreen: React.FC = () => {
@@ -23,7 +23,7 @@ const RecusadoScreen: React.FC = () => {
         <FontAwesome name="times-circle" size={80} color="red" />
         <Text style={styles.title}>Recusado</Text>
         <Text style={styles.subtitle}>
-          Infelizmente, não foi posívvel aprovar seu cadastro no momento.
+          Infelizmente, não foi posível aprovar seu cadastro no momento.
         </Text>
       </View>
 
@@ -49,6 +49,7 @@ const RecusadoScreen: React.FC = () => {
         style={styles.button}
         onPress={() => {
           logout();
+          useRegisterStore.getState().clean();
           router.replace("/login");
         }}
       >

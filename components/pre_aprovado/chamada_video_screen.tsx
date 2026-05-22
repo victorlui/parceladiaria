@@ -324,8 +324,6 @@ const ChamadaVideoScreen: React.FC = () => {
           </View>
         </View>
 
-        <ButtonChat botton={320} />
-
         <View style={{ gap: 10 }}>
           <TouchableOpacity
             onPress={onRequestChamada}
@@ -345,6 +343,7 @@ const ChamadaVideoScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <ButtonChat botton={200} />
     </SafeAreaView>
   );
 };

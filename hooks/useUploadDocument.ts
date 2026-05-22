@@ -59,8 +59,10 @@ export async function uploadFileToS3({ file }: UploadFileParams) {
 
     return final_url;
   } catch (error: any) {
-    Alert.alert("Erro no upload", "Não foi possível enviar o arquivo.");
-    return null;
+    if (error?.response?.status !== 401) {
+      Alert.alert("Erro no upload", "Não foi possível enviar o arquivo.");
+    }
+    throw error;
   }
 }
 

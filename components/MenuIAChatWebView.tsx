@@ -25,10 +25,10 @@ const MenuIAChatWebView: React.FC<MenuIAChatWebViewProps> = ({
   )}&primaryColor=${encodeURIComponent(primaryColor)}&theme=${theme}`;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} collapsable={false}>
       <WebView
         source={{ uri: widgetUrl }}
-        style={styles.webview}
+        style={[styles.webview, { opacity: 0.99 }]}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         startInLoadingState={true}

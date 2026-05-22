@@ -10,12 +10,14 @@ interface Prop {
 }
 
 const ButtonChat: React.FC<Prop> = ({
-  botton = Platform.OS === "ios" ? 50 : 30,
+  botton = Platform.OS === "ios" ? 50 : 10,
 }) => {
   const insets = useSafeAreaInsets();
-  const inset = Platform.OS === "ios" ? 50 : insets.bottom + botton;
+  const inset = Platform.OS === "ios" ? botton : insets.bottom + botton;
   return (
-    <View style={{ position: "absolute", bottom: inset, right: 40 }}>
+    <View
+      style={{ position: "absolute", bottom: inset, right: 40, zIndex: 999 }}
+    >
       <Pressable
         style={{
           backgroundColor: Colors.green.primary,

@@ -396,6 +396,7 @@ export function useRegisterHooks() {
       setData({
         ...data,
         endereco: address.endereco,
+        numero: address.numero,
         complemento: address.complemento,
         bairro: address.bairro,
         cidade: address.cidade,
