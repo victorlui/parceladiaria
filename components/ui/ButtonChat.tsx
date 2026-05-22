@@ -3,16 +3,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Platform, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Prop {
   botton?: number;
 }
 
 const ButtonChat: React.FC<Prop> = ({
-  botton = Platform.OS === "ios" ? 50 : 10,
+  botton = Platform.OS === "ios" ? 50 : 30,
 }) => {
+  const insets = useSafeAreaInsets();
+  const inset = Platform.OS === "ios" ? 50 : insets.bottom + botton;
   return (
-    <View style={{ position: "absolute", bottom: botton, right: 40 }}>
+    <View style={{ position: "absolute", bottom: inset, right: 40 }}>
       <Pressable
         style={{
           backgroundColor: Colors.green.primary,

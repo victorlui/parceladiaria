@@ -1,5 +1,4 @@
 import ButtonComponent from "@/components/ui/Button";
-import ButtonChat from "@/components/ui/ButtonChat";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
@@ -74,7 +73,7 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           loading={isLoading}
         />
 
-        {data?.[PIX_OPTIONS[selected].label as PixValue] === "CPF" && (
+        {PIX_OPTIONS[selected].label !== "CPF" && (
           <ButtonComponent
             title="Não, corrigir"
             onPress={() => {
@@ -86,8 +85,6 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
             loading={isLoading}
           />
         )}
-
-        <ButtonChat />
       </>
     );
   }
@@ -128,8 +125,6 @@ const Step7Component: React.FC<Props> = ({ onNext, isLoading }) => {
           iconRight={null}
           loading={isLoading}
         />
-
-        <ButtonChat />
       </>
     );
   }
