@@ -60,13 +60,15 @@ const ReanaliseScreen: React.FC = () => {
         router.replace("/(tabs)/home");
       } else {
         const status = dataClient?.status;
-        
+
         useRegisterStore.getState().setData({
           ...useRegisterStore.getState().data,
           ...dataClient,
           primeira_analise: response.data?.data?.data?.primeira_analise ?? 0,
         });
-        useRegisterStore.getState().setToken(useRegisterStore.getState().token || "");
+        useRegisterStore
+          .getState()
+          .setToken(useRegisterStore.getState().token || "");
 
         const routeByStatus: Record<string, any> = {
           divergente: "/divergencia_screen",

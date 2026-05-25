@@ -546,7 +546,7 @@ const DivergenciaScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-      <ButtonChat botton={100} />
+      <ButtonChat botton={113} />
     </SafeAreaView>
   );
 };

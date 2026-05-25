@@ -331,9 +331,7 @@ const ChamadaVideoScreen: React.FC = () => {
           >
             <FontAwesome name="whatsapp" size={20} color={Colors.white} />
 
-            <Text style={styles.whatsappButtonText}>
-              Falar com um Atendente
-            </Text>
+            <Text style={styles.whatsappButtonText}>Fazer a video chamada</Text>
 
             <FontAwesome name="arrow-right" size={16} color={Colors.white} />
           </TouchableOpacity>
