@@ -1,12 +1,10 @@
 import { Colors } from "@/constants/Colors";
-import ModalNotice from "@/pages/renew/compoents/ModalNotice";
 import { renewStatus } from "@/services/renew";
 import { useRenewStore } from "@/store/renew";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -46,30 +44,30 @@ const RenewScreen: React.FC = () => {
     }, [setRenew]),
   );
 
-  useEffect(() => {
-    let cancelled = false;
+  // useEffect(() => {
+  //   let cancelled = false;
 
-    const run = async () => {
-      if (!canRenew) return;
+  //   const run = async () => {
+  //     if (!canRenew) return;
 
-      try {
-        const key = "renew_notice_santander_v1";
-        const alreadyShown = await AsyncStorage.getItem(key);
-        if (alreadyShown === "1") return;
+  //     try {
+  //       const key = "renew_notice_santander_v1";
+  //       const alreadyShown = await AsyncStorage.getItem(key);
+  //       if (alreadyShown === "1") return;
 
-        await AsyncStorage.setItem(key, "1");
-        if (!cancelled) setNoticeVisible(true);
-      } catch {
-        if (!cancelled) setNoticeVisible(true);
-      }
-    };
+  //       await AsyncStorage.setItem(key, "1");
+  //       if (!cancelled) setNoticeVisible(true);
+  //     } catch {
+  //       if (!cancelled) setNoticeVisible(true);
+  //     }
+  //   };
 
-    run();
+  //   run();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [canRenew]);
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [canRenew]);
 
   if (isLoadingStatus && !renew) {
     return (
@@ -90,10 +88,10 @@ const RenewScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ModalNotice
+      {/* <ModalNotice
         visible={noticeVisible}
         onClose={() => setNoticeVisible(false)}
-      />
+      /> */}
       {/* Header Padronizado */}
       <View style={styles.header}>
         <TouchableOpacity
