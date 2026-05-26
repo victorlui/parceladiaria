@@ -92,7 +92,8 @@ const FaceRecognitionScreen: React.FC = () => {
         "Erro",
         "Não foi possível finalizar o envio. Tente novamente.",
       );
-    } catch {
+    } catch (error: any) {
+      if (error?.response?.status === 401) return;
       Alert.alert("Erro", "Não foi possível enviar a foto. Tente novamente.");
     } finally {
       console.log("[FaceRecognition] sendPhoto end");

@@ -64,13 +64,12 @@ const VerificationScreen: React.FC = () => {
         return;
       }
 
-      showSuccess(
-        "Sucesso",
-        "Código validado com sucesso. Entre novamente",
-        () => {
-          router.replace("/login");
-        },
-      );
+      await loginMutation.mutateAsync({
+        cpf: data.cpf || "",
+        password: data.password,
+      });
+
+      showSuccess("Sucesso", "Código validado com sucesso.");
     } catch (error: any) {
       showError(
         "Atenção",

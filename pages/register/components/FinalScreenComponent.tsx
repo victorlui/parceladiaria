@@ -1,10 +1,9 @@
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
-import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, StatusBar, StyleSheet, Text, View } from "react-native";
-import { PIX_OPTIONS, PixType } from "../utils/pix";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -13,67 +12,28 @@ interface Props {
 }
 
 const FinalScreenComponent: React.FC<Props> = ({ complete }) => {
-  const { data } = useRegisterStore();
-  const pixLabel = data?.chave
-    ? PIX_OPTIONS[data.chave as PixType]?.label ?? "Chave Pix"
-    : "Chave Pix";
-
   const completeRegistration = () => {
     complete();
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
-      {/* Background decor */}
+      {/* Background decorativo fluido */}
       <View style={styles.circleTop} />
       <View style={styles.circleBottom} />
 
-      <View style={styles.card}>
+      <View style={styles.content}>
         <View style={styles.iconWrapper}>
-          <FontAwesome name="check" size={52} color={Colors.white} />
+          <FontAwesome name="check" size={48} color={Colors.white} />
         </View>
 
-        <Text style={styles.title}>Cadastro Concluído</Text>
+        <Text style={styles.title}>Cadastro Realizado!</Text>
 
         <Text style={styles.description}>
-          Seu cadastro foi enviado com sucesso .
+          Entre para finalizar a solicitação do empréstimo.
         </Text>
-
-        {data?.pix ? (
-          <View style={styles.infoBox}>
-            <FontAwesome
-              name="qrcode"
-              size={18}
-              color={Colors.green.secondary}
-            />
-
-            <Text style={styles.infoText}>
-              {pixLabel}: {data.pix}
-            </Text>
-          </View>
-        ) : null}
-
-        <View style={styles.infoBox}>
-          <FontAwesome
-            name="clock-o"
-            size={18}
-            color={Colors.green.secondary}
-          />
-
-          <Text style={styles.infoText}>
-            Em breve entraremos em contato com você.
-          </Text>
-        </View>
-
-        <View style={styles.infoBox}>
-          <FontAwesome name="user" size={18} color={Colors.green.secondary} />
-
-          <Text style={styles.infoText}>
-            Você pode acompanhar o status pela área do cliente.
-          </Text>
-        </View>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -84,56 +44,45 @@ const FinalScreenComponent: React.FC<Props> = ({ complete }) => {
           onPress={completeRegistration}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
-    justifyContent: "center",
+    backgroundColor: "#F8FAFC", // Substitua por Colors.background se tiver
+    justifyContent: "space-between",
     paddingHorizontal: 24,
+    paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 40 : 60,
+    paddingBottom: 40,
   },
 
-  card: {
-    backgroundColor: Colors.white,
-    borderRadius: 28,
-    paddingVertical: 36,
-    paddingHorizontal: 24,
+  content: {
+    flex: 1,
     alignItems: "center",
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-
-    elevation: 8,
+    justifyContent: "center",
+    paddingHorizontal: 12,
   },
 
   iconWrapper: {
-    width: 110,
-    height: 110,
-    borderRadius: 999,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: Colors.green.secondary,
-
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 32,
 
-    marginBottom: 24,
-
+    // Sombra suave para dar profundidade (Glow effect)
     shadowColor: Colors.green.secondary,
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-
-    elevation: 6,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
 
   title: {
@@ -142,37 +91,20 @@ const styles = StyleSheet.create({
     color: Colors.black,
     textAlign: "center",
     marginBottom: 12,
+    letterSpacing: -0.5,
   },
 
   description: {
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.gray.primary,
     textAlign: "center",
     lineHeight: 24,
-    marginBottom: 28,
-  },
-
-  infoBox: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-
-    backgroundColor: "#F4FDF7",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-  },
-
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.gray.primary,
-    lineHeight: 20,
+    paddingHorizontal: 20,
   },
 
   buttonContainer: {
-    marginTop: 28,
+    width: "100%",
+    marginTop: "auto",
   },
 
   circleTop: {
@@ -182,7 +114,7 @@ const styles = StyleSheet.create({
     width: width * 0.6,
     height: width * 0.6,
     borderRadius: 999,
-    backgroundColor: "rgba(34,197,94,0.08)",
+    backgroundColor: "rgba(34,197,94,0.05)", // 5% de opacidade para ficar sutil
   },
 
   circleBottom: {
@@ -192,7 +124,7 @@ const styles = StyleSheet.create({
     width: width * 0.7,
     height: width * 0.7,
     borderRadius: 999,
-    backgroundColor: "rgba(34,197,94,0.05)",
+    backgroundColor: "rgba(34,197,94,0.03)",
   },
 });
 

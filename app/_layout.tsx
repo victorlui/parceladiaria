@@ -4,7 +4,8 @@ import { useLiveUpdate } from "@/hooks/useLiveUpdate";
 import { usePushNotification } from "@/hooks/usePushNotification";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
-import { StatusCadastro } from "@/utils";
+import { useRegisterStore } from "@/store/register_new";
+import { Etapas, StatusCadastro } from "@/utils";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
@@ -50,7 +51,7 @@ export default function RootLayout() {
   const pathname = usePathname() ?? "";
 
   const { restoreToken, isLoading, user, token } = useAuthStore();
-
+  const { data } = useRegisterStore();
   const { AlertDisplay } = useAlerts();
 
   const [didRestoreToken, setDidRestoreToken] = useState(false);
@@ -401,6 +402,7 @@ export default function RootLayout() {
       [StatusCadastro.REANALISE]: "/reanalise_screen",
       [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
       [StatusCadastro.APROVADO]: "/(tabs)",
+      [StatusCadastro.PROPOSTA_EXPIRADO]: "/divergencia_screen",
     }),
     [],
   );
@@ -417,6 +419,9 @@ export default function RootLayout() {
       hasUser: !!user,
       isLoggedIn: !!user?.isLoggedIn,
     });
+
+    console.log("ruser", user);
+    console.log("ruser data", data);
   }, [token, user]);
 
   // =========================================================
@@ -436,12 +441,66 @@ export default function RootLayout() {
       }
 
       // =====================================================
-      // NÃO LOGADO
+      // NÃO LOGADO (AUTH) - TRATAMENTO DE LEAD
       // =====================================================
 
       if (!token && !user) {
         setIsNavigatingNotification(false);
         if (isPublicRoute) return;
+
+        // Verifica se tem token de lead (registerStore) para pular login
+        const {
+          token: registerToken,
+          data: registerData,
+          etapa,
+        } = useRegisterStore.getState();
+        if (registerToken && registerData?.status) {
+          if (registerData.status === StatusCadastro.PENDENTE) {
+            let pendingRoute = "/(register)/step1";
+            if (etapa === Etapas.ACEITANDO_TERMOS) {
+              pendingRoute = "/(register)/termos";
+            } else if (etapa === Etapas.OPEN_FINANCE) {
+              pendingRoute = "/(register)/openfinance";
+            }
+
+            if (
+              pathname !== pendingRoute &&
+              authRedirectTargetRef.current !== pendingRoute
+            ) {
+              console.log("REDIRECT_LEAD_TO_PENDING", {
+                from: pathname,
+                to: pendingRoute,
+              });
+              authRedirectTargetRef.current = pendingRoute;
+              router.replace(pendingRoute as any);
+              return;
+            }
+            if (pathname === pendingRoute) {
+              return;
+            }
+          }
+
+          const leadRoute =
+            statusRedirectMap[
+              registerData.status as keyof typeof statusRedirectMap
+            ];
+          if (
+            leadRoute &&
+            pathname !== leadRoute &&
+            authRedirectTargetRef.current !== leadRoute
+          ) {
+            console.log("REDIRECT_LEAD_TO_STATUS", {
+              from: pathname,
+              to: leadRoute,
+            });
+            authRedirectTargetRef.current = leadRoute;
+            router.replace(leadRoute as any);
+            return;
+          }
+          if (leadRoute && pathname === leadRoute) {
+            return;
+          }
+        }
 
         if (
           pathname !== "/login" &&
@@ -537,10 +596,21 @@ export default function RootLayout() {
   ]);
 
   // =========================================================
-  // LOADING DE INICIALIZAÇÃO
+  // LOADING DE INICIALIZAÇÃO E PROTEÇÃO DE ROTA INICIAL
   // =========================================================
 
-  if (isBootstrapping) {
+  const { token: registerToken, data: registerData } = useRegisterStore();
+
+  // Impede que a UI tente renderizar as telas internas (Home, etc)
+  // antes do redirecionamento do Lead estar concluído.
+  const isLeadPendingRedirect =
+    !token &&
+    !user &&
+    !!registerToken &&
+    !!registerData?.status &&
+    pathname === "/";
+
+  if (isBootstrapping || isLeadPendingRedirect) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#000" />

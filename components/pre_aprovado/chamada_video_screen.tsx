@@ -18,6 +18,7 @@ import { WebView } from "react-native-webview";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
+import ButtonChat from "../ui/ButtonChat";
 
 const ChamadaVideoScreen: React.FC = () => {
   const { logout } = useAuthStore((state) => state);
@@ -332,9 +333,7 @@ const ChamadaVideoScreen: React.FC = () => {
           >
             <FontAwesome name="whatsapp" size={20} color={Colors.white} />
 
-            <Text style={styles.whatsappButtonText}>
-              Falar com um Atendente
-            </Text>
+            <Text style={styles.whatsappButtonText}>Fazer a video chamada</Text>
 
             <FontAwesome name="arrow-right" size={16} color={Colors.white} />
           </TouchableOpacity>
@@ -344,6 +343,7 @@ const ChamadaVideoScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <ButtonChat botton={200} />
     </SafeAreaView>
   );
 };

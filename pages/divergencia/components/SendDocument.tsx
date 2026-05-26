@@ -1,16 +1,16 @@
+import { Colors } from "@/constants/Colors";
+import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { useDocumentPicker } from "@/hooks/useDocumentPicker";
-import { Ionicons } from "@expo/vector-icons";
 import { documentDisplayNames } from "../utils/displayNames";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -46,11 +46,12 @@ const SendDocument: React.FC<Props> = ({
   }, [item, initialSelected]);
 
   const handlePick = async (
-    type: "camera" | "library" | "pdf" | "video_library",
+    type: "camera" | "library" | "pdf" | "video_library" | "video_camera",
   ) => {
     let file;
     if (type === "pdf") file = await selectPDF();
     else if (type === "video_library") file = await takeVideo("library");
+    else if (type === "video_camera") file = await takeVideo("camera");
     else file = await takePhoto(type);
 
     if (file) setSelected(file as unknown as Selected);
@@ -131,24 +132,44 @@ const SendDocument: React.FC<Props> = ({
         <View style={styles.actionRow}>
           <ActionButton
             icon="camera"
-            label="Câmera"
-            onPress={() => handlePick("camera")}
+            label={
+              item === "video_perfil_app" || item === "ganhos_app"
+                ? "Gravar"
+                : "Câmera"
+            }
+            onPress={() =>
+              handlePick(
+                item === "video_perfil_app" || item === "ganhos_app"
+                  ? "video_camera"
+                  : "camera",
+              )
+            }
           />
           <ActionButton
             icon="images"
             label="Galeria"
-            onPress={() => handlePick("library")}
+            onPress={() =>
+              handlePick(
+                item === "video_perfil_app" || item === "ganhos_app"
+                  ? "video_library"
+                  : "library",
+              )
+            }
           />
-          <ActionButton
-            icon="videocam"
-            label="Vídeo"
-            onPress={() => handlePick("video_library")}
-          />
-          <ActionButton
-            icon="file-tray-full"
-            label="Arquivo"
-            onPress={() => handlePick("pdf")}
-          />
+          {item !== "video_perfil_app" && item !== "ganhos_app" && (
+            <ActionButton
+              icon="videocam"
+              label="Vídeo"
+              onPress={() => handlePick("video_library")}
+            />
+          )}
+          {item !== "video_perfil_app" && item !== "ganhos_app" && (
+            <ActionButton
+              icon="file-tray-full"
+              label="Arquivo"
+              onPress={() => handlePick("pdf")}
+            />
+          )}
         </View>
       </View>
 

@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import api from "./api";
 
 export const solicitarLinkS3 = async (
@@ -23,9 +22,7 @@ export const solicitarLinkS3 = async (
     return response.data;
   } catch (error: any) {
     console.log("error solicitar", error.response);
-    if (error.response && error.response.status === 401) {
-      router.replace("/login");
-    }
+    throw error;
   }
 };
 

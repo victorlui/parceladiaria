@@ -2,7 +2,7 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "parceladiaria",
@@ -34,10 +34,10 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "9"
+      "buildNumber": "19"
     },
     "android": {
-      "versionCode": 17,
+      "versionCode": 19,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#053E38"
@@ -156,7 +156,9 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.1.4",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557",
       "checkAutomatically": "ON_LOAD",

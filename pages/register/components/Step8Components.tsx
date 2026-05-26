@@ -44,6 +44,7 @@ const Step8Components: React.FC<Props> = ({
           <View style={styles.addressContainer}>
             <Text style={styles.addressText}>
               {form.endereco}, {form.numero || "S/N"}
+              {form.complemento ? ` - ${form.complemento}` : ""}
             </Text>
 
             <Text style={styles.addressText}>{form.bairro}</Text>
@@ -122,8 +123,24 @@ const Step8Components: React.FC<Props> = ({
         value={form.numero}
         onChangeText={handleChange("numero")}
         returnKeyType="next"
-        onSubmitEditing={() => refs.bairro.current?.focus()}
+        onSubmitEditing={() => refs.complemento.current?.focus()}
         error={errors.numero}
+      />
+      <InputComponent
+        ref={refs.complemento}
+        placeholder="Complemento (opcional)"
+        icon={
+          <MaterialCommunityIcons
+            name="map-marker"
+            size={20}
+            color={Colors.gray.primary}
+          />
+        }
+        value={form.complemento}
+        onChangeText={handleChange("complemento")}
+        returnKeyType="next"
+        onSubmitEditing={() => refs.bairro.current?.focus()}
+        error={errors.complemento}
       />
       <InputComponent
         ref={refs.bairro}
@@ -172,6 +189,7 @@ const Step8Components: React.FC<Props> = ({
         onChangeText={handleChange("cidade")}
         returnKeyType="done"
         error={errors.cidade}
+        editable={false}
       />
 
       <ButtonComponent
@@ -182,7 +200,8 @@ const Step8Components: React.FC<Props> = ({
         disabled={
           Object.values(errors).some((error) => error !== "") ||
           !form.endereco ||
-          form.numero === ""
+          form.numero === "" ||
+          form.cep.replace(/\D/g, "").length !== 8
         }
       />
     </>

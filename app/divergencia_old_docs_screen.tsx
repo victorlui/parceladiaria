@@ -114,7 +114,8 @@ const DivergenciaScreen: React.FC = () => {
           },
         ],
       );
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 401) return;
       showWarning("Atenção", "Erro ao enviar documentos. Tente novamente.");
     } finally {
       setIsLoading(false);
