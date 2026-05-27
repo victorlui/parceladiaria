@@ -178,7 +178,6 @@ export function useRegisterHooks() {
         };
 
         const response = await api.post("/auth/register", registerData);
-
         setToken(response.data.data.token);
 
         newData.nome = response.data.data.name;

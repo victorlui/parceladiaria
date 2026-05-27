@@ -63,13 +63,15 @@ const PreAprovado: React.FC = () => {
         router.replace("/(tabs)/home");
       } else {
         const status = dataClient?.status;
-        
+
         useRegisterStore.getState().setData({
           ...useRegisterStore.getState().data,
           ...dataClient,
           primeira_analise: response.data?.data?.data?.primeira_analise ?? 0,
         });
-        useRegisterStore.getState().setToken(useRegisterStore.getState().token || "");
+        useRegisterStore
+          .getState()
+          .setToken(useRegisterStore.getState().token || "");
 
         const routeByStatus: Record<string, any> = {
           divergente: "/divergencia_screen",
@@ -143,7 +145,20 @@ const PreAprovado: React.FC = () => {
       }
     } catch (error: any) {
       if (error.response && error.response.data.message) {
-        Alert.alert("Erro", error.response.data.message, [{ text: "OK" }]);
+        if (error.response.data.message === "Os Termos já foram aceitos") {
+          Alert.alert("Aviso", error.response.data.message, [
+            {
+              text: "OK",
+              onPress: async () => {
+                useRegisterStore.getState().clean();
+                await useAuthStore.getState().logout();
+                router.replace("/login");
+              },
+            },
+          ]);
+        } else {
+          Alert.alert("Erro", error.response.data.message, [{ text: "OK" }]);
+        }
       } else {
         Alert.alert("Erro", "Ocorreu um erro. Tente novamente.", [
           { text: "OK" },

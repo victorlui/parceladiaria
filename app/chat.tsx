@@ -2,6 +2,7 @@ import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
 import { useRegisterStore } from "@/store/register_new";
 import { MenuIAChat } from "@menuia/react-native";
+import { formatISO } from "date-fns";
 import React from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +24,10 @@ const Chat: React.FC = () => {
     widgetId = "f7d51017-3e48-40b1-9f02-64f9f3d54256";
   }
 
+  const dataAtual = new Date();
+
+  const dataFormatada = formatISO(dataAtual, { format: "extended" });
+
   return (
     <SafeAreaView
       edges={["top", "bottom"]}
@@ -38,7 +43,11 @@ const Chat: React.FC = () => {
             email: currentUser?.email || "",
             phone: currentUser?.whatsapp || "",
           }}
-          customFields={{ cpf: currentUser?.cpf || "" }}
+          customFields={{
+            cpf: currentUser?.cpf || "",
+            data_horario: dataFormatada,
+            origem: "mobile",
+          }}
           expoPushToken={pushToken || ""}
         />
       </View>
