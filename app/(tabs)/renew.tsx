@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/Colors";
+import ModalNotice from "@/pages/renew/compoents/ModalNotice";
 import { renewStatus } from "@/services/renew";
 import { useRenewStore } from "@/store/renew";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -37,37 +38,13 @@ const RenewScreen: React.FC = () => {
       };
 
       run();
+      setNoticeVisible(true);
 
       return () => {
         isActive = false;
       };
     }, [setRenew]),
   );
-
-  // useEffect(() => {
-  //   let cancelled = false;
-
-  //   const run = async () => {
-  //     if (!canRenew) return;
-
-  //     try {
-  //       const key = "renew_notice_santander_v1";
-  //       const alreadyShown = await AsyncStorage.getItem(key);
-  //       if (alreadyShown === "1") return;
-
-  //       await AsyncStorage.setItem(key, "1");
-  //       if (!cancelled) setNoticeVisible(true);
-  //     } catch {
-  //       if (!cancelled) setNoticeVisible(true);
-  //     }
-  //   };
-
-  //   run();
-
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [canRenew]);
 
   if (isLoadingStatus && !renew) {
     return (
@@ -88,10 +65,10 @@ const RenewScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* <ModalNotice
+      <ModalNotice
         visible={noticeVisible}
         onClose={() => setNoticeVisible(false)}
-      /> */}
+      />
       {/* Header Padronizado */}
       <View style={styles.header}>
         <TouchableOpacity
