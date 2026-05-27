@@ -13,7 +13,8 @@
       "pt-BR": "./locales/pt-BR.json"
     },
     "androidStatusBar": {
-      "barStyle": "light-content"
+      "barStyle": "light-content",
+      "backgroundColor": "#FFFFFF"
     },
     "androidNavigationBar": {
       "barStyle": "dark-content",
@@ -33,7 +34,8 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "56"
+      "buildNumber": "56",
+      "appleTeamId": "J2D7X55DYT"
     },
     "android": {
       "versionCode": 56,
@@ -47,9 +49,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.CAMERA",
-        "CAMERA",
-        "RECORD_AUDIO",
-        "MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "intentFilters": [
         {
@@ -59,7 +59,10 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "br.com.parceladiaria",

@@ -8,19 +8,21 @@ import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { Image, StyleSheet, Text, TextInput, View } from "react-native";
 
-export default function Login() {
-  const { checkCPFMutation } = useLoginMutation();
+export default function Password() {
+  const { loginMutation } = useLoginMutation();
   const { showAlert } = useAlertStore();
-  const cpfRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const senhaRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
-    if (!cpf) {
-      showAlert("error", "Atenção!!", "CPF inválido");
-      cpfRef.current?.focus();
+    if (!password) {
+      showAlert("warning", "Atenção!!", "Senha obrigatórias");
+      senhaRef.current?.focus();
       return;
     }
-    checkCPFMutation.mutate({ cpf });
+    loginMutation.mutate({ password });
   };
 
   return (
@@ -32,31 +34,41 @@ export default function Login() {
           style={styles.logo}
         />
         <View>
-          <Text style={styles.title}>Parcela Diária</Text>
-          <Text style={styles.subtitle}>Insira seu CPF para continuar</Text>
+          <Text style={styles.title}>Senha de acesso</Text>
+          <Text style={styles.subtitle}>
+            {" "}
+            Digite sua senha para acessar sua conta
+          </Text>
         </View>
 
         <InputComponent
-          ref={cpfRef}
-          placeholder="Seu CPF"
-          keyboardType="numeric"
-          maxLength={11}
-          value={cpf}
-          maskType="cpf"
+          ref={senhaRef}
+          placeholder="Senha"
+          secureTextEntry={!showPassword}
+          value={password}
           icon={
-            <FontAwesome name="vcard" size={20} color={Colors.gray.primary} />
+            <FontAwesome name="lock" size={22} color={Colors.gray.primary} />
           }
-          onChangeText={setCpf}
-          returnKeyType="send"
+          rightIcon={
+            <FontAwesome
+              name={showPassword ? "eye-slash" : "eye"}
+              size={22}
+              color={Colors.gray.primary}
+              onPress={() => {
+                setShowPassword(!showPassword);
+              }}
+            />
+          }
+          onChangeText={setPassword}
+          returnKeyType="done"
           onSubmitEditing={handleLogin}
         />
-
         <ButtonComponent
           title="Acessar"
           onPress={handleLogin}
           iconLeft={null}
-          disabled={checkCPFMutation.isPending}
-          loading={checkCPFMutation.isPending}
+          disabled={loginMutation.isPending}
+          loading={loginMutation.isPending}
         />
       </View>
     </Layout>
