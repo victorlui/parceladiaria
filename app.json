@@ -13,8 +13,7 @@
       "pt-BR": "./locales/pt-BR.json"
     },
     "androidStatusBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#FFFFFF"
+      "barStyle": "light-content"
     },
     "androidNavigationBar": {
       "barStyle": "dark-content",

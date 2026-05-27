@@ -4,9 +4,7 @@
     "types": ["./declarations.d.ts"],
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
