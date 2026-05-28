@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { AxiosInstance, create } from "axios";
 import { useAlertStore } from "../store/useAlertStore";
 import { useNotificationsStore } from "../store/useNotificationsStore";
@@ -21,12 +22,19 @@ function getPushToken() {
 api.interceptors.request.use(
   async (config) => {
     const securityHeaders = await createSecurityHeaders();
+    const user = useAuthStore.getState().user;
 
-    Object.assign(config.headers, {
-      ...config.headers,
-      ...securityHeaders,
-      "X-PUSH": getPushToken() || "",
-    });
+    if (securityHeaders) {
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        config.headers.set(key, value);
+      });
+    }
+
+    config.headers.set("X-PUSH", getPushToken() || "");
+
+    if (user?.token) {
+      config.headers.set("Authorization", `Bearer ${user.token}`);
+    }
 
     return config;
   },
@@ -38,7 +46,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log("response api", response);
     return response;
   },
   (error) => {

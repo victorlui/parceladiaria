@@ -1,10 +1,12 @@
 import { useLoginMutation } from "@/features/auth/hooks/useLoginMutation";
 import ButtonComponent from "@/shared/components/Button";
+import ButtonBack from "@/shared/components/ButtonBack";
 import InputComponent from "@/shared/components/Input";
 import Layout from "@/shared/components/Layout";
 import { Colors } from "@/shared/constants/colors";
 import { useAlertStore } from "@/shared/store/useAlertStore";
 import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Image, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -27,6 +29,7 @@ export default function Password() {
 
   return (
     <Layout>
+      <ButtonBack onBack={() => router.replace("/(auth)/login")} />
       <View style={styles.container}>
         <Image
           source={require("../../../assets/images/logo-verde.png")}

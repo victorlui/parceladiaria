@@ -74,4 +74,6 @@ export interface User {
   aprovado_palenca?: number;
   palenca_status?: string | null;
   token?: string | null;
+  password?: string | null;
+  afiliado?: string | null;
 }
