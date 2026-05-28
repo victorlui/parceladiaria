@@ -5,3 +5,10 @@ export function formatarData(data: string) {
 
   return `${yyyy}-${mm}-${dd}`;
 }
+
+export const formatCurrency = (value: number) => {
+  return Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number(value));
+};

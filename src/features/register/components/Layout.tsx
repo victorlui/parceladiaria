@@ -3,6 +3,7 @@ import { Colors } from "@/shared/constants/colors";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useRegisterStore } from "../store/useRgisterStore";
 
 interface Props {
   children: React.ReactNode;
@@ -21,37 +22,51 @@ const LayoutRegister: React.FC<Props> = ({
   showBackButton = false,
   onBack,
 }) => {
+  const { currentStep } = useRegisterStore();
   return (
-    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
+    <View style={styles.mainContainer}>
       {showBackButton && onBack && <ButtonBack onBack={onBack} />}
-
-      <View style={[styles.content, isCenter && styles.centerContent]}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../../../../assets/images/logo-verde.png")}
-            resizeMode="contain"
-            style={styles.logo}
-          />
+      <KeyboardAwareScrollView contentContainerStyle={styles.container}>
+        <View
+          style={[
+            styles.content,
+            isCenter && styles.centerContent,
+            { paddingTop: showBackButton ? 60 : 40 },
+          ]}
+        >
+          {currentStep !== 12 && (
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("../../../../assets/images/logo-verde.png")}
+                resizeMode="contain"
+                style={styles.logo}
+              />
+            </View>
+          )}
+          {title && <Text style={styles.title}>{title}</Text>}
+          {subtitle && (
+            <Text style={[styles.subtitle, { width: isCenter ? 250 : "100%" }]}>
+              {subtitle}
+            </Text>
+          )}
+          {children}
         </View>
-        {title && <Text style={styles.title}>{title}</Text>}
-        {subtitle && (
-          <Text style={[styles.subtitle, { width: isCenter ? 250 : "100%" }]}>
-            {subtitle}
-          </Text>
-        )}
-        {children}
-      </View>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: Colors.white,
   },
+  container: {
+    flexGrow: 1,
+    backgroundColor: Colors.white,
+  },
   content: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     gap: 15,
     width: "100%",

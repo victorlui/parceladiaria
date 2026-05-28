@@ -32,6 +32,7 @@ export default function RootLayout() {
               name="(register)/register"
               options={{ gestureEnabled: false }}
             />
+            <Stack.Screen name="chat" />
           </Stack>
           <GlobalAlert />
         </SafeAreaView>

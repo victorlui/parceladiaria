@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { AxiosInstance, create } from "axios";
+import { router } from "expo-router";
 import { useAlertStore } from "../store/useAlertStore";
 import { useNotificationsStore } from "../store/useNotificationsStore";
 import { createSecurityHeaders } from "../utils/header";
@@ -50,6 +51,28 @@ api.interceptors.response.use(
   },
   (error) => {
     console.log("error response", error.response.data);
+    if (
+      error.response.data.message ===
+      "CEP não encontrado ou serviço indisponível."
+    ) {
+      return Promise.reject(error);
+    }
+
+    if (
+      error.response.data.erro ===
+      "Limite de requisições excedido. Tente novamente mais tarde."
+    ) {
+      useAlertStore
+        .getState()
+        .showAlert(
+          "error",
+          "Atenção!!",
+          "Limite de requisições excedido. Tente novamente mais tarde.",
+        );
+      useAuthStore.getState().logout();
+      router.replace("/(auth)/login");
+      return;
+    }
 
     const errorMessage =
       error.response?.data?.data?.mensagem ||

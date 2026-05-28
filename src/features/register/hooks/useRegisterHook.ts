@@ -5,11 +5,12 @@ import { Etapas } from "@/shared/utils/etapas";
 import { formatarData } from "@/shared/utils/format";
 import { useState } from "react";
 import { useRegisterStore } from "../store/useRgisterStore";
+import { Address } from "../types";
 import { useUpdateUserHook } from "./useUpdateUserHook";
 
 export function useRegisterHook() {
   const { showAlert } = useAlertStore();
-  const { nextStep, prevStep, currentStep } = useRegisterStore();
+  const { nextStep, setStep } = useRegisterStore();
   const { mutate: updateUserAsync, isPending } = useUpdateUserHook();
   const { updateUser, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,9 +89,142 @@ export function useRegisterHook() {
     try {
       updateUser({
         afiliado: affiliateCode,
+        etapa: Etapas.REGISTRANDO_PROFISSAO,
       });
       nextStep();
       return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // gravando profissao
+  const handleNextStep5 = async (item: any) => {
+    setIsLoading(true);
+
+    try {
+      const profissao = String(item?.label ?? "").trim();
+      console.log("profissao", profissao);
+      if (!profissao) {
+        showAlert("warning", "Atenção", "Selecione uma profissão válida");
+        return;
+      }
+
+      updateUserAsync({
+        request: {
+          etapa: item.id === "comerciante" ? Etapas.CNPJ : Etapas.LIMITE,
+          profissao,
+        },
+      });
+      const nextStep = item.id === "comerciante" ? 6 : 8;
+      setStep(nextStep);
+    } catch {
+      showAlert("error", "Atenção", "Erro ao continuar");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // comerciante gravando cnpj
+  const handleNextStep6 = async (cnpj: any) => {
+    setIsLoading(true);
+    try {
+      updateUserAsync({
+        request: {
+          cnpj,
+          etapa: Etapas.INFORMANDO_TIPO_COMERCIO,
+        },
+      });
+      setIsLoading(false);
+      nextStep();
+      return;
+    } catch {
+      showAlert("error", "Atenção", "Erro ao continuar");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // comerciante gravando tipo de comércio
+  const handleNextStep7 = async (businesType: string) => {
+    setIsLoading(true);
+    try {
+      updateUserAsync({
+        request: {
+          tipo_comercio: businesType,
+          etapa: Etapas.LIMITE,
+        },
+      });
+      nextStep();
+    } catch {
+      showAlert("error", "Atenção", "Erro ao continuar");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // gravando email
+  const handleNextStep8 = async (email: string) => {
+    setIsLoading(true);
+    try {
+      const request = {
+        email,
+        etapa: Etapas.REGISTRANDO_PIX,
+      };
+
+      updateUserAsync({ request });
+      updateUser({
+        ...user,
+        email,
+        etapa: Etapas.REGISTRANDO_PIX,
+      });
+      nextStep();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // gravando pix
+  const handleNextStep9 = async (pix: string) => {
+    setIsLoading(true);
+    try {
+      updateUserAsync({
+        request: {
+          pix,
+          etapa: Etapas.REGISTRANDO_ENDERECO,
+        },
+      });
+      nextStep();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // gravando endereco
+  const handleNextStep10 = async (address: Address) => {
+    setIsLoading(true);
+    try {
+      updateUserAsync({
+        request: {
+          ...address,
+          etapa: Etapas.OPEN_FINANCE,
+        },
+      });
+      updateUser({
+        ...user,
+        ...address,
+        etapa: Etapas.OPEN_FINANCE,
+      });
+      nextStep();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNextStep11 = async () => {
+    setIsLoading(true);
+    try {
+      nextStep();
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +235,13 @@ export function useRegisterHook() {
     handleNextStep2,
     handleNextStep3,
     handleNextStep4,
+    handleNextStep5,
+    handleNextStep6,
+    handleNextStep7,
+    handleNextStep8,
+    handleNextStep9,
+    handleNextStep10,
+    handleNextStep11,
     isLoading: isLoading || isPending,
   };
 }
