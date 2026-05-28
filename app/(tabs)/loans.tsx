@@ -23,7 +23,7 @@ const LoansTab: React.FC = () => {
     const totalInstallments =
       loan.installments?.reduce(
         (max, i) => Math.max(max, Number(i.installment || 0)),
-        0
+        0,
       ) || 0;
 
     const paidCount =
@@ -38,7 +38,7 @@ const LoansTab: React.FC = () => {
     try {
       const response = await getLoans();
       const enhanced = (response || []).map((loan: any) =>
-        enhanceLoan(loan as LoansProps)
+        enhanceLoan(loan as LoansProps),
       );
       console.log(enhanced);
       setLoans(enhanced);
@@ -52,7 +52,7 @@ const LoansTab: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       fetchLoans();
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const LoanCard: React.FC<{ loan: LoansProps }> = ({ loan }) => {

@@ -1,8 +1,10 @@
+import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
+import { useIsFocused } from "@react-navigation/native";
 import {
   router,
   useFocusEffect,
@@ -11,7 +13,6 @@ import {
 } from "expo-router";
 import { AlertCircle, Landmark, Lock, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import {
   ActivityIndicator,
   AppState,
@@ -21,7 +22,6 @@ import {
   View,
 } from "react-native";
 import PulsingImageLoader from "./components/PulsingImageLoader";
-import ButtonComponent from "@/components/ui/Button";
 
 type FlowState =
   | "checking"
@@ -246,8 +246,7 @@ const OpenFinanceScreen: React.FC = () => {
             registerData?.profissao === "Motorista";
 
           if (isDriver) {
-            const connectEnabled =
-              data?.data?.openfinance?.motorista?.connect;
+            const connectEnabled = data?.data?.openfinance?.motorista?.connect;
 
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
@@ -283,7 +282,7 @@ const OpenFinanceScreen: React.FC = () => {
           if (registerData?.profissao === "Comerciante") {
             const connectEnabled =
               data?.data?.openfinance?.comerciante?.connect;
-  
+
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
                 await goToTerms();
@@ -481,7 +480,10 @@ const OpenFinanceScreen: React.FC = () => {
               Não conseguimos aprovar com a conta conectada.
             </Text>
 
-            <Text className="mb-10 text-center text-sm font-semibold text-gray-500" style={{ marginBottom: 24 }}>
+            <Text
+              className="mb-10 text-center text-sm font-semibold text-gray-500"
+              style={{ marginBottom: 24 }}
+            >
               Conecte outra conta bancária (de preferência onde você tem maior
               movimentação).
             </Text>
@@ -511,7 +513,10 @@ const OpenFinanceScreen: React.FC = () => {
               Você tem {attempts} tentativas restantes.
             </Text>
 
-            <Text className="mb-10 text-center text-base leading-6 text-gray-500" style={{ marginBottom: 24 }}>
+            <Text
+              className="mb-10 text-center text-base leading-6 text-gray-500"
+              style={{ marginBottom: 24 }}
+            >
               Conecte sua melhor conta para podermos oferecer um crédito
               adequado para você.
             </Text>

@@ -132,7 +132,7 @@ export function useLoginHook() {
             [StatusCadastro.RECUSADO]: "/recusado_screen",
             [StatusCadastro.REANALISE]: "/reanalise_screen",
             [StatusCadastro.ANALISE]: "/analise_screen",
-            [StatusCadastro.APROVADO]: "/pre_aprovado_screen",
+            [StatusCadastro.APROVADO]: "/(tabs)/home",
           };
 
           const route: any = routeByStatus[status as StatusCadastro];
@@ -175,6 +175,27 @@ export function useLoginHook() {
         };
 
         await useAuthStore.getState().login(data?.token, user);
+
+        if (etapa === Etapas.FINALIZADO) {
+          if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
+            router.replace("/divergencia_screen");
+            return;
+          }
+          const routeByStatus: Partial<Record<StatusCadastro, string>> = {
+            [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
+            [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
+            [StatusCadastro.RECUSADO]: "/recusado_screen",
+            [StatusCadastro.REANALISE]: "/reanalise_screen",
+            [StatusCadastro.ANALISE]: "/analise_screen",
+            [StatusCadastro.APROVADO]: "/(tabs)/home",
+          };
+
+          const route: any = routeByStatus[status as StatusCadastro];
+          if (route) {
+            router.replace(route);
+            return;
+          }
+        }
 
         router.replace("/(tabs)/home");
         return;

@@ -156,7 +156,7 @@ const IndicationsScreen: React.FC = () => {
     );
   };
 
-  if ((!foiIndicado && totalLoans > 1 && indications === null) || !hasCode) {
+  if (indications === null && !foiIndicado && !hasCode && totalLoans > 1) {
     return (
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
@@ -204,7 +204,7 @@ const IndicationsScreen: React.FC = () => {
     );
   }
 
-  if ((!foiIndicado && totalLoans <= 1 && indications === null) || hasCode) {
+  if (indications === null && !foiIndicado && (hasCode || totalLoans <= 1)) {
     return (
       <SafeAreaView style={styles.container}>
         <ButtonBack />

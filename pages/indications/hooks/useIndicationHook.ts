@@ -29,7 +29,7 @@ export function useIndicationHook() {
   async function getIndications() {
     try {
       const response = await api.get("/v1/affiliate");
-
+      console.log("response indeication", response);
       const data = response.data?.data;
       const hasFoiIndicado =
         !!data && Object.prototype.hasOwnProperty.call(data, "foi_indicado");
@@ -38,6 +38,7 @@ export function useIndicationHook() {
         setIndications(null);
         setTermos(null);
         setHasCode(data.codigo_disponivel);
+        return;
       }
 
       if (hasFoiIndicado) {

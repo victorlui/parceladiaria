@@ -9,8 +9,10 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useCheckStatus } from "@/hooks/useCheckStatus";
 
 const RecusadoScreen: React.FC = () => {
+  useCheckStatus("/recusado_screen");
   useDisableBackHandler();
   const { logout, userRegister } = useAuthStore();
   const { data } = useRegisterStore();

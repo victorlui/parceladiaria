@@ -2,7 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { View, TouchableOpacity, Text } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FloatingPayButton = ({ disabled, ...props }: any) => {
@@ -58,86 +58,93 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore.getState();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Colors.green.primary,
-        tabBarHideOnKeyboard: true,
-        tabBarStyle: {
-          // altura base + espaço seguro inferior (evita sobrepor à barra do Android)
-          height: 64 + insets.bottom,
-          // padding inferior igual ao safe area para manter tudo visível
-          paddingBottom: Math.max(insets.bottom, 12),
-          // pequeno padding superior para dar respiro aos ícones
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "Início",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="home" color={color} />
-          ),
+    <>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: Colors.green.primary,
+          tabBarHideOnKeyboard: true,
+          tabBarStyle: {
+            // altura base + espaço seguro inferior (evita sobrepor à barra do Android)
+            height: 64 + insets.bottom,
+            // padding inferior igual ao safe area para manter tudo visível
+            paddingBottom: Math.max(insets.bottom, 12),
+            // pequeno padding superior para dar respiro aos ícones
+          },
         }}
-      />
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: "Início",
+            tabBarIcon: ({ color }) => (
+              <FontAwesome size={24} name="home" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="loans"
-        options={{
-          title: "Empréstimos",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="file-invoice-dollar" size={22} color={color} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="loans"
+          options={{
+            title: "Empréstimos",
+            tabBarIcon: ({ color }) => (
+              <FontAwesome6
+                name="file-invoice-dollar"
+                size={22}
+                color={color}
+              />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="payments"
-        options={{
-          title: "Pagar",
-          tabBarLabel: "", // rótulo padrão oculto (usamos o Text customizado)
-          tabBarButton: (props) => (
-            <FloatingPayButton
-              {...props}
-              {...{ disabled: user?.lastLoan?.blocked }}
-            />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="payments"
+          options={{
+            title: "Pagar",
+            tabBarLabel: "", // rótulo padrão oculto (usamos o Text customizado)
+            tabBarButton: (props) => (
+              <FloatingPayButton
+                {...props}
+                {...{ disabled: user?.lastLoan?.blocked }}
+              />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Perfil",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="user" color={color} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Perfil",
+            tabBarIcon: ({ color }) => (
+              <FontAwesome size={24} name="user" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="config"
-        options={{
-          title: "Config",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={24} name="cog" color={color} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="config"
+          options={{
+            title: "Config",
+            tabBarIcon: ({ color }) => (
+              <FontAwesome size={24} name="cog" color={color} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="renew"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="renew_list"
-        options={{
-          href: null,
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="renew"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="renew_list"
+          options={{
+            href: null,
+          }}
+        />
+      </Tabs>
+      {/* <ButtonChat botton={110} /> */}
+    </>
   );
 }

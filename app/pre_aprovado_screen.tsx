@@ -10,8 +10,10 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useCheckStatus } from "@/hooks/useCheckStatus";
 
 const PreAprovado: React.FC = () => {
+  useCheckStatus("/pre_aprovado_screen");
   const { data: registerData } = useRegisterStore();
   const [loadingAccept, setLoadingAccept] = useState(false);
 

@@ -1,13 +1,14 @@
 import ButtonChat from "@/components/ui/ButtonChat";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
+import { useCheckStatus } from "@/hooks/useCheckStatus";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ReanaliseScreen: React.FC = () => {
+  useCheckStatus("/reanalise_screen");
   useDisableBackHandler();
   const { logout } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -142,23 +144,6 @@ const ReanaliseScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Only fetch silently on mount, without alerts/redirects
-    const silentCheck = async () => {
-      try {
-        const response = await api.get("/v1/client");
-        const dataClient =
-          response.data?.data?.data || response.data?.data || response.data;
-        if (dataClient?.type === "client") {
-          checkStatus(); // will log them in
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-    silentCheck();
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

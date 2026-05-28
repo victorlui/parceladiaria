@@ -3,6 +3,7 @@ import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   PermissionsAndroid,
@@ -23,7 +24,9 @@ import ButtonChat from "../ui/ButtonChat";
 const ChamadaVideoScreen: React.FC = () => {
   const { logout } = useAuthStore((state) => state);
   const { data: registerData } = useRegisterStore();
+  const { user } = useAuthStore();
   const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [call, setCall] = useState<{
     expira_minutos: number;
@@ -99,16 +102,23 @@ const ChamadaVideoScreen: React.FC = () => {
   }, [requestPermissions]);
 
   const onExit = () => {
-    if (callExpiryTimeoutRef.current) {
-      clearTimeout(callExpiryTimeoutRef.current);
-      callExpiryTimeoutRef.current = null;
-    }
+    // if (callExpiryTimeoutRef.current) {
+    //   clearTimeout(callExpiryTimeoutRef.current);
+    //   callExpiryTimeoutRef.current = null;
+    // }
 
     logout();
     router.replace("/login");
   };
 
+  const onLeaveCall = () => {
+    logout();
+    router.replace("/login");
+  };
+
   const fetchChamada = React.useCallback(async () => {
+    console.log("fetchChamada", registerData, user);
+
     const { data } = await axios.post(
       "https://cadastroparceladiaria.com.br/api/chamada-app",
       {
@@ -137,24 +147,34 @@ const ChamadaVideoScreen: React.FC = () => {
         return;
       }
 
+      setIsLoading(true);
+
       const data = await fetchChamada();
+      console.log("data chamada", data);
       setCall(data);
     } catch (error) {
-      let description = "Tente novamente em instantes.";
+      const nomeUsuario = registerData?.nome?.split(" ")[0] || "Usuário";
+      let description = `${nomeUsuario}, tente novamente em instantes.`;
 
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        const serverMessage = (error.response?.data as any)?.message;
+        const responseData = error.response?.data as any;
+        const serverMessage = responseData?.message;
 
-        if (typeof serverMessage === "string" && serverMessage.trim()) {
+        if (status === 400) {
+          const details =
+            typeof responseData === "object"
+              ? JSON.stringify(responseData)
+              : responseData;
+          description = `Erro 400: ${serverMessage || details || "Dados inválidos."}`;
+        } else if (typeof serverMessage === "string" && serverMessage.trim()) {
           description = serverMessage;
         } else if (status) {
-          description = `Erro ${status}. Tente novamente em instantes.`;
+          description = `Erro ${status}. ${nomeUsuario}, tente novamente em instantes.`;
         } else if (error.code === "ECONNABORTED") {
-          description = "Timeout. Verifique sua internet e tente novamente.";
+          description = `Timeout. ${nomeUsuario}, verifique sua internet e tente novamente.`;
         } else if (!error.response) {
-          description =
-            "Erro de conexão. Verifique sua internet e tente novamente.";
+          description = `Erro de conexão. ${nomeUsuario}, verifique sua internet e tente novamente.`;
         }
 
         console.log("Erro ao iniciar chamada (axios):", {
@@ -170,19 +190,27 @@ const ChamadaVideoScreen: React.FC = () => {
       }
 
       Alert.alert("Não foi possível iniciar a chamada", description);
+    } finally {
+      setIsLoading(false);
     }
-  }, [fetchChamada, hasPermissions, requestPermissions]);
+  }, [fetchChamada, hasPermissions, requestPermissions, registerData?.nome]);
 
   const onRefreshChamadaAfterExpiry = React.useCallback(async () => {
     try {
       const data = await fetchChamada();
       setCall(data);
-    } catch {
+    } catch (error) {
       setCall(null);
+
+      let errorDetails = "";
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        const responseData = error.response.data;
+        errorDetails = `\nDetalhes (400): ${typeof responseData === "object" ? JSON.stringify(responseData) : responseData}`;
+      }
 
       Alert.alert(
         "Link expirado",
-        "O link expirou e não foi possível gerar um novo agora. Tente novamente.",
+        `O link expirou e não foi possível gerar um novo agora. Tente novamente.${errorDetails}`,
       );
     }
   }, [fetchChamada]);
@@ -264,7 +292,10 @@ const ChamadaVideoScreen: React.FC = () => {
             Não saia desta tela até o final da chamada para evitar desconexão.
           </Text>
 
-          <TouchableOpacity onPress={onExit} style={styles.secondaryButton}>
+          <TouchableOpacity
+            onPress={onLeaveCall}
+            style={styles.secondaryButton}
+          >
             <Text style={styles.secondaryButtonText}>Sair</Text>
           </TouchableOpacity>
         </View>
@@ -330,15 +361,29 @@ const ChamadaVideoScreen: React.FC = () => {
           <TouchableOpacity
             onPress={onRequestChamada}
             style={styles.whatsappButton}
+            disabled={isLoading}
           >
-            <FontAwesome name="whatsapp" size={20} color={Colors.white} />
-
-            <Text style={styles.whatsappButtonText}>Fazer a video chamada</Text>
-
-            <FontAwesome name="arrow-right" size={16} color={Colors.white} />
+            {isLoading ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <>
+                <FontAwesome name="whatsapp" size={20} color={Colors.white} />
+                <Text style={styles.whatsappButtonText}>
+                  Fazer a video chamada
+                </Text>
+                <FontAwesome
+                  name="arrow-right"
+                  size={16}
+                  color={Colors.white}
+                />
+              </>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={onExit} style={styles.secondaryButton}>
+          <TouchableOpacity
+            onPress={onLeaveCall}
+            style={styles.secondaryButton}
+          >
             <Text style={styles.secondaryButtonText}>Sair</Text>
           </TouchableOpacity>
         </View>
