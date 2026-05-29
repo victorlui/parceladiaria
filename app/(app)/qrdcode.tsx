@@ -1,9 +1,16 @@
 import StatusBar from "@/components/ui/StatusBar";
+import { Colors } from "@/constants/Colors";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
+import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
+import { getPaymentStatus } from "@/services/loans";
 import { useQRCodeStore } from "@/store/qrcode";
+import { formatCurrency } from "@/utils/formats";
+import { Entypo, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -11,15 +18,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Colors } from "@/constants/Colors";
-import { LinearGradient } from "expo-linear-gradient";
-import { Entypo, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { formatCurrency } from "@/utils/formats";
 import QRCode from "react-native-qrcode-svg";
-import * as Clipboard from "expo-clipboard";
-import { getPaymentStatus } from "@/services/loans";
-import { useQueryDataClient } from "@/hooks/useQueryClient";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const COLORS = {
   GRADIENT_START: "#209c91",
@@ -100,29 +100,24 @@ const QrCodePayment: React.FC = () => {
     };
   }, [paymentId, refetch]);
 
+  if (isLoading) {
+    return (
+      <PulsingImageLoader
+        source={require("@/assets/images/logo-verde.png")}
+        text="Gerando QR Code para pagamento..."
+      />
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 ">
       <StatusBar />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
-        {isLoading && (
-          <View className="z-10 absolute top-0 bottom-0 left-0 right-0 flex items-center justify-center bg-black/50">
-            <ActivityIndicator color={Colors.green.primary} size={40} />
-            <Text className="text-white mt-4 font-semibold">
-              Gerando QR Code para pagamento...
-            </Text>
-          </View>
-        )}
-
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {!isLoading && (
           <View>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 15,
-              }}
+              style={styles.backButton}
             >
               <FontAwesome5 name="arrow-left" size={18} color="black" />
               <Text style={styles.title}>Pagamentos</Text>
@@ -138,7 +133,7 @@ const QrCodePayment: React.FC = () => {
                 <Text style={styles.bodyValue}>
                   {formatCurrency(Number(qrCodeData?.total_with_tax))}
                 </Text>
-                <Text style={[styles.bodyText, { textTransform: "none" }]}>
+                <Text style={[styles.bodyText, styles.bodyTextNoTransform]}>
                   Referente a {qrCodeData?.qty} parcela(s)
                 </Text>
               </View>
@@ -214,9 +209,7 @@ const QrCodePayment: React.FC = () => {
               style={styles.buttonHome}
               onPress={() => router.replace("/(tabs)/home")}
             >
-              <Text style={{ color: Colors.black, fontWeight: "bold" }}>
-                Voltar ao Início
-              </Text>
+              <Text style={styles.buttonHomeText}>Voltar ao Início</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -405,6 +398,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginVertical: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 15,
+  },
+  bodyTextNoTransform: {
+    textTransform: "none",
+  },
+  buttonHomeText: {
+    color: Colors.black,
+    fontWeight: "bold",
   },
 });
 

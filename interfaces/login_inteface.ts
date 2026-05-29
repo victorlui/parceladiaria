@@ -83,6 +83,7 @@ export interface ApiUserData {
   whatsapp?: string | null;
   whatsapp2?: string | null;
   zip_code?: string | null;
+  palenca_status?: boolean | null;
 }
 
 export interface ApiUserResponse {

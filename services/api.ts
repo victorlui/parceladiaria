@@ -220,7 +220,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.log("error request", error);
     return Promise.reject(error);
   },
 );

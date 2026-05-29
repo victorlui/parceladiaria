@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, Text } from "react-native";
-import { WebView } from "react-native-webview";
 import * as FileSystem from "expo-file-system/legacy";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { WebView } from "react-native-webview";
 
 type Props = {
   uri: string;
@@ -20,7 +20,6 @@ const PDFViewer: React.FC<Props> = ({ uri }) => {
 
         setBase64Pdf(base64);
       } catch (err) {
-        console.log("Erro ao carregar PDF:", err);
         setError("Não foi possível carregar o PDF.");
       }
     })();

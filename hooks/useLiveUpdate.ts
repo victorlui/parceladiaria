@@ -25,8 +25,6 @@ export function useLiveUpdate() {
     }
 
     async function fetchUpdate() {
-      console.log("Verificando atualizações no servidor...");
-
       if (AppState.currentState !== "active") return;
 
       // Se já estiver checando, ignora esta rodada do intervalo
@@ -51,8 +49,6 @@ export function useLiveUpdate() {
         );
 
         if (update.isAvailable) {
-          console.log("Update encontrado! Baixando...");
-
           // 2. Baixa o código novo em segundo plano
           await withTimeout(Updates.fetchUpdateAsync(), CHECK_TIMEOUT_MS);
 
@@ -73,7 +69,7 @@ export function useLiveUpdate() {
           );
         }
       } catch (error) {
-        console.log("Erro ao buscar update:", error);
+        return error;
       } finally {
         isChecking.current = false;
       }

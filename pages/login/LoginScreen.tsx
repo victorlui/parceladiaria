@@ -38,7 +38,7 @@ const LoginScreen: React.FC = () => {
       showError("Atenção", "CPF inválido");
       return;
     }
-    console.log("rawCpf", rawCpf);
+
     setData({ cpf: rawCpf });
     setCpf(rawCpf);
     checkCPFMutation.mutate({

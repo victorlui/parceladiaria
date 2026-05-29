@@ -42,7 +42,6 @@ const AffiliateCode: React.FC<Props> = ({ onNext, isLoading }) => {
         return;
       }
       onNext("");
-      console.log("sucesso", data.data);
     } finally {
       setLoading(false);
     }

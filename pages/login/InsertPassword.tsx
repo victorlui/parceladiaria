@@ -49,8 +49,6 @@ const InsertPasswordScreen: React.FC = () => {
     try {
       const cleanPassword = password.trim();
       const rawCpf = (data?.cpf ?? "").replace(/\D/g, "");
-      console.log("cleanPassword", cleanPassword);
-      console.log("rawCpf", rawCpf);
 
       loginMutation.mutate({
         cpf: rawCpf,

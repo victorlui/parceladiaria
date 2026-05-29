@@ -97,7 +97,7 @@ export function useRegisterAddress() {
 
     try {
       const { data } = await api.get(`cep/${cleanCep}`);
-      console.log(data);
+
       setForm((prev) => ({
         ...prev,
         endereco: data?.data?.logradouro ?? data?.logradouro ?? "",
@@ -110,15 +110,11 @@ export function useRegisterAddress() {
           data?.city ??
           "",
       }));
-
-      refs.numero?.current?.focus();
-    } catch (error) {
+    } catch (_e) {
       setErrors((prev) => ({
         ...prev,
         cep: "CEP não encontrado",
       }));
-
-      console.log(error);
     } finally {
       setLoadingCep(false);
     }

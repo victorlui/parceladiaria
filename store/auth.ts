@@ -86,9 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await removeToken();
       queryClient.clear();
       set({ token: null, user: null });
-    } catch (error) {
-      console.log("logout", error);
-    }
+    } catch {}
   },
 
   restoreToken: async (opts) => {

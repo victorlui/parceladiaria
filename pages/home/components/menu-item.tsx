@@ -1,4 +1,10 @@
-import { Text, TouchableOpacity, View, Animated } from "react-native";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import CircleIcon from "../../../components/ui/CircleIcon";
 
@@ -21,30 +27,17 @@ export const MenuItem: React.FC<Item> = ({
   disabled,
 }) => {
   return (
-    <Animated.View className="items-center w-[25%] my-5">
+    <Animated.View style={styles.container}>
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.8}
-        className="items-center"
+        style={styles.touchable}
         disabled={disabled}
       >
-        <View className="relative">
+        <View style={styles.iconContainer}>
           {badge && (
-            <View
-              style={{
-                position: "absolute",
-                top: -4,
-                left: -4,
-                backgroundColor: "#dc2626",
-                borderRadius: 9999,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                zIndex: 10,
-              }}
-            >
-              <Text style={{ color: "#ffffff", fontSize: 10 }}>
-                {titleBadge}
-              </Text>
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>{titleBadge}</Text>
             </View>
           )}
           <CircleIcon
@@ -58,10 +51,44 @@ export const MenuItem: React.FC<Item> = ({
             gradientEnd={{ x: 0.9, y: 0.9 }}
           />
         </View>
-        <Text className="text-gray-700 text-xs font-semibold mt-2 text-center w-24">
-          {title}
-        </Text>
+        <Text style={styles.titleText}>{title}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    width: "25%",
+    marginVertical: 20,
+  },
+  touchable: {
+    alignItems: "center",
+  },
+  iconContainer: {
+    position: "relative",
+  },
+  badgeContainer: {
+    position: "absolute",
+    top: -4,
+    left: -4,
+    backgroundColor: "#dc2626",
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    zIndex: 10,
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+  },
+  titleText: {
+    color: "#374151",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 8,
+    textAlign: "center",
+    width: 96,
+  },
+});

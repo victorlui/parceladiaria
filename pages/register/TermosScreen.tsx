@@ -58,7 +58,7 @@ const TermosScreen: React.FC = () => {
       setTerms(content);
       hasLoadedTerms.current = true;
     } catch (error) {
-      console.log("error", error);
+      return error;
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +104,7 @@ const TermosScreen: React.FC = () => {
         },
       });
     } catch (error) {
-      console.log("error", error);
+      return error;
     }
   };
 

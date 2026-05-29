@@ -1,5 +1,5 @@
-import * as FileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 
@@ -28,7 +28,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       }
       // nada disponível
       console.warn(
-        "expo-file-system: nem statAsync nem getInfoAsync disponíveis."
+        "expo-file-system: nem statAsync nem getInfoAsync disponíveis.",
       );
       return null;
     } catch (err) {
@@ -39,7 +39,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
 
   const checkFileSize = async (
     uri: string,
-    customMaxSize?: number
+    customMaxSize?: number,
   ): Promise<{ valid: boolean; fixedUri: string }> => {
     try {
       const sizeLimit = (customMaxSize ?? maxSizeMB) * 1024 * 1024;
@@ -79,7 +79,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       console.warn(
         "Não foi possível obter tamanho do arquivo. URI:",
         uri,
-        " - Considere atualizar expo-file-system ou verificar permissões."
+        " - Considere atualizar expo-file-system ou verificar permissões.",
       );
       return { valid: false, fixedUri: uri };
     } catch (error) {
@@ -98,7 +98,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
       if (cameraStatus !== "granted" || mediaStatus !== "granted") {
         Alert.alert(
           "Permissões necessárias",
-          "Para usar esta funcionalidade, é necessário permitir o acesso à câmera e galeria."
+          "Para usar esta funcionalidade, é necessário permitir o acesso à câmera e galeria.",
         );
         return false;
       }
@@ -111,7 +111,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
   };
 
   const selectPDF = async (
-    customName?: string
+    customName?: string,
   ): Promise<SelectedFile | null> => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -126,7 +126,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
         if (!valid) {
           Alert.alert(
             "Arquivo muito grande",
-            `O arquivo PDF deve ter no máximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`
+            `O arquivo PDF deve ter no máximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`,
           );
           return null;
         }
@@ -157,7 +157,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
 
   const takePhoto = async (
     from: "camera" | "library",
-    customName?: string
+    customName?: string,
   ): Promise<SelectedFile | null> => {
     try {
       const hasPermission = await requestPermissions();
@@ -178,17 +178,6 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
 
       if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
-        // const isValidSize = await checkFileSize(asset.uri, maxSizeMB * 3);
-        // console.log("isValidSize", isValidSize);
-        // if (!isValidSize) {
-        //   Alert.alert(
-        //     "Imagem muito grande",
-        //     `A imagem deve ter no máximo ${maxSizeMB}MB. Por favor, tire uma nova foto ou selecione uma imagem menor.`
-        //   );
-        //   return null;
-        // }
-
-        // console.log("asset", asset);
 
         return {
           uri: asset.uri,
@@ -207,7 +196,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
 
   const takeVideo = async (
     from: "camera" | "library",
-    customName?: string
+    customName?: string,
   ): Promise<SelectedFile | null> => {
     try {
       const hasPermission = await requestPermissions();
@@ -235,7 +224,7 @@ export function useDocumentPicker(maxSizeMB: number = 10) {
         if (!isValidSize) {
           Alert.alert(
             "Vídeo muito grande",
-            `O vídeo deve ter no máximo ${maxVideoSizeMB}MB. Por favor, grave um vídeo menor ou reduza a qualidade.`
+            `O vídeo deve ter no máximo ${maxVideoSizeMB}MB. Por favor, grave um vídeo menor ou reduza a qualidade.`,
           );
           return null;
         }

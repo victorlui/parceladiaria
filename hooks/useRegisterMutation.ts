@@ -1,4 +1,4 @@
-import { sendCode, checkOTP } from "@/services/code";
+import { checkOTP, sendCode } from "@/services/code";
 import { registerService, updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterAuthStore } from "@/store/register";
@@ -12,7 +12,6 @@ export function useRegisterMutation() {
     mutationFn: ({ phone, method }: { phone: string; method: string }) =>
       sendCode(phone, method),
     onSuccess: (data) => {
-      console.log("sucesso", data);
       return data;
     },
     onError: (error: any) => {
@@ -56,7 +55,6 @@ export function useRegisterDataMutation() {
     }) => registerService(cpf, phone, password),
 
     onSuccess: (data) => {
-      console.log("data", data);
       const authStore = useAuthStore.getState();
       const { login } = authStore;
       if (data?.success) {
@@ -66,7 +64,6 @@ export function useRegisterDataMutation() {
       return data;
     },
     onError: (error: any) => {
-      console.log("error", error);
       alert(error.message || "Erro ao verificar código");
     },
   });
@@ -140,7 +137,7 @@ export function useUpdateUserMutation() {
                 router.replace("/login");
               },
             },
-          ]
+          ],
         );
       } else {
         Alert.alert("Atenção", error.message || "Erro ao atualizar usuário");

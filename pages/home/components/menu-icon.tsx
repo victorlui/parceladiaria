@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { View } from "react-native";
-import { SkeletonItem } from "../../../components/ui/Skeleton";
-import { router, useFocusEffect } from "expo-router";
-import { useAuthStore } from "@/store/auth";
 import { getMenuItems } from "@/constants/menuItems";
-import { MenuItem } from "./menu-item";
-import { renewStatus } from "@/services/renew";
-import { useRenewStore } from "@/store/renew";
 import { useIndicationHook } from "@/pages/indications/hooks/useIndicationHook";
 import { getLoans } from "@/services/loans";
+import { renewStatus } from "@/services/renew";
+import { useAuthStore } from "@/store/auth";
+import { useRenewStore } from "@/store/renew";
 import { Ionicons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import React, { useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { SkeletonItem } from "../../../components/ui/Skeleton";
+import { MenuItem } from "./menu-item";
 
 const MenuIcon: React.FC = () => {
   const { user } = useAuthStore();
@@ -17,7 +17,7 @@ const MenuIcon: React.FC = () => {
   const { foiIndicado, indications, updateTotalLoans } = useIndicationHook();
   const baseItems = getMenuItems({ user, router });
   const [available, setAvailable] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [totalLoans, setTotalLoans] = useState<number>(0);
 
   const items = React.useMemo(() => {
@@ -67,18 +67,14 @@ const MenuIcon: React.FC = () => {
         setLoading(true);
         try {
           const response = await renewStatus();
-          console.log("response", response.data);
           const loans = await getLoans();
           updateTotalLoans(loans.length);
           setTotalLoans(loans.length);
           setAvailable(response.data.data.can_renew ?? false);
           setRenew(response.data.data);
         } catch (error: any) {
-          //   if (!isActive) return;
-          console.log("error", error?.response ?? error);
           setAvailable(false);
         } finally {
-          //   if (!isActive) return;
           setLoading(false);
         }
       };
@@ -88,12 +84,9 @@ const MenuIcon: React.FC = () => {
   );
 
   return (
-    <View
-      className="flex-row justify-between px-4"
-      style={{ marginVertical: 12 }}
-    >
+    <View style={styles.container}>
       {loading ? (
-        <View className="flex-row justify-between w-full my-5">
+        <View style={styles.skeletonContainer}>
           {Array.from({ length: 4 }).map((_, index) => (
             <SkeletonItem key={index} />
           ))}
@@ -114,5 +107,21 @@ const MenuIcon: React.FC = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    marginVertical: 12,
+  },
+  skeletonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginVertical: 12,
+  },
+});
 
 export default MenuIcon;

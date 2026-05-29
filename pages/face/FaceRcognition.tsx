@@ -1,20 +1,20 @@
+import ButtonComponent from "@/components/ui/Button";
+import { Colors } from "@/constants/Colors";
+import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
+import { uploadRawFile } from "@/hooks/useUploadDocument";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { useSettingsStore } from "@/store/settings";
+import { Etapas } from "@/utils";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useRef, useState } from "react";
+import * as Network from "expo-network";
+import React, { useRef, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { uploadRawFile } from "@/hooks/useUploadDocument";
-import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { Etapas } from "@/utils";
-import { useSettingsStore } from "@/store/settings";
 import FaceCaptureWebView from "./components/FaceCaptureWebView";
-import * as Network from "expo-network";
-import TipItem from "./components/TipItem";
-import ButtonComponent from "@/components/ui/Button";
 import LoadingScreen from "./components/LoadingScreen";
-import { useAuthStore } from "@/store/auth";
-import api from "@/services/api";
+import TipItem from "./components/TipItem";
 
 const FaceRecognitionScreen: React.FC = () => {
   const { mutateAsync: updateUser, isPending } = useUpdateUserMutation();
@@ -27,7 +27,6 @@ const FaceRecognitionScreen: React.FC = () => {
 
   const sendPhoto = async (photoData: any) => {
     if (isSendingPhotoRef.current) {
-      console.log("[FaceRecognition] sendPhoto ignored: already sending");
       return;
     }
 
@@ -87,7 +86,6 @@ const FaceRecognitionScreen: React.FC = () => {
         return;
       }
 
-      console.log("[FaceRecognition] profissao not handled", { profissao });
       Alert.alert(
         "Erro",
         "Não foi possível finalizar o envio. Tente novamente.",
@@ -96,7 +94,6 @@ const FaceRecognitionScreen: React.FC = () => {
       if (error?.response?.status === 401) return;
       Alert.alert("Erro", "Não foi possível enviar a foto. Tente novamente.");
     } finally {
-      console.log("[FaceRecognition] sendPhoto end");
       isSendingPhotoRef.current = false;
       setIsSendingPhoto(false);
       setLoading(false);
@@ -114,12 +111,9 @@ const FaceRecognitionScreen: React.FC = () => {
         onSuccess={(photo) => sendPhoto(photo)}
         onClose={() => {
           if (isSendingPhotoRef.current) {
-            console.log(
-              "[FaceRecognition] onClose ignored: sending in progress",
-            );
             return;
           }
-          console.log("[FaceRecognition] capture modal closed by user");
+
           setOpen(false);
         }}
       />

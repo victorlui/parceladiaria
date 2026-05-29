@@ -1,14 +1,56 @@
-import * as Notification from "expo-notifications";
-import * as Linking from "expo-linking";
-import { Alert, AppState, Platform } from "react-native";
-import Constants from "expo-constants";
+import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
+import { useRegisterStore } from "@/store/register_new";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
+import * as Notification from "expo-notifications";
+import { router } from "expo-router";
 import { useEffect, useRef } from "react";
+import { Alert, AppState } from "react-native";
+
+// Configuração do handler de notificações para exibir alertas em foreground (primeiro plano)
+Notification.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export function usePushNotification(options?: { disabled?: boolean }) {
   const appState = useRef(AppState.currentState);
   const isAlertShown = useRef(false);
   const disabled = options?.disabled;
+
+  // Lida com o clique na notificação e o redirecionamento
+  useEffect(() => {
+    const responseListener =
+      Notification.addNotificationResponseReceivedListener((response) => {
+        const url = response.notification.request.content.data?.url;
+
+        if (url && typeof url === "string") {
+          const { hydrated } = useRegisterStore.getState();
+          const { isLoading } = useAuthStore.getState();
+          const isAppReady = !isLoading && hydrated;
+
+          if (isAppReady) {
+            // Pequeno delay para garantir que a navegação e o Zustand não entrem em conflito
+            setTimeout(() => {
+              router.push(url as any);
+            }, 100);
+          } else {
+            // Guarda a rota para o redirecionamento pós-carregamento no index.tsx
+            useNotificationsStore.getState().setPendingRoute(url);
+          }
+        }
+      });
+
+    return () => {
+      responseListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (disabled) {
@@ -71,7 +113,7 @@ export function usePushNotification(options?: { disabled?: boolean }) {
         ).data;
         setPushToken(token);
       } catch (error) {
-        console.log("Erro ao pegar token:", error);
+        return error;
       }
     };
 

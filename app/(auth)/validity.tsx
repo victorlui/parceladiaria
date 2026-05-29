@@ -53,7 +53,6 @@ const Validity: React.FC = () => {
         error.response?.data?.message ||
           "Ocorreu um erro ao verificar seu CPF.",
       );
-      console.log("error", error.response);
     } finally {
       setIsLoading(false);
     }

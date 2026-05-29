@@ -1,7 +1,14 @@
+import ItemRenew from "@/components/renew/item-renew";
 import StatusBar from "@/components/ui/StatusBar";
+import { Colors } from "@/constants/Colors";
 import { RenewListProps } from "@/interfaces/renew";
 import { renewList } from "@/services/renew";
-import { useFocusEffect, router } from "expo-router";
+import { useAuthStore } from "@/store/auth";
+import { useConfirmPixStore } from "@/store/confirm-pix";
+import { formatCurrency } from "@/utils/formats";
+import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
@@ -12,14 +19,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
-import ItemRenew from "@/components/renew/item-renew";
-import { useAuthStore } from "@/store/auth";
-import { LinearGradient } from "expo-linear-gradient";
-import { formatCurrency } from "@/utils/formats";
-import { useRenewStore } from "@/store/renew";
-import { useConfirmPixStore } from "@/store/confirm-pix";
 
 const RenewList: React.FC = () => {
   const { user } = useAuthStore((state) => state);
@@ -49,7 +48,7 @@ const RenewList: React.FC = () => {
       }));
       setList(renewWithSelection as RenewListProps[]);
     } catch (error: any) {
-      console.log("error", error?.response);
+      return;
     } finally {
       setLoading(false);
     }

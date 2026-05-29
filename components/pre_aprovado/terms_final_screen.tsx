@@ -1,11 +1,12 @@
+import { Colors } from "@/constants/Colors";
+import api from "@/services/api";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Buffer } from "buffer";
+import { File, Paths } from "expo-file-system";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
-import { Colors } from "@/constants/Colors";
-import { File, Paths } from "expo-file-system";
-import { Buffer } from "buffer";
 import Pdf from "react-native-pdf";
 import ButtonComponent from "../ui/Button";
-import api from "@/services/api";
 global.Buffer = Buffer;
 
 type Props = {
@@ -37,7 +38,6 @@ const TermsFinalScreen: React.FC<Props> = ({ loadingAccept, onAccept }) => {
 
       setPdfUri(file.uri);
     } catch (error) {
-      console.log(error);
       Alert.alert("Erro", "Ocorreu um erro ao carregar o contrato.");
     } finally {
       setLoading(false);
@@ -59,10 +59,25 @@ const TermsFinalScreen: React.FC<Props> = ({ loadingAccept, onAccept }) => {
 
   return (
     <View style={styles.container}>
-      <View style={{ flex: 1 }}>
+      <View style={styles.header}>
+        <View style={styles.headerIconContainer}>
+          <MaterialCommunityIcons
+            name="file-document-outline"
+            size={28}
+            color={Colors.primaryColor}
+          />
+        </View>
+        <Text style={styles.title}>Contrato de Adesão</Text>
+        <Text style={styles.description}>
+          Por favor, leia atentamente o documento abaixo. Ao aceitar, você
+          concorda com todas as condições estabelecidas.
+        </Text>
+      </View>
+
+      <View style={styles.pdfContainer}>
         <Pdf
           source={{ uri: pdfUri }}
-          style={{ flex: 1 }}
+          style={styles.pdf}
           fitPolicy={0} // 🔥 Ajusta largura automaticamente
           enablePaging={false}
           horizontal={false}
@@ -72,18 +87,20 @@ const TermsFinalScreen: React.FC<Props> = ({ loadingAccept, onAccept }) => {
             console.log("Total de páginas:", numberOfPages);
           }}
           onError={(error) => {
-            console.log(error);
+            Alert.alert("Erro", "Ocorreu um erro ao carregar o contrato.");
           }}
         />
       </View>
 
-      <ButtonComponent
-        title="Aceitar e Continuar"
-        onPress={onAccept}
-        disabled={loadingAccept}
-        loading={loadingAccept}
-        iconLeft={null}
-      />
+      <View style={styles.footer}>
+        <ButtonComponent
+          title="Li e aceito os termos"
+          onPress={onAccept}
+          disabled={loadingAccept}
+          loading={loadingAccept}
+          iconLeft={null}
+        />
+      </View>
     </View>
   );
 };
@@ -91,16 +108,61 @@ const TermsFinalScreen: React.FC<Props> = ({ loadingAccept, onAccept }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.white,
+  },
+  header: {
+    padding: 20,
+    paddingBottom: 16,
+    alignItems: "center",
+  },
+  headerIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.info.bg,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: Colors.black,
+    color: Colors.primaryColor,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 14,
+    color: Colors.gray.text,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  pdfContainer: {
+    flex: 1,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+    overflow: "hidden",
+    backgroundColor: "#F9FAFB",
+    minHeight: 400, // Garantir uma altura mínima
+  },
+  pdf: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  footer: {
+    padding: 20,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderColor,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: Colors.white,
     gap: 12,
   },
   subtitle: {

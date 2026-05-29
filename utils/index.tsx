@@ -1,9 +1,9 @@
-import { Alert, Platform } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { AxiosError } from "axios";
-import { router } from "expo-router";
 import { useAuthStore } from "@/store/auth";
+import { AxiosError } from "axios";
 import * as Crypto from "expo-crypto";
+import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
+import { Alert, Platform } from "react-native";
 
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -78,6 +78,7 @@ export enum Etapas {
   ACEITANDO_TERMOS = "Aceitando termos",
 
   OPEN_FINANCE = "Openfinance",
+  PALENCA = "Palenca",
 }
 
 const routeMap: Record<Etapas, string> = {
@@ -101,6 +102,7 @@ const routeMap: Record<Etapas, string> = {
 
   // OpenFinance
   [Etapas.OPEN_FINANCE]: "/(register_new)/register-openfinance",
+  [Etapas.PALENCA]: "/(register)/palenca",
 
   [Etapas.FINALIZADO]: "/login",
 };

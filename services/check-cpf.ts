@@ -13,7 +13,6 @@ export async function checkCPF(
     });
     return response.data;
   } catch (error) {
-    console.log("error", error);
     throw error;
   }
 }

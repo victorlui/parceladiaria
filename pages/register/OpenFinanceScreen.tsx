@@ -127,10 +127,36 @@ const OpenFinanceScreen: React.FC = () => {
     );
   }, [showWarningPress]);
 
-  const goToTerms = useCallback(async () => {
+  const goToNextStep = useCallback(async () => {
     if (isLeaving.current) return;
     if (hasGoneToTerms.current) return;
     hasGoneToTerms.current = true;
+
+    // Palenca
+    // const isDriver =
+    //   registerData?.profissao === "Motoboy" ||
+    //   registerData?.profissao === "Motorista";
+
+    // if (isDriver) {
+    //   try {
+    //     await api.put("/v1/client/update", {
+    //       etapa: Etapas.PALENCA,
+    //     });
+    //     if (isLeaving.current) return;
+
+    //     setEtapa(Etapas.PALENCA);
+    //     if (registerData) {
+    //       setData({ ...registerData, etapa: Etapas.PALENCA });
+    //     }
+    //   } catch (error) {
+    //     console.log("update etapa error", error);
+    //   }
+
+    //   if (isLeaving.current) return;
+    //   router.replace("/(register)/palenca");
+
+    //   return;
+    // }
 
     try {
       await api.put("/v1/client/update", {
@@ -194,7 +220,7 @@ const OpenFinanceScreen: React.FC = () => {
       if (status === "aprovado") {
         setFlowState("approved");
         if (from !== "termos") {
-          await goToTerms();
+          await goToNextStep();
         } else {
           setFlowState("idle");
         }
@@ -218,7 +244,7 @@ const OpenFinanceScreen: React.FC = () => {
         handleLogout();
       }
     }
-  }, [from, goToTerms, handleLogout]);
+  }, [from, goToNextStep, handleLogout]);
 
   /**
    * INITIAL FLOW
@@ -250,20 +276,19 @@ const OpenFinanceScreen: React.FC = () => {
 
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
-                await goToTerms();
+                await goToNextStep();
               } else {
                 setFlowState("idle");
               }
               return;
             }
             const { data: klaviData } = await api.get("/v1/klavi");
-            console.log("klaviData comerciante", klaviData);
             if (cancelled || isLeaving.current) return;
             setAttempts(klaviData?.r_attempts || 0);
 
             if (klaviData?.status === "aprovado") {
               if (shouldAutoAdvance) {
-                await goToTerms();
+                await goToNextStep();
               } else {
                 setFlowState("idle");
               }
@@ -285,7 +310,7 @@ const OpenFinanceScreen: React.FC = () => {
 
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
-                await goToTerms();
+                await goToNextStep();
               } else {
                 setFlowState("idle");
               }
@@ -294,12 +319,12 @@ const OpenFinanceScreen: React.FC = () => {
 
             const { data: klaviData } = await api.get("/v1/klavi");
             if (cancelled || isLeaving.current) return;
-            console.log("klaviData comerciante", klaviData);
+
             setAttempts(klaviData?.r_attempts || 0);
 
             if (klaviData?.status === "aprovado") {
               if (shouldAutoAdvance) {
-                await goToTerms();
+                await goToNextStep();
               } else {
                 setFlowState("idle");
               }
@@ -316,7 +341,7 @@ const OpenFinanceScreen: React.FC = () => {
           }
 
           if (shouldAutoAdvance) {
-            await goToTerms();
+            await goToNextStep();
           } else {
             setFlowState("idle");
           }
@@ -343,7 +368,7 @@ const OpenFinanceScreen: React.FC = () => {
       registerData?.etapa,
       registerData?.profissao,
       from,
-      goToTerms,
+      goToNextStep,
     ]),
   );
 

@@ -12,6 +12,7 @@ export default function RegisterLayout() {
       <Stack screenOptions={{ gestureEnabled: false }}>
         <Stack.Screen name="step1" options={options} />
         <Stack.Screen name="openfinance" options={options} />
+        <Stack.Screen name="palenca" options={options} />
         <Stack.Screen name="termos" options={options} />
       </Stack>
     </>

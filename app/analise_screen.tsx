@@ -7,7 +7,7 @@ import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -21,10 +21,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const AnaliseScreen: React.FC = () => {
-  useCheckStatus("/analise_screen");
+  const { redirectPath } = useCheckStatus("/analise_screen");
   useDisableBackHandler();
   const { logout } = useAuthStore();
   const [loading, setLoading] = useState(false);
+
+  if (redirectPath) {
+    return <Redirect href={redirectPath as any} />;
+  }
 
   const checkStatus = async () => {
     setLoading(true);
@@ -139,7 +143,7 @@ const AnaliseScreen: React.FC = () => {
         ]);
       }
     } catch (error) {
-      console.log("error checkStatus", error);
+      return;
     } finally {
       setLoading(false);
     }

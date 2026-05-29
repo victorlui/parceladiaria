@@ -1,26 +1,26 @@
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { useConfirmPixStore } from "@/store/confirm-pix";
+import { convertData } from "@/utils";
+import { formatCurrency } from "@/utils/formats";
+import { tratarEstado } from "@/utils/validation";
+import { Ionicons } from "@expo/vector-icons";
+import * as Network from "expo-network";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors } from "@/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
 import { ChangePixModal } from "./components/ChabgePixModal";
-import { router } from "expo-router";
-import { useConfirmPixStore } from "@/store/confirm-pix";
-import { formatCurrency } from "@/utils/formats";
-import { useAuthStore } from "@/store/auth";
-import * as Network from "expo-network";
-import { convertData } from "@/utils";
-import { tratarEstado } from "@/utils/validation";
-import { useQueryDataClient } from "@/hooks/useQueryClient";
-import { useAlerts } from "@/components/useAlert";
-import api from "@/services/api";
 
 const ConfirmRenewal: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -69,7 +69,7 @@ const ConfirmRenewal: React.FC = () => {
         return;
       } else {
         const { data } = await api.post("/v1/affiliate/withdraw");
-        console.log("saque indicação", data);
+
         if (data.success && data.data) {
           showSuccess("Sucesso", "Saque efetuado com sucesso!");
           router.replace("/(tabs)/home");

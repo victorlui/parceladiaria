@@ -92,7 +92,6 @@ const ChamadaVideoScreen: React.FC = () => {
       // IOS
       setHasPermissions(true);
     } catch (error) {
-      console.log("Erro permissões:", error);
       setHasPermissions(false);
     }
   }, []);
@@ -117,17 +116,21 @@ const ChamadaVideoScreen: React.FC = () => {
   };
 
   const fetchChamada = React.useCallback(async () => {
-    console.log("fetchChamada", registerData, user);
+    const telefoneFinal =
+      registerData?.whatsapp ||
+      registerData?.phone ||
+      user?.whatsapp ||
+      user?.phone ||
+      "";
 
     const { data } = await axios.post(
       "https://cadastroparceladiaria.com.br/api/chamada-app",
       {
-        cpf: registerData?.cpf || "",
-        nome: registerData?.nome || "",
-        telefone: registerData?.whatsapp || "",
+        cpf: registerData?.cpf || user?.cpf || "",
+        nome: registerData?.nome || user?.nome || "",
+        telefone: telefoneFinal,
       },
       {
-        timeout: 30000,
         headers: {
           "Content-Type": "application/json",
         },
@@ -138,7 +141,16 @@ const ChamadaVideoScreen: React.FC = () => {
       expira_minutos: number;
       url: string;
     };
-  }, [registerData?.cpf, registerData?.nome, registerData?.whatsapp]);
+  }, [
+    registerData?.cpf,
+    registerData?.nome,
+    registerData?.whatsapp,
+    registerData?.phone,
+    user?.cpf,
+    user?.nome,
+    user?.whatsapp,
+    user?.phone,
+  ]);
 
   const onRequestChamada = React.useCallback(async () => {
     try {
@@ -146,14 +158,12 @@ const ChamadaVideoScreen: React.FC = () => {
         await requestPermissions();
         return;
       }
-
       setIsLoading(true);
-
       const data = await fetchChamada();
-      console.log("data chamada", data);
       setCall(data);
     } catch (error) {
-      const nomeUsuario = registerData?.nome?.split(" ")[0] || "Usuário";
+      const nomeUsuario =
+        (registerData?.nome || user?.nome)?.split(" ")[0] || "Usuário";
       let description = `${nomeUsuario}, tente novamente em instantes.`;
 
       if (axios.isAxiosError(error)) {
@@ -176,14 +186,7 @@ const ChamadaVideoScreen: React.FC = () => {
         } else if (!error.response) {
           description = `Erro de conexão. ${nomeUsuario}, verifique sua internet e tente novamente.`;
         }
-
-        console.log("Erro ao iniciar chamada (axios):", {
-          status,
-          code: error.code,
-          data: error.response?.data,
-        });
       } else {
-        console.log("Erro ao iniciar chamada:", error);
         if (error instanceof Error && error.message) {
           description = error.message;
         }
@@ -193,7 +196,13 @@ const ChamadaVideoScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchChamada, hasPermissions, requestPermissions, registerData?.nome]);
+  }, [
+    fetchChamada,
+    hasPermissions,
+    requestPermissions,
+    registerData?.nome,
+    user?.nome,
+  ]);
 
   const onRefreshChamadaAfterExpiry = React.useCallback(async () => {
     try {

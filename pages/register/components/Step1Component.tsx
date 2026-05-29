@@ -2,10 +2,10 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { Colors } from "@/constants/Colors";
 import { useRegisterStore } from "@/store/register_new";
+import { validateBirthDate18Plus, validateCPF } from "@/utils/validation";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
-import { validateBirthDate18Plus, validateCPF } from "@/utils/validation";
 
 // import { Container } from './styles';
 
@@ -22,8 +22,6 @@ const Step1Component: React.FC<Props> = ({ onNext, isLoading }) => {
   const [birthDate, setBirthDate] = useState(
     data?.nascimento ? data.nascimento.split("-").reverse().join("/") : "",
   );
-
-  console.log('data', data)
 
   const onSubmit = () => {
     onNext(cpf, birthDate);

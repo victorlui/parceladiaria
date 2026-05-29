@@ -1,14 +1,15 @@
 import { ApiUserData } from "@/interfaces/login_inteface";
 import { Etapas } from "@/utils";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import * as SecureStore from "expo-secure-store";
 
 interface RegisterAuth extends Omit<ApiUserData, "cpf"> {
   cpf?: string | null;
   password?: string | null;
   afiliado?: string | null;
   primeira_analise?: number | null;
+  palenca_status?: boolean | null;
 }
 
 type Register = {
@@ -26,10 +27,9 @@ type Register = {
 };
 
 const registerStorage = {
-  getItem: (name: string) => SecureStore.getItemAsync(name),
-  setItem: (name: string, value: string) =>
-    SecureStore.setItemAsync(name, value),
-  removeItem: (name: string) => SecureStore.deleteItemAsync(name),
+  getItem: (name: string) => AsyncStorage.getItem(name),
+  setItem: (name: string, value: string) => AsyncStorage.setItem(name, value),
+  removeItem: (name: string) => AsyncStorage.removeItem(name),
 };
 
 const initialState = {

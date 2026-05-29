@@ -59,7 +59,7 @@ const FaceCaptureWebView: React.FC<Props> = ({
         onSuccess(data);
       }
     } catch (err) {
-      console.log("[FaceCaptureWebView] onMessage parse error", err);
+      return err;
     }
   };
 

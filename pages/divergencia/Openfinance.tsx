@@ -52,11 +52,11 @@ export default function Openfinance({ back, onConnected }: Props) {
         setFlowState("idle");
       }
     } catch (error: any) {
-      console.log("connect klavi error", error?.response ?? error);
       setFlowState("idle");
       showError(
         "Erro",
-        error?.message || "Não foi possível conectar sua conta. Tente novamente.",
+        error?.message ||
+          "Não foi possível conectar sua conta. Tente novamente.",
       );
     }
   }, [showError]);
@@ -85,7 +85,6 @@ export default function Openfinance({ back, onConnected }: Props) {
 
       setFlowState("denied");
     } catch (error: any) {
-      console.log("checkAnalysisStatus error", error?.response ?? error);
       setFlowState("idle");
     }
   }, [back, onConnected]);
@@ -136,7 +135,9 @@ export default function Openfinance({ back, onConnected }: Props) {
           <ActivityIndicator size="large" color={Colors.green.primary} />
           <Text style={styles.loadingText}>{loadingMessage}</Text>
           {flowState === "analyzing" && (
-            <Text style={styles.hintText}>Isso pode levar alguns segundos...</Text>
+            <Text style={styles.hintText}>
+              Isso pode levar alguns segundos...
+            </Text>
           )}
         </View>
       ) : flowState === "retry" ? (
@@ -147,7 +148,8 @@ export default function Openfinance({ back, onConnected }: Props) {
 
           <Text style={styles.title}>Tentar novamente</Text>
           <Text style={styles.subtitle}>
-            Você tem {attempts} tentativas restantes. Conecte outra conta bancária.
+            Você tem {attempts} tentativas restantes. Conecte outra conta
+            bancária.
           </Text>
 
           <ButtonComponent
@@ -184,7 +186,8 @@ export default function Openfinance({ back, onConnected }: Props) {
 
           <Text style={styles.title}>Conecte sua conta</Text>
           <Text style={styles.subtitle}>
-            Você tem {attempts} tentativas restantes. Conecte sua melhor conta para concluir seu cadastro.
+            Você tem {attempts} tentativas restantes. Conecte sua melhor conta
+            para concluir seu cadastro.
           </Text>
 
           <ButtonComponent
@@ -196,7 +199,9 @@ export default function Openfinance({ back, onConnected }: Props) {
 
           <View style={styles.secureRow}>
             <Lock size={14} color="#9ca3af" style={{ marginRight: 6 }} />
-            <Text style={styles.secureText}>Conexão segura via Open Finance</Text>
+            <Text style={styles.secureText}>
+              Conexão segura via Open Finance
+            </Text>
           </View>
         </View>
       )}

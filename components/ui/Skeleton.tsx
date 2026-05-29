@@ -19,16 +19,33 @@ export const SkeletonItem: React.FC = () => {
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     loop.start();
     return () => loop.stop();
   }, [opacity]);
 
   return (
-    <Animated.View style={{ opacity }} className="items-center w-[25%]">
-      <View className="bg-gray-200 rounded-full w-16 h-16" />
-      <View className="bg-gray-200 rounded-md w-20 h-3 mt-3" />
+    <Animated.View
+      style={[{ opacity }, { alignItems: "center", width: "25%" }]}
+    >
+      <View
+        style={{
+          backgroundColor: "#e5e7eb",
+          borderRadius: 9999,
+          width: 64,
+          height: 64,
+        }}
+      />
+      <View
+        style={{
+          backgroundColor: "#e5e7eb",
+          borderRadius: 6,
+          width: 80,
+          height: 12,
+          marginTop: 12,
+        }}
+      />
     </Animated.View>
   );
 };

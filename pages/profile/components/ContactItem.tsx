@@ -35,7 +35,6 @@ export default function ContactItem(props: Props) {
       await api.post(`v1/client/${type}/validar-atual/otp`);
       setOtpVisible(true);
     } catch (error) {
-      console.log(error);
       return;
     } finally {
       setLoading(false);
@@ -50,7 +49,6 @@ export default function ContactItem(props: Props) {
           otp,
         },
       );
-      console.log("confirmarOTP", data);
 
       showSuccess(
         "Successo",

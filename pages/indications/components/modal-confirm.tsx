@@ -1,14 +1,14 @@
-import React, { useState } from "react";
-import { Colors } from "@/constants/Colors";
-import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import { useAlerts } from "@/components/useAlert";
-import { IndicationResponse } from "../types/indications";
-import { Modal, Pressable, Text, View } from "react-native";
-import { formatCurrencyBRL } from "@/utils/formats";
-import api from "@/services/api";
-import LoadingDots from "@/components/ui/LoadingDots";
 import ChangeKey from "@/components/renew/change-key";
+import LoadingDots from "@/components/ui/LoadingDots";
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import api from "@/services/api";
 import { changePixKey } from "@/services/change-pix";
+import { formatCurrencyBRL } from "@/utils/formats";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { Modal, Pressable, Text, View } from "react-native";
+import { IndicationResponse } from "../types/indications";
 
 interface Props {
   visible: boolean;
@@ -44,13 +44,12 @@ const ModalConfirm: React.FC<Props> = (props) => {
     setLoading(true);
     try {
       const { data } = await api.post("/v1/affiliate/withdraw");
-      console.log("data", data);
+
       if (data.success && data.data) {
         onSuccess(data.data.status, data.data.valor_sacado);
       }
       onClose();
     } catch (error: any) {
-      console.log("error ao confirmar saque", error.response);
       showError("Error", error.response?.data?.message || error.message);
       return;
     } finally {

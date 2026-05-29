@@ -18,10 +18,9 @@ export const solicitarLinkS3 = async (
         },
       },
     );
-    console.log("solicitarLinkS3", response.data);
+
     return response.data;
   } catch (error: any) {
-    console.log("error solicitar", error.response);
     throw error;
   }
 };

@@ -107,7 +107,6 @@ export function useRegisterHooks() {
         return;
       }
     } catch (error: any) {
-      console.log("error", error.response.data.message);
       if (
         error.response &&
         error.response.data &&
@@ -168,7 +167,6 @@ export function useRegisterHooks() {
       const newData = {
         ...data,
       };
-      console.log("hasToken", token);
 
       if (!hasToken) {
         const registerData = {
@@ -199,7 +197,6 @@ export function useRegisterHooks() {
       setStep(3);
       return;
     } catch (error: any) {
-      console.log("error", error.response?.data?.message || error.message);
       if (
         error.response &&
         error.response.data &&

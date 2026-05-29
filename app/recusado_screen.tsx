@@ -1,21 +1,25 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
+import { useCheckStatus } from "@/hooks/useCheckStatus";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { formatDateToBR } from "@/utils/formats";
 import { FontAwesome } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCheckStatus } from "@/hooks/useCheckStatus";
 
 const RecusadoScreen: React.FC = () => {
-  useCheckStatus("/recusado_screen");
+  const { redirectPath } = useCheckStatus("/recusado_screen");
   useDisableBackHandler();
   const { logout, userRegister } = useAuthStore();
   const { data } = useRegisterStore();
+
+  if (redirectPath) {
+    return <Redirect href={redirectPath as any} />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>

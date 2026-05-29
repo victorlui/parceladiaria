@@ -25,8 +25,6 @@ export async function login(
 
     return data;
   } catch (error: any) {
-    console.log(error.response);
-
     if (error.response) {
       throw {
         status: error.response.status,

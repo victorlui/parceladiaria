@@ -1,15 +1,17 @@
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 
 export function useCheckStatus(currentRoute: string) {
   const [isChecking, setIsChecking] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setRedirectPath(null);
 
       const checkStatus = async () => {
         setIsChecking(true);
@@ -46,7 +48,7 @@ export function useCheckStatus(currentRoute: string) {
             await useAuthStore.getState().login(token, user);
 
             if (isActive) {
-              router.replace("/(tabs)/home");
+              setRedirectPath("/(tabs)/home");
             }
           } else {
             const status = dataClient?.status;
@@ -72,11 +74,11 @@ export function useCheckStatus(currentRoute: string) {
               status && routeByStatus[status] ? routeByStatus[status] : null;
 
             if (isActive && targetRoute && targetRoute !== currentRoute) {
-              router.replace(targetRoute);
+              setRedirectPath(targetRoute);
             }
           }
         } catch (error) {
-          console.log("Erro ao verificar status na tela:", error);
+          return error;
         } finally {
           if (isActive) {
             setIsChecking(false);
@@ -92,5 +94,5 @@ export function useCheckStatus(currentRoute: string) {
     }, [currentRoute]),
   );
 
-  return { isChecking };
+  return { isChecking, redirectPath };
 }

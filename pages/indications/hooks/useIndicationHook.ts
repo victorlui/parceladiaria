@@ -29,7 +29,7 @@ export function useIndicationHook() {
   async function getIndications() {
     try {
       const response = await api.get("/v1/affiliate");
-      console.log("response indeication", response);
+
       const data = response.data?.data;
       const hasFoiIndicado =
         !!data && Object.prototype.hasOwnProperty.call(data, "foi_indicado");
@@ -86,7 +86,6 @@ export function useIndicationHook() {
       const loans = await getLoans();
       setTotalLoans(Array.isArray(loans) ? loans.length : 0);
     } catch (error) {
-      console.log("error", error);
       setTotalLoans(0);
     } finally {
       setLoadingLoans(false);
@@ -99,7 +98,7 @@ export function useIndicationHook() {
       const response = await api.get("/termos/Termos_afiliado");
       setTermos(response.data.termo.content);
     } catch (error) {
-      console.log("error", error);
+      return error;
     } finally {
       setLoadingTermo(false);
     }
@@ -126,7 +125,7 @@ export function useIndicationHook() {
       setTermos(null);
       await getIndications();
     } catch (error) {
-      console.log("error ao aceitar termos", error);
+      return error;
     } finally {
       setLoadingAccept(false);
     }

@@ -56,7 +56,7 @@ const FloatingPayButton = ({ disabled, ...props }: any) => {
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuthStore.getState();
+  const user = useAuthStore((s) => s.user);
   return (
     <>
       <Tabs

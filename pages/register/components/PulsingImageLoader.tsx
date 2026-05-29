@@ -3,10 +3,10 @@ import React, { useEffect, useRef } from "react";
 import {
   Animated,
   Easing,
-  StyleSheet,
-  View,
   ImageSourcePropType,
+  StyleSheet,
   Text,
+  View,
 } from "react-native";
 
 interface PulsingImageLoaderProps {
@@ -24,7 +24,7 @@ export default function PulsingImageLoader({
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.parallel([
         Animated.sequence([
           Animated.timing(scaleAnim, {
@@ -54,8 +54,14 @@ export default function PulsingImageLoader({
           }),
         ]),
       ]),
-    ).start();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [scaleAnim, opacityAnim]);
 
   return (
     <View style={styles.container}>
@@ -84,7 +90,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    fontWeight: "regular",
+    fontWeight: "normal",
     textAlign: "center",
     color: Colors.green.primary,
     marginTop: 10,

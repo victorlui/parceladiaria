@@ -1,10 +1,11 @@
 // Componente LoansTab
+import ItemLoan from "@/components/loans/item-loan";
 import StatusBar from "@/components/ui/StatusBar";
+import { Colors } from "@/constants/Colors";
 import { LoansProps } from "@/interfaces/loans";
 import { getLoans } from "@/services/loans";
 import { useFocusEffect } from "expo-router";
 import React, { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,8 +13,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Colors } from "@/constants/Colors";
-import ItemLoan from "@/components/loans/item-loan";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoansTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ const LoansTab: React.FC = () => {
       const enhanced = (response || []).map((loan: any) =>
         enhanceLoan(loan as LoansProps),
       );
-      console.log(enhanced);
+
       setLoans(enhanced);
     } catch (error) {
       console.error("Erro ao carregar empréstimos:", error);

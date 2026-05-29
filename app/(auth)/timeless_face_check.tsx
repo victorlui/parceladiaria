@@ -1,12 +1,12 @@
 import FaceCaptureWebView from "@/pages/face/components/FaceCaptureWebView";
+import * as Network from "expo-network";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import * as Network from "expo-network";
 import { Alert } from "react-native";
 
-import { useAuthStore } from "@/store/auth";
-import api from "@/services/api";
 import LoadingScreen from "@/pages/face/components/LoadingScreen";
+import api from "@/services/api";
+import { useAuthStore } from "@/store/auth";
 
 const TimeLess: React.FC = () => {
   const { cpfValid, register } = useAuthStore((state) => state);
@@ -14,7 +14,7 @@ const TimeLess: React.FC = () => {
 
   const sendFace = async (face: any) => {
     setLoading(true);
-    console.log("cpfValid", cpfValid);
+
     try {
       if (!face) {
         return;
