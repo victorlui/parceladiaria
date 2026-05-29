@@ -9,7 +9,12 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 
 export default function Index() {
-  const { user, restoreToken, isLoading: authLoading } = useAuthStore();
+  const {
+    user,
+    token: userToken,
+    restoreToken,
+    isLoading: authLoading,
+  } = useAuthStore();
   const {
     data: leadUser,
     token: leadToken,
@@ -17,7 +22,7 @@ export default function Index() {
     hydrated: registerHydrated,
   } = useRegisterStore();
   const { handleFlow } = useNavigationFlow();
-  const { pendingRoute, setPendingRoute } = useNotificationsStore();
+  const { setPendingRoute } = useNotificationsStore();
 
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
@@ -25,12 +30,13 @@ export default function Index() {
 
   useEffect(() => {
     restoreToken();
-  }, []);
+  }, [restoreToken]);
 
   useEffect(() => {
     if (!isLoading) {
+      const pendingRoute = useNotificationsStore.getState().pendingRoute;
       let path = "/login";
-      if (user) {
+      if (user && userToken) {
         path =
           pendingRoute ||
           handleFlow(user.type || "client", user.etapa, user.status);
@@ -53,11 +59,11 @@ export default function Index() {
   }, [
     isLoading,
     user,
+    userToken,
     leadUser,
     leadToken,
     leadEtapa,
     handleFlow,
-    pendingRoute,
     setPendingRoute,
   ]);
 

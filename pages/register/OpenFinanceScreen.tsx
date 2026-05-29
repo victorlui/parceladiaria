@@ -169,7 +169,7 @@ const OpenFinanceScreen: React.FC = () => {
         setData({ ...registerData, etapa: Etapas.ACEITANDO_TERMOS });
       }
     } catch (error) {
-      console.log("update etapa error", error);
+      return error;
     }
 
     if (isLeaving.current) return;
