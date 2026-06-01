@@ -34,7 +34,7 @@
       },
       "bundleIdentifier": "br.com.parceladiaria",
       "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "56"
+      "buildNumber": "59"
     },
     "android": {
       "versionCode": 56,

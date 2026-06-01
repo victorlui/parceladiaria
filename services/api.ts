@@ -136,29 +136,37 @@ function showServerErrorAlert() {
   Alert.alert(
     "Erro do servidor",
     "Ocorreu um erro interno. Tente novamente mais tarde.",
+    [{ text: "OK", onPress: logoutUser }],
   );
 }
 
 function showTimeoutAlert() {
-  Alert.alert("Timeout", "A requisição demorou muito para responder.");
+  Alert.alert("Timeout", "A requisição demorou muito para responder.", [
+    { text: "OK", onPress: logoutUser },
+  ]);
 }
 
 function showConnectionErrorAlert() {
-  Alert.alert("Erro de conexão", "Verifique sua internet e tente novamente.");
+  Alert.alert("Erro de conexão", "Verifique sua internet e tente novamente.", [
+    { text: "OK", onPress: logoutUser },
+  ]);
 }
 
 function showBlockedAlert(message: string) {
-  Alert.alert("Acesso bloqueado", message);
+  Alert.alert("Acesso bloqueado", message, [
+    { text: "OK", onPress: logoutUser },
+  ]);
 }
 
 function showForbiddenAlert(message: string) {
-  Alert.alert("Erro", message);
+  Alert.alert("Erro", message, [{ text: "OK", onPress: logoutUser }]);
 }
 
 function showRateLimitAlert(message?: string) {
   Alert.alert(
     "Limite de requisições",
     message ?? "Limite de requisições excedido. Tente novamente mais tarde.",
+    [{ text: "OK", onPress: logoutUser }],
   );
 }
 

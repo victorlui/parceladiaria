@@ -1,98 +1,111 @@
 import * as Updates from "expo-updates";
 import { useEffect, useRef } from "react";
-import { Alert, AppState } from "react-native";
+import { Alert, AppState, AppStateStatus } from "react-native";
 
 export function useLiveUpdate() {
-  // Usamos um ref para evitar múltiplas chamadas simultâneas se a rede estiver lenta
-  const isChecking = useRef(false);
+  const { isUpdatePending, isChecking, isDownloading } = Updates.useUpdates();
+  const alertShown = useRef(false);
+  const lastChecked = useRef<number>(0);
+
+  // Guardamos o status atualizado em um Ref
+  const statusRef = useRef({ isChecking, isDownloading, isUpdatePending });
 
   useEffect(() => {
-    const CHECK_INTERVAL_MS = 1000 * 60 * 5;
-    const CHECK_TIMEOUT_MS = 1000 * 20;
+    statusRef.current = { isChecking, isDownloading, isUpdatePending };
 
-    function withTimeout<T>(promise: Promise<T>, ms: number) {
-      let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-      const timeoutPromise = new Promise<T>((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error("LiveUpdate timeout"));
-        }, ms);
-      });
-
-      return Promise.race([promise, timeoutPromise]).finally(() => {
-        if (timeoutId) clearTimeout(timeoutId);
-      }) as Promise<T>;
+    // Se o update deixar de estar pendente (ex: foi aplicado), liberamos o alerta para o próximo update
+    if (!isUpdatePending) {
+      alertShown.current = false;
     }
+  }, [isChecking, isDownloading, isUpdatePending]);
+
+  // 1. Dispara o Alerta quando o update está pronto
+  useEffect(() => {
+    if (isUpdatePending && !alertShown.current) {
+      alertShown.current = true;
+
+      Alert.alert(
+        "Novas funções disponíveis!",
+        "Acabamos de lançar uma melhoria. Deseja aplicar agora?",
+        [
+          {
+            text: "Atualizar Agora",
+            onPress: async () => {
+              await Updates.reloadAsync();
+            },
+          },
+        ],
+        { cancelable: false },
+      );
+    }
+  }, [isUpdatePending]);
+
+  // 2. Controle de checagem inteligente (Intervalo + AppState)
+  useEffect(() => {
+    const CHECK_INTERVAL_MS = 1000 * 30; // 5 minutos
 
     async function fetchUpdate() {
       if (AppState.currentState !== "active") return;
-
-      // Se já estiver checando, ignora esta rodada do intervalo
-      if (isChecking.current) return;
+      console.log("fetchUpdate");
 
       if (__DEV__ || !Updates.isEnabled) {
         console.log(
-          `LiveUpdate desabilitado (DEV=${String(__DEV__)}, enabled=${String(
-            Updates.isEnabled,
-          )})`,
+          `LiveUpdate desabilitado (DEV=${__DEV__}, enabled=${Updates.isEnabled})`,
         );
         return;
       }
 
-      try {
-        isChecking.current = true;
+      const status = statusRef.current;
+      if (status.isChecking || status.isDownloading || status.isUpdatePending) {
+        return;
+      }
 
-        // 1. Verifica se há algo novo no servidor do Expo
-        const update = await withTimeout(
-          Updates.checkForUpdateAsync(),
-          CHECK_TIMEOUT_MS,
-        );
+      try {
+        // Atualiza o timestamp imediatamente para evitar que múltiplos gatilhos rápidos disparem juntos
+        lastChecked.current = Date.now();
+
+        const update = await Updates.checkForUpdateAsync();
 
         if (update.isAvailable) {
-          // 2. Baixa o código novo em segundo plano
-          await withTimeout(Updates.fetchUpdateAsync(), CHECK_TIMEOUT_MS);
-
-          // 3. Avisa o usuário IMEDIATAMENTE
-          Alert.alert(
-            "Novas funções disponíveis!",
-            "Acabamos de lançar uma melhoria. Deseja aplicar agora?",
-            [
-              {
-                text: "Atualizar Agora",
-                onPress: async () => {
-                  // Reinicia o app já com o código novo
-                  await Updates.reloadAsync();
-                },
-              },
-            ],
-            { cancelable: false }, // Garante que o usuário veja o alerta
-          );
+          await Updates.fetchUpdateAsync();
         }
       } catch (error) {
-        return error;
-      } finally {
-        isChecking.current = false;
+        console.log("Erro no LiveUpdate:", error);
       }
     }
 
-    // Verifica quando o app volta para o primeiro plano (foreground)
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
+    // Valida se realmente passou o tempo necessário (Resolve o congelamento do iOS)
+    function handleCheckRequirements() {
+      const now = Date.now();
+      if (now - lastChecked.current >= CHECK_INTERVAL_MS) {
         fetchUpdate();
       }
-    });
+    }
 
-    // Verifica em intervalo seguro para produção (5 minutos)
+    // Listener para quando o app volta do background
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState === "active") {
+          handleCheckRequirements();
+        }
+      },
+    );
+
+    // Intervalo contínuo caso o usuário fique com o app aberto direto
     const interval = setInterval(() => {
-      fetchUpdate();
+      handleCheckRequirements();
     }, CHECK_INTERVAL_MS);
 
-    // Executa uma vez logo que o hook é montado
-    fetchUpdate();
+    // Aguarda 5 segundos na primeira montagem para o ON_LOAD nativo trabalhar livremente
+    const initialTimeout = setTimeout(() => {
+      fetchUpdate();
+    }, 5000);
 
     return () => {
       subscription.remove();
       clearInterval(interval);
+      clearTimeout(initialTimeout);
     };
   }, []);
 }

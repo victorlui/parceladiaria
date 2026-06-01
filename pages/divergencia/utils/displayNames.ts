@@ -7,7 +7,7 @@ export const documentDisplayNames: Record<string, string> = {
   video_comercio: "Vídeo do Comércio",
   ganhos_app: "Relatório de Ganhos",
   foto_frente_doc: "Foto Frente do Documento",
-  foto_verso_doc: "Foto Verso do Documento",
+  foto_verso_doc: "Foto do QRCode do Documento",
   fachada: "Foto da Fachada",
   video_fachada: "Vídeo da Fachada",
   video_interior: "Vídeo do Interior",

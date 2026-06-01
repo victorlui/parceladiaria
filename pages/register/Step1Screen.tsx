@@ -48,7 +48,7 @@ const Step1Register: React.FC = () => {
           currentStep.subtitle ??
           "Para iniciar seu cadastro, informe seu CPF e data de nascimento."
         }
-        showBackButton={step > 0}
+        showBackButton={step >= 0}
         onBack={handlePrevStep}
       >
         {/* Gravando cpf e data de nascimento  */}

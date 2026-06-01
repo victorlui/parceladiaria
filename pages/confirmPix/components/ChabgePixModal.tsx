@@ -1,24 +1,24 @@
+import ModalOtp from "@/components/renew/modal-otp";
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import api from "@/services/api";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Keyboard,
+  Modal,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
-  Modal,
   TextInput,
-  Platform,
+  TouchableOpacity,
   TouchableWithoutFeedback,
-  Keyboard,
-  ScrollView,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/Colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getPixKeyValidationError } from "../utils/validation";
-import api from "@/services/api";
-import { useAlerts } from "@/components/useAlert";
-import ModalOtp from "@/components/renew/modal-otp";
 
 interface PixModalProps {
   isVisible: boolean;
@@ -26,7 +26,7 @@ interface PixModalProps {
   onSave: (type: string, key: string) => void;
 }
 
-type PixKeyType = "cpf" | "email" | "phone" | "random";
+type PixKeyType = "cpf" | "email" | "phone" | "evp";
 
 type PixTypeOption = {
   id: PixKeyType;
@@ -38,7 +38,7 @@ const PIX_TYPES: PixTypeOption[] = [
   { id: "cpf", label: "CPF", icon: "person-outline" },
   { id: "email", label: "E-mail", icon: "mail-outline" },
   { id: "phone", label: "Telefone", icon: "call-outline" },
-  { id: "random", label: "Aleatória", icon: "shuffle-outline" },
+  { id: "evp", label: "Aleatória", icon: "shuffle-outline" },
 ];
 
 export const ChangePixModal: React.FC<PixModalProps> = ({
@@ -90,6 +90,8 @@ export const ChangePixModal: React.FC<PixModalProps> = ({
 
     setLoading(true);
     try {
+      console.log("keyValue", keyValue.trim());
+      console.log("selectedType", selectedType);
       const { data: response } = await api.post("/v1/client/change/pix/otp", {
         pix: keyValue.trim(),
         type: selectedType,
@@ -99,6 +101,7 @@ export const ChangePixModal: React.FC<PixModalProps> = ({
       setTouched(false);
       onClose();
     } catch (error: any) {
+      console.log("erro ao mudar o pix", error.response);
       showWarning(
         "Atenção",
         error.response.data.message || "Erro ao enviar OTP",
@@ -222,6 +225,7 @@ export const ChangePixModal: React.FC<PixModalProps> = ({
                 autoCapitalize="none"
                 onSubmitEditing={Keyboard.dismiss}
                 returnKeyType="done"
+                placeholderTextColor={Colors.gray.text}
               />
               {touched && validationError ? (
                 <Text style={styles.errorText}>{validationError}</Text>

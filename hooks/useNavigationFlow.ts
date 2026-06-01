@@ -78,7 +78,7 @@ export function useNavigationFlow() {
             return "/divergencia_screen";
           }
           const routeByStatus: Partial<Record<StatusCadastro, string>> = {
-            [StatusCadastro.DIVERGENTE]: "/pre_aprovado_screen",
+            [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
             [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",
             [StatusCadastro.RECUSADO]: "/recusado_screen",
             [StatusCadastro.REANALISE]: "/reanalise_screen",

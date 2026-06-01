@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +25,7 @@ interface PalencaConfig {
 export default function Palenca() {
   const { data: dataRegister, setStep } = useRegisterStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEligible, setIsEligible] = useState(false);
   const [palencaConfig, setPalencaConfig] = useState<PalencaConfig | null>(
     null,
   );
@@ -34,18 +36,18 @@ export default function Palenca() {
       const getSettings = async () => {
         try {
           const { data } = await api.get("v1/register/settings");
+          const { data: dataClient } = await api.get("/v1/client");
 
           const userProfession = dataRegister?.profissao ?? "";
           const isDriver = ["Motorista", "Motoboy"].includes(userProfession);
           const isPalencaEnabled = data?.data?.palenca.enabled ?? false;
-          const hasCompletedPalenca = dataRegister?.palenca_status !== null;
+          const hasCompletedPalenca =
+            dataClient.data.data.palenca_status !== null;
+
+          console.log("data", dataClient);
 
           if (isDriver && isPalencaEnabled && !hasCompletedPalenca) {
-            // Show Palenca step before TermsFinais
-            const response = await api.post("/v1/palenca/init");
-
-            const config = response.data?.data || response.data;
-            setPalencaConfig(config);
+            setIsEligible(true);
           } else {
             // Skip to next screen
             router.replace("/(register)/termos");
@@ -60,6 +62,20 @@ export default function Palenca() {
     }, [dataRegister?.profissao, dataRegister?.palenca_status]),
   );
 
+  const handleConnect = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.post("/v1/palenca/init");
+      console.log("response", response);
+      const config = response.data?.data || response.data;
+      setPalencaConfig(config);
+    } catch (_e) {
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.containerLoading}>
@@ -68,15 +84,67 @@ export default function Palenca() {
     );
   }
 
-  if (!palencaConfig) {
+  if (!isEligible) {
     return null;
   }
 
-  const host = !palencaConfig.is_sandbox
+  if (!palencaConfig) {
+    return (
+      <SafeAreaView style={styles.promptContainer}>
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => {
+              setStep(8);
+              router.replace("/(register)/step1");
+            }}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+            hitSlop={12}
+          >
+            <ArrowLeft size={20} color={Colors.black} />
+          </Pressable>
+        </View>
+        <View style={styles.promptContent}>
+          <Image
+            source={require("@/assets/images/logo-verde.png")}
+            style={styles.logo}
+          />
+
+          <View>
+            <Text style={styles.title}>Validação automática da sua renda</Text>
+            <Text style={styles.description}>
+              Conecte o app que você usa pra rodar e tenha maiores chance de
+              aprovação. É rápido, seguro e adianta sua análise.
+            </Text>
+          </View>
+        </View>
+        <View style={styles.promptActions}>
+          <TouchableOpacity
+            style={styles.connectButton}
+            onPress={handleConnect}
+          >
+            <Text style={styles.connectButtonText}>Conectar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.replace("/(register)/termos")}
+          >
+            <Text style={styles.skipButtonText}>Pular esta etapa</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const host = palencaConfig.is_sandbox
     ? "sandbox.palenca.com"
     : "connect.palenca.com";
   const url = `https://${host}/?widget_id=${palencaConfig.widget_id}&external_id=${palencaConfig.external_id}`;
   // https://sandbox.palenca.com/?widget_id=3b00f292-291b-47ee-9ade-d7e79ef29ff1&external_id=PD_396492
+
+  console.log("url", url);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -104,14 +172,14 @@ export default function Palenca() {
           return true;
         }}
       />
-      <View style={styles.footer}>
+      {/* <View style={styles.footer}>
         <TouchableOpacity
           style={styles.skipButton}
           onPress={() => router.replace("/(register)/termos")}
         >
           <Text style={styles.skipButtonText}>Pular esta etapa</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 }
@@ -123,6 +191,48 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
   },
+  promptContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  promptContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#666",
+    textAlign: "center",
+    maxWidth: 320,
+  },
+  promptActions: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  connectButton: {
+    backgroundColor: Colors.green.button,
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  connectButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -131,6 +241,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#fff",
+  },
+  logo: {
+    width: 100,
+    height: 100,
   },
   backButton: {
     width: 40,

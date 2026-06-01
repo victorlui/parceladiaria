@@ -25,7 +25,8 @@ const Step8Components: React.FC<Props> = ({
   confirmAddress,
   setConfirmAddress,
 }) => {
-  const { refs, form, handleChange, errors, loadingCep } = useRegisterAddress();
+  const { refs, form, handleChange, errors, loadingCep, isCepValidated } =
+    useRegisterAddress();
 
   const onConfirm = () => {
     setConfirmAddress(true);
@@ -88,28 +89,26 @@ const Step8Components: React.FC<Props> = ({
         onChangeText={handleChange("cep")}
         returnKeyType="next"
         onSubmitEditing={() => {
-          refs.endereco.current?.focus();
+          refs.numero.current?.focus();
         }}
         error={errors.cep}
       />
-      <InputComponent
-        ref={refs.endereco}
-        placeholder="Informe sua Rua"
-        icon={
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={20}
-            color={Colors.gray.primary}
-          />
-        }
-        value={form.endereco}
-        onChangeText={handleChange("endereco")}
-        returnKeyType="next"
-        onSubmitEditing={() => refs.numero.current?.focus()}
-        error={errors.endereco}
-        editable={!loadingCep}
-        rightIcon={loadingCep ? <ActivityIndicator size="small" /> : null}
-      />
+      {loadingCep ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Colors.green.button} />
+          <Text style={styles.loadingText}>Buscando endereco pelo CEP...</Text>
+        </View>
+      ) : null}
+      {isCepValidated ? (
+        <View style={styles.autoFilledCard}>
+          <Text style={styles.autoFilledTitle}>Endereco encontrado</Text>
+          <Text style={styles.autoFilledText}>{form.endereco}</Text>
+          <Text style={styles.autoFilledText}>{form.bairro}</Text>
+          <Text style={styles.autoFilledText}>
+            {form.cidade} - {form.estado}
+          </Text>
+        </View>
+      ) : null}
       <InputComponent
         ref={refs.numero}
         placeholder="Informe seu Número"
@@ -125,6 +124,7 @@ const Step8Components: React.FC<Props> = ({
         returnKeyType="next"
         onSubmitEditing={() => refs.complemento.current?.focus()}
         error={errors.numero}
+        keyboardType="number-pad"
       />
       <InputComponent
         ref={refs.complemento}
@@ -138,58 +138,8 @@ const Step8Components: React.FC<Props> = ({
         }
         value={form.complemento}
         onChangeText={handleChange("complemento")}
-        returnKeyType="next"
-        onSubmitEditing={() => refs.bairro.current?.focus()}
-        error={errors.complemento}
-      />
-      <InputComponent
-        ref={refs.bairro}
-        placeholder="Informe seu Bairro"
-        icon={
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={20}
-            color={Colors.gray.primary}
-          />
-        }
-        value={form.bairro}
-        onChangeText={handleChange("bairro")}
-        returnKeyType="next"
-        error={errors.bairro}
-        onSubmitEditing={() => refs.estado.current?.focus()}
-      />
-      <InputComponent
-        ref={refs.estado}
-        placeholder="Informe seu Estado"
-        editable={false}
-        icon={
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={20}
-            color={Colors.gray.primary}
-          />
-        }
-        value={form.estado}
-        onChangeText={handleChange("estado")}
-        returnKeyType="next"
-        onSubmitEditing={() => refs.cidade.current?.focus()}
-        error={errors.estado}
-      />
-      <InputComponent
-        ref={refs.cidade}
-        placeholder="Informe sua Cidade"
-        icon={
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={20}
-            color={Colors.gray.primary}
-          />
-        }
-        value={form.cidade}
-        onChangeText={handleChange("cidade")}
         returnKeyType="done"
-        error={errors.cidade}
-        editable={false}
+        error={errors.complemento}
       />
 
       <ButtonComponent
@@ -198,10 +148,10 @@ const Step8Components: React.FC<Props> = ({
         loading={isLoading}
         iconLeft={null}
         disabled={
-          Object.values(errors).some((error) => error !== "") ||
-          !form.endereco ||
+          loadingCep ||
+          !isCepValidated ||
           form.numero === "" ||
-          form.cep.replace(/\D/g, "").length !== 8
+          form.cep?.replace(/\D/g, "").length !== 8
         }
       />
     </>
@@ -209,10 +159,6 @@ const Step8Components: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  loadingInput: {
-    opacity: 0.7,
-  },
-
   loadingContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -225,6 +171,29 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: "#666",
+  },
+
+  autoFilledCard: {
+    width: "100%",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F7F8FA",
+    padding: 16,
+    gap: 4,
+  },
+
+  autoFilledTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+
+  autoFilledText: {
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
   },
 
   confirmCard: {

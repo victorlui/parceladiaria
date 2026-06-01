@@ -1,5 +1,5 @@
 export type Address = {
-  cep: string;
+  cep?: string;
   endereco: string;
   numero: string;
   bairro: string;

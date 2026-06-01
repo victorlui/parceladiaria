@@ -1,11 +1,12 @@
+import ButtonChat from "@/components/ui/ButtonChat";
 import { Colors } from "@/constants/Colors";
+import { useQueryDataClient } from "@/hooks/useQueryClient";
 import { useAuthStore } from "@/store/auth";
+import { useQRCodeStore } from "@/store/qrcode";
+import { formatCurrency } from "@/utils/formats";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { formatCurrency } from "@/utils/formats";
-import { useQRCodeStore } from "@/store/qrcode";
-import { useQueryDataClient } from "@/hooks/useQueryClient";
 import {
   ScrollView,
   StyleSheet,
@@ -77,95 +78,98 @@ const PaymentsScreen: React.FC = () => {
   const handleClearSelection = () => setSelectedInstallments([]);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      <ScrollView style={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.header}>
-          <FontAwesome5 name="arrow-left" size={18} color="black" />
-          <Text style={styles.title}>Pagamentos</Text>
-        </TouchableOpacity>
-        <HeaderInfo
-          loading={isFetching}
-          skeletonOpacity={0.8}
-          user={user || null}
-        />
-        <View
-          style={[
-            styles.body,
-            { paddingBottom: selectedInstallments.length > 0 ? 150 : 80 },
-          ]}
-        >
-          {!isFetching && installments.length > 0 && (
-            <Text style={styles.infoText}>
-              Selecione as parcelas para pagar
-            </Text>
-          )}
+    <>
+      <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+        <ScrollView style={styles.container}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.header}>
+            <FontAwesome5 name="arrow-left" size={18} color="black" />
+            <Text style={styles.title}>Pagamentos</Text>
+          </TouchableOpacity>
+          <HeaderInfo
+            loading={isFetching}
+            skeletonOpacity={0.8}
+            user={user || null}
+          />
+          <View
+            style={[
+              styles.body,
+              { paddingBottom: selectedInstallments.length > 0 ? 150 : 80 },
+            ]}
+          >
+            {!isFetching && installments.length > 0 && (
+              <Text style={styles.infoText}>
+                Selecione as parcelas para pagar
+              </Text>
+            )}
 
-          {isFetching && (
-            <View style={{ marginTop: 10, gap: 10 }}>
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} />
+            {isFetching && (
+              <View style={{ marginTop: 10, gap: 10 }}>
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton key={index} />
+                ))}
+              </View>
+            )}
+
+            {!isFetching && installments.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome5
+                  name="clipboard-check"
+                  size={64}
+                  color={Colors.gray.primary}
+                />
+                <Text style={styles.emptyTitle}>Tudo certo por aqui!</Text>
+                <Text style={styles.emptySubtitle}>
+                  Você não possui parcelas pendentes no momento.
+                </Text>
+              </View>
+            )}
+
+            {!isFetching &&
+              installments.length > 0 &&
+              installments.map((item: any) => (
+                <ItemPayment
+                  key={item.id}
+                  itemSelected={selectedInstallments}
+                  toggleSelect={toggleSelect}
+                  item={item}
+                />
               ))}
-            </View>
-          )}
+            {!isFetching && (
+              <TouchableOpacity
+                style={styles.selectAllButton}
+                onPress={allSelected ? handleClearSelection : handleSelectAll}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.selectAllButtonText}>
+                  {allSelected ? "Limpar seleção" : "Selecionar todas"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
 
-          {!isFetching && installments.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <FontAwesome5
-                name="clipboard-check"
-                size={64}
-                color={Colors.gray.primary}
-              />
-              <Text style={styles.emptyTitle}>Tudo certo por aqui!</Text>
-              <Text style={styles.emptySubtitle}>
-                Você não possui parcelas pendentes no momento.
+        {selectedInstallments.length > 0 && (
+          <View style={styles.selectInstallmentContainer}>
+            <View style={{ flex: 2 }}>
+              <Text style={styles.textInfo}>
+                Total de {selectedInstallments.length} parcelas selecionadas
+              </Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(Number(selectedTotal))}
               </Text>
             </View>
-          )}
-
-          {!isFetching &&
-            installments.length > 0 &&
-            installments.map((item: any) => (
-              <ItemPayment
-                key={item.id}
-                itemSelected={selectedInstallments}
-                toggleSelect={toggleSelect}
-                item={item}
-              />
-            ))}
-          {!isFetching && (
             <TouchableOpacity
-              style={styles.selectAllButton}
-              onPress={allSelected ? handleClearSelection : handleSelectAll}
+              style={styles.payButton}
+              onPress={handlePay}
               activeOpacity={0.8}
             >
-              <Text style={styles.selectAllButtonText}>
-                {allSelected ? "Limpar seleção" : "Selecionar todas"}
-              </Text>
+              <Text style={styles.payButtonText}>Pagar</Text>
             </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
-
-      {selectedInstallments.length > 0 && (
-        <View style={styles.selectInstallmentContainer}>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.textInfo}>
-              Total de {selectedInstallments.length} parcelas selecionadas
-            </Text>
-            <Text style={styles.totalValue}>
-              {formatCurrency(Number(selectedTotal))}
-            </Text>
           </View>
-          <TouchableOpacity
-            style={styles.payButton}
-            onPress={handlePay}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.payButtonText}>Pagar</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+        )}
+      </SafeAreaView>
+      <ButtonChat botton={selectedInstallments.length > 0 ? 100 : 10} />
+    </>
   );
 };
 

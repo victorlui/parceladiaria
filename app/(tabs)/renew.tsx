@@ -1,5 +1,4 @@
 import { Colors } from "@/constants/Colors";
-import ModalNotice from "@/pages/renew/compoents/ModalNotice";
 import { renewStatus } from "@/services/renew";
 import { useRenewStore } from "@/store/renew";
 import { FontAwesome6, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -38,7 +37,7 @@ const RenewScreen: React.FC = () => {
       };
 
       run();
-      setNoticeVisible(true);
+      //setNoticeVisible(true);
 
       return () => {
         isActive = false;
@@ -65,10 +64,10 @@ const RenewScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ModalNotice
+      {/* <ModalNotice
         visible={noticeVisible}
         onClose={() => setNoticeVisible(false)}
-      />
+      /> */}
       {/* Header Padronizado */}
       <View style={styles.header}>
         <TouchableOpacity

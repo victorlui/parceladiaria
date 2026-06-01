@@ -1,7 +1,8 @@
+import ButtonChat from "@/components/ui/ButtonChat";
 import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -57,6 +58,8 @@ const FloatingPayButton = ({ disabled, ...props }: any) => {
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const pathname = usePathname();
+  const isPayments = pathname === "/payments";
   return (
     <>
       <Tabs
@@ -144,7 +147,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      {/* <ButtonChat botton={110} /> */}
+      {!isPayments && <ButtonChat botton={110} />}
     </>
   );
 }

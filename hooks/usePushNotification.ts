@@ -27,23 +27,19 @@ export function usePushNotification(options?: { disabled?: boolean }) {
   // Lida com o clique na notificação e o redirecionamento
   useEffect(() => {
     const responseListener =
-      Notification.addNotificationResponseReceivedListener((response) => {
-        const url = response.notification.request.content.data?.url;
+      Notification.addNotificationResponseReceivedListener(() => {
+        const { hydrated } = useRegisterStore.getState();
+        const { isLoading } = useAuthStore.getState();
+        const isAppReady = !isLoading && hydrated;
 
-        if (url && typeof url === "string") {
-          const { hydrated } = useRegisterStore.getState();
-          const { isLoading } = useAuthStore.getState();
-          const isAppReady = !isLoading && hydrated;
-
-          if (isAppReady) {
-            // Pequeno delay para garantir que a navegação e o Zustand não entrem em conflito
-            setTimeout(() => {
-              router.push(url as any);
-            }, 100);
-          } else {
-            // Guarda a rota para o redirecionamento pós-carregamento no index.tsx
-            useNotificationsStore.getState().setPendingRoute(url);
-          }
+        if (isAppReady) {
+          // Pequeno delay para garantir que a navegação e o Zustand não entrem em conflito
+          setTimeout(() => {
+            router.push("/login");
+          }, 100);
+        } else {
+          // Guarda a rota para o redirecionamento pós-carregamento no index.tsx
+          useNotificationsStore.getState().setPendingRoute("/login");
         }
       });
 

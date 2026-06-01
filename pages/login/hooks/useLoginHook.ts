@@ -14,7 +14,7 @@ import { useNavigationFlow } from "@/hooks/useNavigationFlow";
 
 export function useLoginHook() {
   const { showError } = useAlerts();
-  const { setStep, setToken, setData, setEtapa } = useRegisterStore();
+  const { setStep, setToken, setData } = useRegisterStore();
   const { handleFlow } = useNavigationFlow();
 
   const checkCPFMutation = useMutation({
@@ -77,27 +77,29 @@ export function useLoginHook() {
           const response = await api.get(`/v1/client/data/info`);
           const userData = response?.data?.data || {};
           const user: ApiUserData = {
-            nome: userData.name,
-            email: userData.email,
-            cpf: userData.cpf,
-            cidade: userData.city,
-            bairro: userData.neighborhood,
-            status: userData.status,
-            estado: userData.uf,
-            endereco: userData.address,
-            msg_painel: userData.msg_painel,
-            msg_status: userData.msg_status,
-            lastLoan: data?.data?.lastLoan,
-            zip_code: userData.zip_code,
-            phone: userData.phone,
-            pix: userData.chave_pix ?? "",
-            status_doc: userData.status_doc,
-            isLoggedIn: true,
-            observacoes: userData.observacoes,
-            email_verificado: userData.email_verificado,
-            phone_verificado: userData.phone_verificado,
-            type,
             ...data?.data,
+            lastLoan: data?.data?.lastLoan,
+            nome: userData.name ?? data?.data?.nome,
+            email: userData.email ?? data?.data?.email,
+            cpf: userData.cpf ?? data?.data?.cpf,
+            cidade: userData.city ?? data?.data?.cidade,
+            bairro: userData.neighborhood ?? data?.data?.bairro,
+            status: userData.status ?? data?.data?.status,
+            estado: userData.uf ?? data?.data?.estado,
+            endereco: userData.address ?? data?.data?.endereco,
+            msg_painel: userData.msg_painel ?? data?.data?.msg_painel,
+            msg_status: userData.msg_status ?? data?.data?.msg_status,
+            zip_code: userData.zip_code ?? data?.data?.zip_code,
+            phone: userData.phone ?? data?.data?.phone,
+            pix: (userData.chave_pix ?? data?.data?.pix ?? "") as any,
+            status_doc: userData.status_doc ?? data?.data?.status_doc,
+            observacoes: userData.observacoes ?? data?.data?.observacoes,
+            email_verificado:
+              userData.email_verificado ?? data?.data?.email_verificado,
+            phone_verificado:
+              userData.phone_verificado ?? data?.data?.phone_verificado,
+            type,
+            isLoggedIn: true,
           };
 
           await useAuthStore.getState().login(data?.token, user);

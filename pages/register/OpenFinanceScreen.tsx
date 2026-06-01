@@ -107,9 +107,11 @@ const OpenFinanceScreen: React.FC = () => {
       etapa === Etapas.OPEN_FINANCE ||
       etapa === Etapas.ACEITANDO_TERMOS ||
       etapa === Etapas.FINALIZADO ||
+      etapa === Etapas.PALENCA ||
       registerData?.etapa === Etapas.OPEN_FINANCE ||
       registerData?.etapa === Etapas.ACEITANDO_TERMOS ||
-      registerData?.etapa === Etapas.FINALIZADO;
+      registerData?.etapa === Etapas.FINALIZADO ||
+      registerData?.etapa === Etapas.PALENCA;
     if (!allowed) {
       router.replace("/(register)/step1");
       return;
@@ -128,52 +130,43 @@ const OpenFinanceScreen: React.FC = () => {
   }, [showWarningPress]);
 
   const goToNextStep = useCallback(async () => {
-    if (isLeaving.current) return;
-    if (hasGoneToTerms.current) return;
+    if (isLeaving.current || hasGoneToTerms.current) return;
     hasGoneToTerms.current = true;
 
-    // Palenca
-    // const isDriver =
-    //   registerData?.profissao === "Motoboy" ||
-    //   registerData?.profissao === "Motorista";
+    const currentStore = useRegisterStore.getState();
+    const storeData = currentStore.data;
 
-    // if (isDriver) {
-    //   try {
-    //     await api.put("/v1/client/update", {
-    //       etapa: Etapas.PALENCA,
-    //     });
-    //     if (isLeaving.current) return;
+    // Tratamento seguro para evitar falhas de String nula e problemas de Case Sensitive
+    const rawProfissao = storeData?.profissao || registerData?.profissao || "";
+    const currentProfissao = rawProfissao.trim().toLowerCase();
 
-    //     setEtapa(Etapas.PALENCA);
-    //     if (registerData) {
-    //       setData({ ...registerData, etapa: Etapas.PALENCA });
-    //     }
-    //   } catch (error) {
-    //     console.log("update etapa error", error);
-    //   }
+    const isDriver =
+      currentProfissao === "motoboy" || currentProfissao === "motorista";
 
-    //   if (isLeaving.current) return;
-    //   router.replace("/(register)/palenca");
+    const nextEtapa = isDriver ? Etapas.PALENCA : Etapas.ACEITANDO_TERMOS;
+    const nextRoute = isDriver ? "/(register)/palenca" : "/(register)/termos";
 
-    //   return;
-    // }
-
+    // const nextEtapa = Etapas.ACEITANDO_TERMOS;
+    // const nextRoute = "/(register)/termos";
     try {
-      await api.put("/v1/client/update", {
-        etapa: Etapas.ACEITANDO_TERMOS,
-      });
+      await api.put("/v1/client/update", { etapa: nextEtapa });
+
       if (isLeaving.current) return;
 
-      setEtapa(Etapas.ACEITANDO_TERMOS);
-      if (registerData) {
-        setData({ ...registerData, etapa: Etapas.ACEITANDO_TERMOS });
-      }
-    } catch (error) {
-      return error;
-    }
+      setEtapa(nextEtapa);
 
-    if (isLeaving.current) return;
-    router.replace("/(register)/termos");
+      if (storeData) {
+        setData({ ...storeData, etapa: nextEtapa });
+      } else if (registerData) {
+        setData({ ...registerData, etapa: nextEtapa });
+      }
+
+      if (isLeaving.current) return;
+      router.replace(nextRoute);
+    } catch (error) {
+      hasGoneToTerms.current = false;
+      console.log("goToNextStep error", error);
+    }
   }, [registerData, setData, setEtapa]);
 
   const connectKlavi = useCallback(async () => {
@@ -267,12 +260,20 @@ const OpenFinanceScreen: React.FC = () => {
           const { data } = await api.get("v1/register/settings");
           if (cancelled || isLeaving.current) return;
 
+          const currentStore = useRegisterStore.getState();
+          const storeData = currentStore.data;
+
+          // Mesma normalização segura aplicada no início do ciclo de foco
+          const rawProfissao =
+            storeData?.profissao || registerData?.profissao || "";
+          const currentProfissao = rawProfissao.trim().toLowerCase();
+
           const isDriver =
-            registerData?.profissao === "Motoboy" ||
-            registerData?.profissao === "Motorista";
+            currentProfissao === "motoboy" || currentProfissao === "motorista";
 
           if (isDriver) {
             const connectEnabled = data?.data?.openfinance?.motorista?.connect;
+            console.log("shouldAutoAdvance", shouldAutoAdvance);
 
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
@@ -304,7 +305,7 @@ const OpenFinanceScreen: React.FC = () => {
             return;
           }
 
-          if (registerData?.profissao === "Comerciante") {
+          if (currentProfissao === "comerciante") {
             const connectEnabled =
               data?.data?.openfinance?.comerciante?.connect;
 
