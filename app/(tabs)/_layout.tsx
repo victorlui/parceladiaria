@@ -3,7 +3,7 @@ import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { Tabs, usePathname } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FloatingPayButton = ({ disabled, ...props }: any) => {
@@ -59,7 +59,15 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const pathname = usePathname();
-  const isPayments = pathname === "/payments";
+  const isPayments = pathname === "/payments" || pathname === "/renew_list";
+  const tabBarBaseHeight = 64;
+  const tabBarHeight = tabBarBaseHeight + insets.bottom;
+  const chatSpacing = 16;
+  const chatBottomOffset =
+    Platform.OS === "ios"
+      ? tabBarHeight + chatSpacing
+      : tabBarBaseHeight + chatSpacing;
+
   return (
     <>
       <Tabs
@@ -69,7 +77,7 @@ export default function TabLayout() {
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
             // altura base + espaço seguro inferior (evita sobrepor à barra do Android)
-            height: 64 + insets.bottom,
+            height: tabBarHeight,
             // padding inferior igual ao safe area para manter tudo visível
             paddingBottom: Math.max(insets.bottom, 12),
             // pequeno padding superior para dar respiro aos ícones
@@ -147,7 +155,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      {!isPayments && <ButtonChat botton={110} />}
+      {!isPayments && <ButtonChat botton={chatBottomOffset} />}
     </>
   );
 }
