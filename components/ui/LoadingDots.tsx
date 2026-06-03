@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { StyleSheet, Text } from "react-native";
 
-const LoadingDots: React.FC<{ text?: string; interval?: number }> = ({
-  text = "Enviando",
-  interval = 400,
-}) => {
+const LoadingDots: React.FC<{
+  text?: string;
+  interval?: number;
+  color?: string;
+}> = ({ text = "Enviando", interval = 400, color = "#FFF" }) => {
   const [dots, setDots] = useState("");
   React.useEffect(() => {
     const id = setInterval(() => {
@@ -13,7 +14,7 @@ const LoadingDots: React.FC<{ text?: string; interval?: number }> = ({
     return () => clearInterval(id);
   }, [interval]);
   return (
-    <Text style={styles.textButton}>
+    <Text style={[styles.textButton, { color }]}>
       {text}
       {dots}
     </Text>
@@ -22,7 +23,6 @@ const LoadingDots: React.FC<{ text?: string; interval?: number }> = ({
 
 const styles = StyleSheet.create({
   textButton: {
-    color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },

@@ -40,6 +40,7 @@ export function useLoginHook() {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data: any, variables) => {
+      console.log(data);
       try {
         if ((data as any)?.needs_otp === true) {
           useVerificationStore.getState().handleData({

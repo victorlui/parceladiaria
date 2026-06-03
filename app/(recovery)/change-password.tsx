@@ -4,6 +4,7 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { useAuthStore } from "@/store/auth";
+import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -26,10 +27,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ChangePassword: React.FC = () => {
   const { AlertDisplay, showSuccess, showError, hideAlert } = useAlerts();
   const { tokenRegister } = useAuthStore();
+  const { token } = useRegisterStore();
   const senhaRef = useRef<TextInput>(null);
   const confirmSenhaRef = useRef<TextInput>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Validações em tempo real da senha
@@ -66,6 +70,14 @@ const ChangePassword: React.FC = () => {
     Keyboard.dismiss();
     setIsLoading(true);
 
+    const recoveryToken = tokenRegister ?? token;
+
+    if (!recoveryToken) {
+      showError("Erro", "Sessão de recuperação inválida. Reinicie o processo.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await api.post(
         "/v1/client/change-password",
@@ -74,7 +86,7 @@ const ChangePassword: React.FC = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${tokenRegister}`,
+            Authorization: `Bearer ${recoveryToken}`,
           },
         },
       );
@@ -130,13 +142,21 @@ const ChangePassword: React.FC = () => {
               <InputComponent
                 ref={senhaRef}
                 placeholder="Nova senha"
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 value={password}
                 icon={
                   <FontAwesome
                     name="lock"
                     size={22}
                     color={Colors.gray.primary}
+                  />
+                }
+                rightIcon={
+                  <FontAwesome
+                    name={showPassword ? "eye-slash" : "eye"}
+                    size={22}
+                    color={Colors.gray.primary}
+                    onPress={() => setShowPassword(!showPassword)}
                   />
                 }
                 onChangeText={setPassword}
@@ -146,13 +166,21 @@ const ChangePassword: React.FC = () => {
               <InputComponent
                 ref={confirmSenhaRef}
                 placeholder="Confirme a senha"
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
                 value={confirmPassword}
                 icon={
                   <FontAwesome
                     name="lock"
                     size={22}
                     color={Colors.gray.primary}
+                  />
+                }
+                rightIcon={
+                  <FontAwesome
+                    name={showConfirmPassword ? "eye-slash" : "eye"}
+                    size={22}
+                    color={Colors.gray.primary}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   />
                 }
                 onChangeText={setConfirmPassword}

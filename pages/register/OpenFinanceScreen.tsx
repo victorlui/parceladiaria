@@ -18,6 +18,7 @@ import {
   AppState,
   BackHandler,
   Linking,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -436,19 +437,17 @@ const OpenFinanceScreen: React.FC = () => {
       case "analyzing":
       case "approved":
         return (
-          <View className="w-full items-center">
+          <View style={styles.contentContainer}>
             <ActivityIndicator
               size="large"
               color={Colors.green.primary}
-              className="mb-6"
+              style={styles.loadingIndicator}
             />
 
-            <Text className="text-center text-lg font-semibold text-gray-800">
-              {loadingMessage}
-            </Text>
+            <Text style={styles.loadingTitle}>{loadingMessage}</Text>
 
             {flowState === "analyzing" && (
-              <Text className="mt-2 text-center text-sm text-gray-500">
+              <Text style={styles.loadingSubtitle}>
                 Isso pode levar alguns segundos...
               </Text>
             )}
@@ -457,20 +456,18 @@ const OpenFinanceScreen: React.FC = () => {
 
       case "denied":
         return (
-          <View className="w-full items-center px-4">
-            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-red-50">
+          <View style={styles.contentWithHorizontalPadding}>
+            <View style={styles.deniedIconWrapper}>
               <X size={40} color="#ef4444" />
             </View>
 
-            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
-              Cadastro recusado
-            </Text>
+            <Text style={styles.title}>Cadastro recusado</Text>
 
-            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+            <Text style={styles.infoText}>
               Você tem {attempts} tentativas restantes.
             </Text>
 
-            <Text className="mb-6 text-center text-base leading-6 text-gray-500">
+            <Text style={styles.descriptionText}>
               Infelizmente não foi possível aprovar seu empréstimo neste
               momento.
             </Text>
@@ -489,27 +486,22 @@ const OpenFinanceScreen: React.FC = () => {
 
       case "retry":
         return (
-          <View className="w-full items-center px-4">
-            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-orange-50">
+          <View style={styles.contentWithHorizontalPadding}>
+            <View style={styles.retryIconWrapper}>
               <AlertCircle size={40} color="#f97316" />
             </View>
 
-            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
-              Tentar novamente
-            </Text>
+            <Text style={styles.title}>Tentar novamente</Text>
 
-            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+            <Text style={styles.infoText}>
               Você tem {attempts} tentativas restantes.
             </Text>
 
-            <Text className="mb-6 text-center text-base leading-6 text-gray-500">
+            <Text style={styles.descriptionText}>
               Não conseguimos aprovar com a conta conectada.
             </Text>
 
-            <Text
-              className="mb-10 text-center text-sm font-semibold text-gray-500"
-              style={{ marginBottom: 24 }}
-            >
+            <Text style={styles.retryHint}>
               Conecte outra conta bancária (de preferência onde você tem maior
               movimentação).
             </Text>
@@ -526,23 +518,18 @@ const OpenFinanceScreen: React.FC = () => {
       case "idle":
       default:
         return (
-          <View className="w-full items-center px-4">
-            <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-teal-50">
+          <View style={styles.contentWithHorizontalPadding}>
+            <View style={styles.idleIconWrapper}>
               <Landmark size={40} color="#0f766e" />
             </View>
 
-            <Text className="mb-3 text-center text-2xl font-bold text-slate-900">
-              Conecte sua conta
-            </Text>
+            <Text style={styles.title}>Conecte sua conta</Text>
 
-            <Text className="mb-3 text-center text-base leading-6 text-gray-500">
+            <Text style={styles.infoText}>
               Você tem {attempts} tentativas restantes.
             </Text>
 
-            <Text
-              className="mb-10 text-center text-base leading-6 text-gray-500"
-              style={{ marginBottom: 24 }}
-            >
+            <Text style={styles.descriptionText}>
               Conecte sua melhor conta para podermos oferecer um crédito
               adequado para você.
             </Text>
@@ -554,10 +541,10 @@ const OpenFinanceScreen: React.FC = () => {
               onPress={connectKlavi}
             />
 
-            <View className="mt-6 flex-row items-center">
+            <View style={styles.securityRow}>
               <Lock size={14} color="#9ca3af" style={{ marginRight: 6 }} />
 
-              <Text className="text-sm text-gray-400">
+              <Text style={styles.securityText}>
                 Conexão segura via Open Finance
               </Text>
             </View>
@@ -567,11 +554,109 @@ const OpenFinanceScreen: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
+    <View style={styles.screen}>
       <AlertDisplay />
       {renderContent()}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    width: "100%",
+    alignItems: "center",
+  },
+  contentWithHorizontalPadding: {
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  loadingIndicator: {
+    marginBottom: 24,
+  },
+  loadingTitle: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
+  loadingSubtitle: {
+    marginTop: 8,
+    textAlign: "center",
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  deniedIconWrapper: {
+    marginBottom: 32,
+    width: 96,
+    height: 96,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fef2f2",
+  },
+  retryIconWrapper: {
+    marginBottom: 32,
+    width: 96,
+    height: 96,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff7ed",
+  },
+  idleIconWrapper: {
+    marginBottom: 32,
+    width: 96,
+    height: 96,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f0fdfa",
+  },
+  title: {
+    marginBottom: 12,
+    textAlign: "center",
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  infoText: {
+    marginBottom: 12,
+    textAlign: "center",
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#6b7280",
+  },
+  descriptionText: {
+    marginBottom: 24,
+    textAlign: "center",
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#6b7280",
+  },
+  retryHint: {
+    marginBottom: 24,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  securityRow: {
+    marginTop: 24,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  securityText: {
+    fontSize: 14,
+    color: "#9ca3af",
+  },
+  screen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 24,
+  },
+});
 
 export default OpenFinanceScreen;

@@ -1,5 +1,7 @@
 import { Selected } from "../components/SendDocument";
 
+type SelectedFileMap = Record<string, { key: string; selected?: Selected }>;
+
 export function safeParseArray(str: any) {
   if (!str) return [];
   if (Array.isArray(str)) return str;
@@ -15,7 +17,7 @@ export function safeParseArray(str: any) {
 
 export const getInitialSelectedForItem = (
   documentKey: string,
-  selectedFiles: Record<string, { key: string; selected?: Selected }>,
+  selectedFiles: SelectedFileMap,
 ): Selected | null => {
   const entry = selectedFiles[documentKey];
   if (entry?.selected) return entry.selected;
@@ -38,4 +40,19 @@ export const getInitialSelectedForItem = (
       : "image/jpeg";
 
   return { uri, name, type, mimeType };
+};
+
+export const getSelectedFilesFromData = (
+  divergencias: string[],
+  data: Record<string, any> | null | undefined,
+): SelectedFileMap => {
+  return divergencias.reduce<SelectedFileMap>((acc, documentKey) => {
+    const value = data?.[documentKey];
+
+    if (typeof value === "string" && value.trim()) {
+      acc[documentKey] = { key: value.trim() };
+    }
+
+    return acc;
+  }, {});
 };

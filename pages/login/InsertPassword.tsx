@@ -61,7 +61,7 @@ const InsertPasswordScreen: React.FC = () => {
   };
 
   const navigationForgotPassword = () => {
-    router.push("/(auth)/validity");
+    router.push("/(recovery)/cpf");
   };
 
   return (

@@ -20,13 +20,11 @@ import {
   View,
 } from "react-native";
 
-const Validity: React.FC = () => {
+export default function CPFScreen() {
   const { showWarning } = useAlerts();
   const { setCpfValid } = useAuthStore((state) => state);
-
   const cpfRef = useRef<TextInput>(null);
   const [cpf, setCpf] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async () => {
@@ -37,17 +35,29 @@ const Validity: React.FC = () => {
     cpfRef.current?.blur();
     setIsLoading(true);
     try {
-      const response = await api.post("auth/verify-auth", {
+      const { data } = await api.post("/auth/recovery/start", {
         cpf,
       });
-      const { method } = response.data.data;
+      console.log("data", data);
+
       setCpfValid(cpf);
-      if (method === "face") {
-        router.push("/(auth)/timeless_face_check");
-      } else {
-        router.push("/(auth)/cpf-otp-screen");
+
+      if (data.data.method && data.data.method === "question") {
+        router.push("/(recovery)/birthdate");
+        return;
       }
+      if (data.data.method && data.data.method === "face") {
+        router.push("/(recovery)/face");
+        return;
+      }
+
+      router.push("/(recovery)/otp");
+      return;
     } catch (error: any) {
+      if (error.response?.data?.message === "Validation Error.") {
+        showWarning("Error", "CPF inválido");
+        return;
+      }
       showWarning(
         "Erro",
         error.response?.data?.message ||
@@ -111,7 +121,7 @@ const Validity: React.FC = () => {
       </TouchableWithoutFeedback>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -148,5 +158,3 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 });
-
-export default Validity;

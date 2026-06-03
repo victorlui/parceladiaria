@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/Colors";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import LoadingDots from "./LoadingDots";
 
 interface Props {
@@ -67,7 +67,12 @@ const ButtonComponent: React.FC<Props> = ({
     >
       <View style={styles.content}>
         {!loading && iconLeft && renderIcon(iconLeft, styles.iconLeft)}
-        {loading && <LoadingDots text="Aguarde..." />}
+        {loading && (
+          <LoadingDots
+            text="Aguarde..."
+            color={outline ? Colors.green.button : Colors.white}
+          />
+        )}
         {!loading && (
           <Text
             style={[styles.buttonText, outline && styles.buttonTextOutline]}

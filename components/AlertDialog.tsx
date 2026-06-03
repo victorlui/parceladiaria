@@ -138,9 +138,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 20, // text-xl
+    fontSize: 19, // text-xl
     fontWeight: "bold",
     color: "#000000",
+    alignItems: "center",
   },
   message: {
     color: "#4b5563", // text-gray-600

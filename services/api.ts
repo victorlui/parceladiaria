@@ -34,7 +34,6 @@ interface RetryRequestConfig extends AxiosRequestConfig {
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -142,7 +141,7 @@ function showServerErrorAlert() {
 
 function showTimeoutAlert() {
   Alert.alert("Timeout", "A requisição demorou muito para responder.", [
-    { text: "OK", onPress: logoutUser },
+    { text: "OK", onPress: () => {} },
   ]);
 }
 
@@ -159,7 +158,7 @@ function showBlockedAlert(message: string) {
 }
 
 function showForbiddenAlert(message: string) {
-  Alert.alert("Erro", message, [{ text: "OK", onPress: logoutUser }]);
+  Alert.alert("Erro", message, [{ text: "OK", onPress: () => {} }]);
 }
 
 function showRateLimitAlert(message?: string) {
@@ -184,6 +183,9 @@ function getBlockedReasonFromErro(erro?: string): string | undefined {
 
   const match = normalized.match(/#(\d+)/);
   const code = match?.[1];
+
+  console.log("code", code);
+  console.log("erro", erro);
 
   switch (code) {
     case "990":
@@ -265,8 +267,10 @@ api.interceptors.response.use(
 
       if (blockedReason) {
         showBlockedAlert(blockedReason);
-      } else if (blockMessage || message) {
+      } else if (blockMessage || message !== "Validation Error.") {
         showForbiddenAlert(blockMessage ?? message);
+      } else if (!blockMessage && message === "Validation Error.") {
+        return Promise.reject(error);
       } else {
         showForbiddenAlert("Requisição não autorizada.");
       }
@@ -275,6 +279,7 @@ api.interceptors.response.use(
     } else if (status && status >= 500) {
       showServerErrorAlert();
     } else if (error.code === "ECONNABORTED") {
+      console.log("Timeout", error);
       showTimeoutAlert();
     } else if (!error.response) {
       showConnectionErrorAlert();

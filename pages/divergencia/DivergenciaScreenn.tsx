@@ -3,11 +3,9 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { updateUserService } from "@/services/register";
-import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
-import { Etapas, StatusCadastro } from "@/utils";
+import { StatusCadastro } from "@/utils";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ScrollView,
@@ -24,12 +22,17 @@ import ExpiredDocument from "./components/ExpiredDocument";
 import ItemDivergente from "./components/ItemDivergente";
 import SendDocument, { type Selected } from "./components/SendDocument";
 import Openfinance from "./Openfinance";
+import OtpDivergencia from "./otp";
 import { uploadDocumentService } from "./service/upload";
-import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
+import {
+  getInitialSelectedForItem,
+  getSelectedFilesFromData,
+  safeParseArray,
+} from "./utils/parse";
 
 const DivergenciaScreen: React.FC = () => {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
-  const { data, clean } = useRegisterStore();
+  const { data, setData } = useRegisterStore();
   const divergencias = safeParseArray(data?.divergencias || "[]")
     .map((value: any) => {
       if (typeof value === "string") return value;
@@ -48,7 +51,7 @@ const DivergenciaScreen: React.FC = () => {
 
   const isMountedRef = useRef(true);
   const isUploadingRef = useRef(false);
-  const isSubmittingRef = useRef(false);
+  const [isOtpSend, setIsOtpSend] = useState<boolean>(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -56,6 +59,16 @@ const DivergenciaScreen: React.FC = () => {
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    const persistedSelectedFiles = getSelectedFilesFromData(divergencias, data);
+    if (!Object.keys(persistedSelectedFiles).length) return;
+
+    setSelectedFiles((prev) => ({
+      ...persistedSelectedFiles,
+      ...prev,
+    }));
+  }, [data, divergencias]);
 
   const onSelect = (nextItem: any) => {
     const next =
@@ -173,6 +186,11 @@ const DivergenciaScreen: React.FC = () => {
       });
 
       if (!isMountedRef.current) return;
+
+      setData({
+        ...(useRegisterStore.getState().data || {}),
+        [currentItem]: url,
+      });
       setSelectedFiles((prev) => ({
         ...prev,
         [currentItem]: { key: url, selected: normalized },
@@ -204,131 +222,14 @@ const DivergenciaScreen: React.FC = () => {
       );
       return;
     }
-
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
     setLoadingSubmit(true);
     try {
-      await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
-
-      const response = await api.get("/v1/client");
-      const dataClient =
-        response.data?.data?.data || response.data?.data || response.data;
-
-      if (dataClient?.type === "client") {
-        const infoResponse = await api.get("/v1/client/data/info");
-        const userData = infoResponse.data.data;
-        const user = {
-          nome: userData.name,
-          email: userData.email,
-          cpf: userData.cpf,
-          cidade: userData.city,
-          bairro: userData.neighborhood,
-          status: userData.status,
-          estado: userData.uf,
-          endereco: userData.address,
-          msg_painel: userData.msg_painel,
-          msg_status: userData.msg_status,
-          lastLoan: dataClient?.lastLoan,
-          zip_code: userData.zip_code,
-          phone: userData.phone,
-          pix: userData.chave_pix ?? "",
-          status_doc: userData.status_doc,
-          isLoggedIn: true,
-          observacoes: userData.observacoes,
-          email_verificado: userData.email_verificado,
-          phone_verificado: userData.phone_verificado,
-        };
-        const token = useRegisterStore.getState().token || "";
-        await useAuthStore.getState().login(token, user);
-        router.replace("/(tabs)/home");
-      } else {
-        const status = dataClient?.status;
-
-        useRegisterStore.getState().setData({
-          ...useRegisterStore.getState().data,
-          ...dataClient,
-          primeira_analise: response.data?.data?.data?.primeira_analise ?? 0,
-        });
-        useRegisterStore
-          .getState()
-          .setToken(useRegisterStore.getState().token || "");
-
-        const routeByStatus: Record<string, any> = {
-          divergente: "/divergencia_screen",
-          recusado: "/recusado_screen",
-          aprovado: "/pre_aprovado_screen",
-          "pre-aprovado": "/pre_aprovado_screen",
-          analise: "/analise_screen",
-          reanalise: "/reanalise_screen",
-          "proposta-expirada": "/divergencia_screen",
-        };
-
-        const targetRoute =
-          status && routeByStatus[status] ? routeByStatus[status] : null;
-
-        const alertContent: Record<string, { title: string; message: string }> =
-          {
-            divergente: {
-              title: "Ação Necessária",
-              message: "Encontramos uma divergência nos seus dados.",
-            },
-            recusado: {
-              title: "Cadastro Recusado",
-              message: "Infelizmente seu cadastro não foi aprovado.",
-            },
-            aprovado: {
-              title: "Cadastro Aprovado",
-              message: "Parabéns! Seu cadastro foi aprovado.",
-            },
-            "pre-aprovado": {
-              title: "Cadastro Pré-Aprovado",
-              message: "Parabéns! Seu cadastro foi pré-aprovado.",
-            },
-            analise: {
-              title: "Aguarde um momento",
-              message:
-                "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.",
-            },
-            reanalise: {
-              title: "Aguarde um momento",
-              message:
-                "Documentos enviados com sucesso. Seu cadastro está em reanálise. Por favor, aguarde.",
-            },
-            "proposta-expirada": {
-              title: "Proposta Expirada",
-              message: "Sua proposta expirou. É necessário atualizar os dados.",
-            },
-          };
-
-        const alertTitle =
-          status && alertContent[status]
-            ? alertContent[status].title
-            : "Aguarde um momento";
-        const alertMessage =
-          status && alertContent[status]
-            ? alertContent[status].message
-            : "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.";
-
-        showSuccess(alertTitle, alertMessage, () => {
-          if (targetRoute && targetRoute !== "/divergencia_screen") {
-            router.replace(targetRoute);
-          } else {
-            clean();
-            router.replace("/login");
-          }
-        });
-      }
-    } catch (error: any) {
-      if (error?.response?.status === 401) return;
-      showError(
-        "Erro",
-        error?.message ||
-          "Não foi possível enviar os documentos. Tente novamente.",
-      );
+      await api.post("/v1/analise/otp");
+      setIsOtpSend(true);
+    } catch (error) {
+      return;
     } finally {
-      isSubmittingRef.current = false;
-      if (isMountedRef.current) setLoadingSubmit(false);
+      setLoadingSubmit(false);
     }
   };
 
@@ -350,7 +251,7 @@ const DivergenciaScreen: React.FC = () => {
         <AlertDisplay />
         <PulsingImageLoader
           source={require("@/assets/images/logo-verde.png")}
-          text="Enviando documentos..."
+          text="Confirmando dados..."
         />
       </>
     );
@@ -414,6 +315,10 @@ const DivergenciaScreen: React.FC = () => {
 
   if (data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
     return <ExpiredDocument />;
+  }
+
+  if (isOtpSend) {
+    return <OtpDivergencia back={() => setIsOtpSend(false)} />;
   }
 
   const renderDocumentRequests = () => {

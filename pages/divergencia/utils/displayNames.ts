@@ -1,4 +1,8 @@
 export const documentDisplayNames: Record<string, string> = {
+  phone: "Novo telefone",
+  telefone: "Novo telefone",
+  celular: "Novo telefone",
+  whatsapp: "Novo telefone",
   comprovante_endereco: "Comprovante de endereço",
   foto_perfil_app: "Perfil no App de Corridas",
   foto_perfil_app2: "Perfil em Outro App",
