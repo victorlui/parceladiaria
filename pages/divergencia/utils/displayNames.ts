@@ -19,4 +19,5 @@ export const documentDisplayNames: Record<string, string> = {
   face: "Reconhecimento Facial",
   video_perfil_app: "Vídeo do Perfil no App",
   openfinance: "Open Finance",
+  palenca: "Palenca",
 };

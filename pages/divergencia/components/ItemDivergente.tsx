@@ -1,8 +1,8 @@
+import { Colors } from "@/constants/Colors";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import getIconInfo from "./IconDivergente";
-import { Colors } from "@/constants/Colors";
 import { documentDisplayNames } from "../utils/displayNames";
+import getIconInfo from "./IconDivergente";
 
 interface Props {
   item: string;
@@ -14,7 +14,10 @@ const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
   const iconInfo = getIconInfo(item);
   const displayName = documentDisplayNames[item] || item;
   const isOpenFinance = item === "openfinance";
+  const isPalenca = item === "palenca";
   const isSelected = Boolean(selectedUri);
+
+  console.log(isPalenca);
 
   return (
     <View style={styles.card}>
@@ -39,10 +42,10 @@ const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
             {isSelected
               ? isOpenFinance
                 ? "Conectado"
-                : "Arquivo Selecionado"
-              : isOpenFinance
-                ? "Pendente - Conectar"
-                : "Divergente - Reenviar"}
+                : "Alterar"
+              : isOpenFinance || isPalenca
+                ? "Conectar"
+                : "Enviar"}
           </Text>
         </View>
       </View>
@@ -61,7 +64,13 @@ const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
             isOpenFinance && isSelected && styles.sendButtonTextDisabled,
           ]}
         >
-          {isSelected ? (isOpenFinance ? "Conectado" : "Alterar") : isOpenFinance ? "Conectar" : "Enviar"}
+          {isSelected
+            ? isOpenFinance
+              ? "Conectado"
+              : "Alterar"
+            : isOpenFinance || isPalenca
+              ? "Conectar"
+              : "Enviar"}
         </Text>
       </TouchableOpacity>
     </View>

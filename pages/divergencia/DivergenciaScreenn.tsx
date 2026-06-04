@@ -23,6 +23,8 @@ import ItemDivergente from "./components/ItemDivergente";
 import SendDocument, { type Selected } from "./components/SendDocument";
 import Openfinance from "./Openfinance";
 import OtpDivergencia from "./otp";
+
+import PalencaDivergente from "./Palenca";
 import { uploadDocumentService } from "./service/upload";
 import {
   getInitialSelectedForItem,
@@ -86,6 +88,7 @@ const DivergenciaScreen: React.FC = () => {
   const onSelect = (nextItem: any) => {
     const next =
       typeof nextItem === "string" ? nextItem : String(nextItem ?? "");
+    console.log(next);
     setItem(next);
   };
 
@@ -270,6 +273,15 @@ const DivergenciaScreen: React.FC = () => {
     );
   }
 
+  if (item && item === "palenca") {
+    return (
+      <>
+        <AlertDisplay />
+        <PalencaDivergente />
+      </>
+    );
+  }
+
   if (item && item === "openfinance") {
     return (
       <>
@@ -325,6 +337,8 @@ const DivergenciaScreen: React.FC = () => {
       </>
     );
   }
+
+  console.log("item", item);
 
   if (data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
     return <ExpiredDocument />;

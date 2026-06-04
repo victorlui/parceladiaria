@@ -81,8 +81,6 @@ export function useFinalizeDivergenciaFlow() {
       const responseData = response.data?.data?.data;
       const dataClient = responseData || response.data?.data || response.data;
 
-      console.log("finalizar", responseData);
-
       if (dataClient?.type === "client") {
         const infoResponse = await api.get("/v1/client/data/info");
         const userData = infoResponse.data?.data || {};

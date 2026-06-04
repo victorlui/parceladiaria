@@ -1,4 +1,5 @@
 import {
+  FontAwesome5,
   FontAwesome6,
   Ionicons,
   MaterialCommunityIcons,
@@ -28,6 +29,10 @@ const ICONS: Record<string, IconInfo> = {
     icon: <Ionicons name="videocam" size={24} color="#3B82F6" />,
     bg: "#EFF6FF",
   },
+  palenca: {
+    icon: <FontAwesome5 name="plug" size={24} color="black" />,
+    bg: "#EFF6FF",
+  },
   default: {
     icon: <FontAwesome6 name="camera" size={22} color="#A855F7" />,
     bg: "#FAF5FF",
@@ -37,6 +42,7 @@ const ICONS: Record<string, IconInfo> = {
 const getIconInfo = (item: string): IconInfo => {
   if (item === "face") return ICONS.face;
   if (item === "ganhos_app" || item.includes("video")) return ICONS.video;
+  if (item === "palenca") return ICONS.palenca;
   return ICONS.default;
 };
 
