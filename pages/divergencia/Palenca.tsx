@@ -81,7 +81,7 @@ export default function PalencaDivergente() {
     );
   }
 
-  if (!loadingSubmit) {
+  if (loadingSubmit) {
     return (
       <PulsingImageLoader
         source={require("@/assets/images/logo-verde.png")}
