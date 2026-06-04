@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function QuestionsScreen() {
-  const { AlertDisplay, showWarning, showInfo } = useAlerts();
+  const { showWarning, showInfo } = useAlerts();
   const {
     data: questions,
     setData,
@@ -161,7 +161,6 @@ export default function QuestionsScreen() {
             iconRight={null}
           />
         </View>
-        <AlertDisplay />
       </SafeAreaView>
     );
   }
@@ -268,7 +267,6 @@ export default function QuestionsScreen() {
           />
         </View>
       </ScrollView>
-      <AlertDisplay />
     </SafeAreaView>
   );
 }

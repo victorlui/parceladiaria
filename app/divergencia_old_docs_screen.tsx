@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const DivergenciaScreen: React.FC = () => {
   const { logout, user } = useAuthStore();
-  const { AlertDisplay, showWarning } = useAlerts();
+  const { showWarning } = useAlerts();
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { uri: string; nameImage: string }>
   >({});
@@ -165,8 +165,6 @@ const DivergenciaScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AlertDisplay />
-
       {isLoading && <LoadingScreen />}
 
       <ScrollView

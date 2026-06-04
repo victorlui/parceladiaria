@@ -40,8 +40,12 @@ const SendDocument: React.FC<Props> = ({
   const [selected, setSelected] = useState<Selected | null>(
     initialSelected ?? null,
   );
+  const previousItemRef = React.useRef(item);
 
   useEffect(() => {
+    if (previousItemRef.current === item) return;
+
+    previousItemRef.current = item;
     setSelected(initialSelected ?? null);
   }, [item, initialSelected]);
 

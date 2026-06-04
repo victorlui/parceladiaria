@@ -71,6 +71,7 @@ export enum Etapas {
   REGISTRANDO_PROFISSAO = "Informando Profissão",
   REGISTRANDO_EMAIL = "registrando_email",
   REGISTRANDO_ENDERECO = "registrando_endereco",
+  INFORMANDO_ENDERECO = "Informando Endereço",
   REGISTRANDO_PIX = "registrando_pix",
   INFORMANDO_PIX = "Informando PIX",
   INFORMANDO_TIPO_COMERCIO = "Informando Tipo Comércio",
@@ -92,6 +93,8 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.INFORMANDO_TIPO_COMERCIO]: "/(register)/step1",
 
   [Etapas.REGISTRANDO_ENDERECO]: "/(register_new)/register-address",
+  [Etapas.INFORMANDO_ENDERECO]: "/(register_new)/register-address",
+
   [Etapas.REGISTRANDO_PIX]: "/(register)/chave_pix",
   [Etapas.INFORMANDO_PIX]: "/(register)/chave_pix",
 

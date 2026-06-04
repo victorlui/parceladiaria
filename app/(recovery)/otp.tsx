@@ -22,7 +22,7 @@ import {
 } from "react-native";
 
 export default function OtpScreen() {
-  const { AlertDisplay, showWarning, showSuccess } = useAlerts();
+  const { showWarning, showSuccess } = useAlerts();
   const cpfValid = useAuthStore((state) => state.cpfValid);
   const { token, data: registerData, setData, setToken } = useRegisterStore();
   const [otp, setOtp] = useState("");
@@ -133,7 +133,6 @@ export default function OtpScreen() {
 
   return (
     <View style={styles.container}>
-      <AlertDisplay />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={styles.keyboardContainer}

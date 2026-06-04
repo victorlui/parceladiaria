@@ -6,7 +6,7 @@ import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
 import { FontAwesome5 } from "@expo/vector-icons";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -33,14 +33,19 @@ import {
 const DivergenciaScreen: React.FC = () => {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
   const { data, setData } = useRegisterStore();
-  const divergencias = safeParseArray(data?.divergencias || "[]")
-    .map((value: any) => {
-      if (typeof value === "string") return value;
-      if (typeof value?.key === "string") return value.key;
-      if (typeof value?.item === "string") return value.item;
-      return "";
-    })
-    .filter((value: string) => Boolean(value));
+
+  const divergencias = useMemo(
+    () =>
+      safeParseArray(data?.divergencias || "[]")
+        .map((value: any) => {
+          if (typeof value === "string") return value;
+          if (typeof value?.key === "string") return value.key;
+          if (typeof value?.item === "string") return value.item;
+          return "";
+        })
+        .filter((value: string) => Boolean(value)),
+    [data?.divergencias],
+  );
   const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
   const [item, setItem] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<
@@ -64,10 +69,18 @@ const DivergenciaScreen: React.FC = () => {
     const persistedSelectedFiles = getSelectedFilesFromData(divergencias, data);
     if (!Object.keys(persistedSelectedFiles).length) return;
 
-    setSelectedFiles((prev) => ({
-      ...persistedSelectedFiles,
-      ...prev,
-    }));
+    setSelectedFiles((prev) => {
+      let hasChanges = false;
+      const next = { ...prev };
+
+      Object.entries(persistedSelectedFiles).forEach(([documentKey, entry]) => {
+        if (prev[documentKey]?.key === entry.key) return;
+        hasChanges = true;
+        next[documentKey] = { ...prev[documentKey], key: entry.key };
+      });
+
+      return hasChanges ? next : prev;
+    });
   }, [data, divergencias]);
 
   const onSelect = (nextItem: any) => {

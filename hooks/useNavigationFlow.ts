@@ -10,6 +10,7 @@ const stepMap: Partial<Record<Etapas, number>> = {
   [Etapas.REGISTRANDO_EMAIL]: 6,
   [Etapas.REGISTRANDO_PIX]: 7,
   [Etapas.REGISTRANDO_ENDERECO]: 8,
+  [Etapas.INFORMANDO_ENDERECO]: 8,
   [Etapas.CNPJ]: 9,
   [Etapas.INFORMANDO_TIPO_COMERCIO]: 10,
 };

@@ -25,7 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ChangePassword: React.FC = () => {
-  const { AlertDisplay, showSuccess, showError, hideAlert } = useAlerts();
+  const { showSuccess, showError, hideAlert } = useAlerts();
   const { tokenRegister } = useAuthStore();
   const { token } = useRegisterStore();
   const senhaRef = useRef<TextInput>(null);
@@ -112,7 +112,6 @@ const ChangePassword: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <AlertDisplay />
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"

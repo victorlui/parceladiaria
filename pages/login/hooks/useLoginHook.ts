@@ -40,7 +40,6 @@ export function useLoginHook() {
     mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
       login(cpf, password),
     onSuccess: async (data: any, variables) => {
-      console.log(data);
       try {
         if ((data as any)?.needs_otp === true) {
           useVerificationStore.getState().handleData({
@@ -59,12 +58,15 @@ export function useLoginHook() {
         const etapa = data?.data?.etapa;
         const status = data?.data?.status;
 
+        console.log(data?.data);
+
         if (type === "lead") {
           setToken(data?.token);
           const response = await api.get(`/v1/client`);
 
           setData({
             ...data?.data,
+            cpf: data?.data?.cpf,
             primeira_analise: response?.data?.data?.data?.primeira_analise ?? 0,
           });
 
@@ -113,6 +115,7 @@ export function useLoginHook() {
         // Fallback para caso não caia em nenhum type conhecido
         showError("Ops!", "Tipo de usuário desconhecido ou não configurado.");
       } catch (error: any) {
+        console.log("error", error, error.response);
         showError(
           "Ops!",
           "Ocorreu um erro ao carregar os dados do usuário. Tente novamente.",

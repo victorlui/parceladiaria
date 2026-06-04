@@ -45,7 +45,7 @@ type FaceRecoveryResponse =
     };
 
 const FaceScreen: React.FC = () => {
-  const { showWarning, AlertDisplay } = useAlerts();
+  const { showWarning } = useAlerts();
   const cpfValid = useAuthStore((state) => state.cpfValid);
   const setCpfValid = useAuthStore((state) => state.setCpfValid);
   const registerRecovery = useAuthStore((state) => state.register);
@@ -255,7 +255,6 @@ const FaceScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AlertDisplay />
       <FaceCaptureWebView
         visible={isFace}
         onSuccess={sendPhoto}
