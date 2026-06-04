@@ -1,3 +1,4 @@
+import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useAuthStore } from "@/store/auth";
 import { router } from "expo-router";
@@ -22,9 +23,12 @@ import axios from "axios";
 import ButtonChat from "../ui/ButtonChat";
 
 const ChamadaVideoScreen: React.FC = () => {
+  const missingRequiredDataError =
+    "Dados obrigatórios ausentes para iniciar a chamada.";
   const { logout } = useAuthStore((state) => state);
-  const { data: registerData } = useRegisterStore();
+  const { data: registerData, clean } = useRegisterStore();
   const { user } = useAuthStore();
+  const { showError, AlertDisplay } = useAlerts();
   const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -100,16 +104,6 @@ const ChamadaVideoScreen: React.FC = () => {
     requestPermissions();
   }, [requestPermissions]);
 
-  const onExit = () => {
-    // if (callExpiryTimeoutRef.current) {
-    //   clearTimeout(callExpiryTimeoutRef.current);
-    //   callExpiryTimeoutRef.current = null;
-    // }
-
-    logout();
-    router.replace("/login");
-  };
-
   const onLeaveCall = () => {
     logout();
     router.replace("/login");
@@ -117,17 +111,30 @@ const ChamadaVideoScreen: React.FC = () => {
 
   const fetchChamada = React.useCallback(async () => {
     const telefoneFinal =
-      registerData?.whatsapp ||
-      registerData?.phone ||
-      user?.whatsapp ||
-      user?.phone ||
-      "";
+      registerData?.whatsapp?.trim() || registerData?.phone?.trim();
+
+    const cpfFinal = registerData?.cpf?.trim() || "";
+    const nomeFinal = registerData?.nome?.trim() || "";
+
+    if (!cpfFinal || !nomeFinal || !telefoneFinal) {
+      showError(
+        "Atenção",
+        "Não foi possível iniciar a chamada porque faltam CPF, nome ou telefone. Faça login novamente para atualizar seus dados.",
+        false,
+        async () => {
+          clean();
+          await logout();
+          router.replace("/login");
+        },
+      );
+      throw new Error(missingRequiredDataError);
+    }
 
     const { data } = await axios.post(
       "https://cadastroparceladiaria.com.br/api/chamada-app",
       {
-        cpf: registerData?.cpf || user?.cpf || "",
-        nome: registerData?.nome || user?.nome || "",
+        cpf: cpfFinal,
+        nome: nomeFinal,
         telefone: telefoneFinal,
       },
       {
@@ -162,6 +169,13 @@ const ChamadaVideoScreen: React.FC = () => {
       const data = await fetchChamada();
       setCall(data);
     } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === missingRequiredDataError
+      ) {
+        return;
+      }
+
       const nomeUsuario =
         (registerData?.nome || user?.nome)?.split(" ")[0] || "Usuário";
       let description = `${nomeUsuario}, tente novamente em instantes.`;
@@ -314,6 +328,7 @@ const ChamadaVideoScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F7FCFA" }}>
+      <AlertDisplay />
       <View style={styles.preAprovadoContainer}>
         <View style={{ alignItems: "center", gap: 24 }}>
           <FontAwesome

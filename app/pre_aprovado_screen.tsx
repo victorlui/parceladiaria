@@ -17,7 +17,7 @@ const PreAprovado: React.FC = () => {
   const { redirectPath } = useCheckStatus("/pre_aprovado_screen");
   const { data: registerData, clean } = useRegisterStore();
   const [loadingAccept, setLoadingAccept] = useState(false);
-  const { showSuccess, AlertDisplay } = useAlerts();
+  const { showSuccess, showError, AlertDisplay } = useAlerts();
   if (redirectPath) {
     return <Redirect href={redirectPath as any} />;
   }
@@ -26,12 +26,29 @@ const PreAprovado: React.FC = () => {
     setLoadingAccept(true);
     try {
       const ip = await Network.getIpAddressAsync();
+      const city = registerData?.cidade?.trim();
+      const rawState = registerData?.estado?.trim();
+      const state = rawState ? tratarEstado(rawState) : "";
+
+      if (!ip || !city || !rawState || state === "Estado Inválido") {
+        showError(
+          "Atenção",
+          "Não foi possível aceitar os termos porque faltam cidade, estado ou IP. Faça login novamente para atualizar seus dados.",
+          false,
+          async () => {
+            clean();
+            await useAuthStore.getState().logout();
+            router.replace("/login");
+          },
+        );
+        return;
+      }
 
       const payload = {
         sign_info_date: convertData(),
         sign_info_ip_address: ip,
-        sign_info_city: registerData?.cidade ?? "São Paulo",
-        sign_info_state: tratarEstado(registerData?.estado || "SP"),
+        sign_info_city: city,
+        sign_info_state: state,
         sign_info_country: "BR",
       };
 
@@ -204,6 +221,7 @@ const PreAprovado: React.FC = () => {
         edges={["top", "bottom"]}
         style={{ flex: 1, backgroundColor: "#fff" }}
       >
+        <AlertDisplay />
         <TermsFinalScreen
           loadingAccept={loadingAccept}
           onAccept={acceptTerms}

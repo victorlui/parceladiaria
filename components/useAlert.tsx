@@ -15,7 +15,12 @@ type AlertData = {
 type AlertStore = {
   alert: AlertData | null;
   showSuccess: (title: string, message: string, onOkPress?: () => void) => void;
-  showError: (title: string, message: string, sac?: boolean) => void;
+  showError: (
+    title: string,
+    message: string,
+    sac?: boolean,
+    onOkPress?: () => void,
+  ) => void;
   showWarning: (title: string, message: string, onPress?: () => void) => void;
   showWarningPress: (
     title: string,
@@ -38,13 +43,14 @@ const useAlertStore = create<AlertStore>((set) => ({
         sac: false,
       },
     }),
-  showError: (title, message, sac) =>
+  showError: (title, message, sac, onOkPress) =>
     set({
       alert: {
         type: "error",
         title,
         message,
         sac,
+        onPress: onOkPress,
       },
     }),
   showWarning: (title, message, onPress) =>

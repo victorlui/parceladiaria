@@ -81,6 +81,8 @@ export function useFinalizeDivergenciaFlow() {
       const responseData = response.data?.data?.data;
       const dataClient = responseData || response.data?.data || response.data;
 
+      console.log("finalizar", responseData);
+
       if (dataClient?.type === "client") {
         const infoResponse = await api.get("/v1/client/data/info");
         const userData = infoResponse.data?.data || {};
@@ -122,13 +124,16 @@ export function useFinalizeDivergenciaFlow() {
       });
       registerStore.setToken(registerStore.token || "");
 
-      const targetRoute = status && routeByStatus[status] ? routeByStatus[status] : null;
-      const alertTitle = status && alertContent[status]
-        ? alertContent[status].title
-        : "Aguarde um momento";
-      const alertMessage = status && alertContent[status]
-        ? alertContent[status].message
-        : "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.";
+      const targetRoute =
+        status && routeByStatus[status] ? routeByStatus[status] : null;
+      const alertTitle =
+        status && alertContent[status]
+          ? alertContent[status].title
+          : "Aguarde um momento";
+      const alertMessage =
+        status && alertContent[status]
+          ? alertContent[status].message
+          : "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.";
 
       showSuccess(alertTitle, alertMessage, () => {
         if (targetRoute && targetRoute !== "/divergencia_screen") {
