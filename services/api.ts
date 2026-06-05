@@ -165,7 +165,7 @@ function showRateLimitAlert(message?: string) {
   Alert.alert(
     "Limite de requisições",
     message ?? "Limite de requisições excedido. Tente novamente mais tarde.",
-    [{ text: "OK", onPress: logoutUser }],
+    [{ text: "OK", onPress: () => {} }],
   );
 }
 
@@ -253,6 +253,10 @@ api.interceptors.response.use(
 
     const hasToken = !!getAuthToken();
 
+    console.log("status", status);
+    console.log("error", error.response);
+    console.log("message", message);
+
     if (
       status === 401 &&
       hasToken &&
@@ -274,6 +278,8 @@ api.interceptors.response.use(
       } else {
         showForbiddenAlert("Requisição não autorizada.");
       }
+    } else if (status === 429 && message?.startsWith("Aguarde")) {
+      return Promise.reject(error);
     } else if (status === 429) {
       showRateLimitAlert("Muitas requisições na mesma rota");
     } else if (status && status >= 500) {

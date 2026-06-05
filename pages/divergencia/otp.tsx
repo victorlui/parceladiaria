@@ -101,6 +101,7 @@ export default function OtpDivergencia({
     initialTargetPhoneDigits !== registeredPhoneDigits;
   const [screenMode, setScreenMode] = useState<Props["mode"]>(mode);
   const [phone, setPhone] = useState(initialPhone);
+  const [phoneBaselineDigits, setPhoneBaselineDigits] = useState("");
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(initialPhoneChangeFlow ? 30 : 45);
   const [isLoading, setIsLoading] = useState(false);
@@ -123,6 +124,10 @@ export default function OtpDivergencia({
   const hasPhoneChangeFlow =
     targetPhoneDigits.length === 11 &&
     targetPhoneDigits !== registeredPhoneDigits;
+  const helperPhoneDigits = hasPhoneChangeFlow
+    ? targetPhoneDigits
+    : registeredPhoneDigits;
+  const helperPhoneLabel = "Telefone atual:";
   const subtitlePhone =
     targetPhoneMasked ||
     (targetPhoneDigits ? maskPhone(targetPhoneDigits) : "") ||
@@ -171,7 +176,10 @@ export default function OtpDivergencia({
 
   const handleOpenPhoneEdition = () => {
     Keyboard.dismiss();
-    setPhone(targetPhoneDigits || registeredPhoneDigits || initialPhone);
+    const currentPhoneDigits =
+      targetPhoneDigits || registeredPhoneDigits || initialPhone;
+    setPhone(currentPhoneDigits);
+    setPhoneBaselineDigits(String(currentPhoneDigits).replace(/\D/g, ""));
     setScreenMode("edit_phone");
   };
 
@@ -182,14 +190,15 @@ export default function OtpDivergencia({
       return;
     }
 
-    if (phoneValueDigits === registeredPhoneDigits) {
+    if (phoneValueDigits === phoneBaselineDigits) {
       showWarning("Atenção", "Informe um telefone diferente do numero atual.");
       return;
     }
 
     setIsLoading(true);
+
     try {
-      const response = await api.post("/analise/phone/otp", {
+      const response = await api.post("/v1/analise/phone/otp", {
         telefone: phoneValueDigits,
       });
       const maskedPhone =
@@ -228,12 +237,10 @@ export default function OtpDivergencia({
           otp: otpDigits,
         });
 
-        if (data) {
-          setData({
-            ...data,
-            whatsapp: targetPhoneDigits,
-          });
-        }
+        setData({
+          ...(useRegisterStore.getState().data || {}),
+          whatsapp: targetPhoneDigits,
+        });
 
         setTargetPhoneDigits("");
         setTargetPhoneMasked(
@@ -275,7 +282,7 @@ export default function OtpDivergencia({
     setIsLoading(true);
     try {
       if (hasPhoneChangeFlow) {
-        await api.post("/analise/phone/otp", {
+        await api.post("/v1/analise/phone/otp", {
           telefone: targetPhoneDigits,
         });
       } else {
@@ -345,11 +352,11 @@ export default function OtpDivergencia({
                   enviado para esse telefone para concluir a alteracao.
                 </Text>
 
-                {registeredPhoneDigits ? (
+                {helperPhoneDigits ? (
                   <Text style={styles.helperText}>
-                    Telefone atual:{" "}
+                    {helperPhoneLabel}{" "}
                     <Text style={styles.helperTextStrong}>
-                      {maskPhone(registeredPhoneDigits)}
+                      {maskPhone(helperPhoneDigits)}
                     </Text>
                   </Text>
                 ) : null}
@@ -488,7 +495,7 @@ export default function OtpDivergencia({
                   loading={isBusy}
                   iconLeft="call-outline"
                   iconRight={null}
-                  disabled={!canSubmit || isBusy}
+                  disabled={isBusy}
                   outline
                 />
               </View>
