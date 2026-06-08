@@ -8,16 +8,33 @@ interface Props {
   item: string;
   onSelect: (item: any) => void;
   selectedUri?: string;
+  disabled?: boolean;
+  disabledLabel?: string;
 }
 
-const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
+const ItemDivergente: React.FC<Props> = ({
+  item,
+  onSelect,
+  selectedUri,
+  disabled = false,
+  disabledLabel = "Aguardando",
+}) => {
   const iconInfo = getIconInfo(item);
   const displayName = documentDisplayNames[item] || item;
   const isOpenFinance = item === "openfinance";
   const isPalenca = item === "palenca";
   const isSelected = Boolean(selectedUri);
-
-  console.log(isPalenca);
+  const isButtonDisabled = disabled || (isOpenFinance && isSelected);
+  const actionLabel = disabled
+    ? disabledLabel
+    : isSelected
+      ? isOpenFinance
+        ? "Conectado"
+        : "Alterar"
+      : isOpenFinance || isPalenca
+        ? "Conectar"
+        : "Enviar";
+  const statusColor = disabled ? "#9CA3AF" : isSelected ? "#10B981" : "#EA580C";
 
   return (
     <View style={styles.card}>
@@ -25,52 +42,32 @@ const ItemDivergente: React.FC<Props> = ({ item, onSelect, selectedUri }) => {
         {iconInfo.icon}
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{displayName}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {displayName}
+        </Text>
         <View style={styles.statusContainer}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: isSelected ? "#10B981" : "#EA580C" },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              { color: isSelected ? "#10B981" : "#EA580C" },
-            ]}
-          >
-            {isSelected
-              ? isOpenFinance
-                ? "Conectado"
-                : "Alterar"
-              : isOpenFinance || isPalenca
-                ? "Conectar"
-                : "Enviar"}
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={[styles.statusText, { color: statusColor }]}>
+            {actionLabel}
           </Text>
         </View>
       </View>
       <TouchableOpacity
-        disabled={isOpenFinance && isSelected}
+        disabled={isButtonDisabled}
         style={[
           styles.sendButton,
           isSelected && styles.sendButtonSelected,
-          isOpenFinance && isSelected && styles.sendButtonDisabled,
+          isButtonDisabled && styles.sendButtonDisabled,
         ]}
         onPress={() => onSelect(item)}
       >
         <Text
           style={[
             styles.sendButtonText,
-            isOpenFinance && isSelected && styles.sendButtonTextDisabled,
+            isButtonDisabled && styles.sendButtonTextDisabled,
           ]}
         >
-          {isSelected
-            ? isOpenFinance
-              ? "Conectado"
-              : "Alterar"
-            : isOpenFinance || isPalenca
-              ? "Conectar"
-              : "Enviar"}
+          {actionLabel}
         </Text>
       </TouchableOpacity>
     </View>
@@ -99,12 +96,14 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     justifyContent: "center",
+    marginRight: 12,
   },
   title: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1F2937",
     marginBottom: 4,
+    lineHeight: 18,
   },
   statusContainer: {
     flexDirection: "row",

@@ -25,7 +25,7 @@ export type Selected = {
 interface Props {
   item: string;
   initialSelected?: Selected | null;
-  back: () => void;
+  back: (selected: Selected | null) => void;
   onSubmit: (selected: Selected | null) => void;
 }
 
@@ -62,6 +62,29 @@ const SendDocument: React.FC<Props> = ({
   };
 
   const displayName = documentDisplayNames[item] || item;
+  const isVideoItem = item === "video_perfil_app" || item === "ganhos_app";
+  const handleBack = () => back(selected);
+  const actionButtons = [
+    {
+      icon: "camera",
+      label: isVideoItem ? "Gravar" : "Câmera",
+      onPress: () => handlePick(isVideoItem ? "video_camera" : "camera"),
+    },
+    {
+      icon: "images",
+      label: "Galeria",
+      onPress: () => handlePick(isVideoItem ? "video_library" : "library"),
+    },
+    ...(!isVideoItem
+      ? [
+          {
+            icon: "file-tray-full",
+            label: "Arquivo",
+            onPress: () => handlePick("pdf"),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <View
@@ -72,7 +95,7 @@ const SendDocument: React.FC<Props> = ({
     >
       {/* Header Minimalista */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={back} style={styles.iconBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.iconBtn}>
           <Ionicons name="arrow-back" size={26} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{displayName}</Text>
@@ -134,46 +157,15 @@ const SendDocument: React.FC<Props> = ({
 
         {/* Botões de Ação Dinâmicos */}
         <View style={styles.actionRow}>
-          <ActionButton
-            icon="camera"
-            label={
-              item === "video_perfil_app" || item === "ganhos_app"
-                ? "Gravar"
-                : "Câmera"
-            }
-            onPress={() =>
-              handlePick(
-                item === "video_perfil_app" || item === "ganhos_app"
-                  ? "video_camera"
-                  : "camera",
-              )
-            }
-          />
-          <ActionButton
-            icon="images"
-            label="Galeria"
-            onPress={() =>
-              handlePick(
-                item === "video_perfil_app" || item === "ganhos_app"
-                  ? "video_library"
-                  : "library",
-              )
-            }
-          />
-          {item !== "video_perfil_app" && item !== "ganhos_app" && (
+          {actionButtons.map((action) => (
             <ActionButton
-              icon="videocam"
-              label="Vídeo"
-              onPress={() => handlePick("video_library")}
+              key={action.label}
+              icon={action.icon}
+              label={action.label}
+              onPress={action.onPress}
+              compact={actionButtons.length === 3}
             />
-          )}
-          {item !== "video_perfil_app" && item !== "ganhos_app" && (
-            <ActionButton
-              icon="file-tray-full"
-              label="Arquivo"
-              onPress={() => handlePick("pdf")}
-            />
-          )}
+          ))}
         </View>
       </View>
 
@@ -194,9 +186,12 @@ const SendDocument: React.FC<Props> = ({
 };
 
 // Componente Interno para os botões de seleção
-const ActionButton = ({ icon, label, onPress }: any) => (
+const ActionButton = ({ icon, label, onPress, compact }: any) => (
   <TouchableOpacity
-    style={styles.actionBtn}
+    style={[
+      styles.actionBtn,
+      compact ? styles.actionBtnCompact : styles.actionBtnWide,
+    ]}
     onPress={onPress}
     activeOpacity={0.7}
   >
@@ -302,13 +297,23 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     marginTop: 18,
-    columnGap: 12,
     rowGap: 12,
   },
   actionBtn: {
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  actionBtnCompact: {
+    width: "31%",
+  },
+  actionBtnWide: {
     width: "48%",
   },
   actionIconArea: {
@@ -324,6 +329,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#64748B",
+    textAlign: "center",
+    paddingHorizontal: 8,
   },
   footer: {
     paddingHorizontal: 25,

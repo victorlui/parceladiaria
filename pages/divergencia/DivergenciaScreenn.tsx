@@ -1,40 +1,35 @@
+import ButtonComponent from "@/components/ui/Button";
 import ButtonChat from "@/components/ui/ButtonChat";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
-import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
-import { FontAwesome5 } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle } from "react-native-svg";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
 import ExpiredDocument from "./components/ExpiredDocument";
+import HeaderDivergente from "./components/HeaderDivergente";
 import ItemDivergente from "./components/ItemDivergente";
-import SendDocument, { type Selected } from "./components/SendDocument";
+import SendDocument, { Selected } from "./components/SendDocument";
 import Openfinance from "./Openfinance";
 import OtpDivergencia from "./otp";
-
 import PalencaDivergente from "./Palenca";
 import { uploadDocumentService } from "./service/upload";
-import {
-  getInitialSelectedForItem,
-  getSelectedFilesFromData,
-  safeParseArray,
-} from "./utils/parse";
+import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
 
-const DivergenciaScreen: React.FC = () => {
+export default function DivergenciaScreenn() {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
   const { data, setData } = useRegisterStore();
+  const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
+  const [selectedFiles, setSelectedFiles] = useState<
+    Record<string, { key: string; selected?: Selected }>
+  >({});
+  const [item, setItem] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isOtpSend, setIsOtpSend] = useState<boolean>(false);
 
   const divergencias = useMemo(
     () =>
@@ -48,168 +43,27 @@ const DivergenciaScreen: React.FC = () => {
         .filter((value: string) => Boolean(value)),
     [data?.divergencias],
   );
-  const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
-  const [item, setItem] = useState<string>("");
-  const [selectedFiles, setSelectedFiles] = useState<
-    Record<string, { key: string; selected?: Selected }>
-  >({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
 
-  const isMountedRef = useRef(true);
-  const isUploadingRef = useRef(false);
-  const [isOtpSend, setIsOtpSend] = useState<boolean>(false);
+  const hasPendingDocuments = useMemo(
+    () =>
+      divergencias.some(
+        (documentKey: string) =>
+          selectedFiles[documentKey]?.selected === undefined,
+      ),
+    [divergencias, selectedFiles],
+  );
+  const hasFrontDocument = Boolean(selectedFiles.foto_frente_doc?.selected);
+  const hasBackDocument = Boolean(selectedFiles.foto_verso_doc?.selected);
+  const canOpenFaceRecognition = hasFrontDocument && hasBackDocument;
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const persistedSelectedFiles = getSelectedFilesFromData(divergencias, data);
-    if (!Object.keys(persistedSelectedFiles).length) return;
-
-    setSelectedFiles((prev) => {
-      let hasChanges = false;
-      const next = { ...prev };
-
-      Object.entries(persistedSelectedFiles).forEach(([documentKey, entry]) => {
-        if (prev[documentKey]?.key === entry.key) return;
-        hasChanges = true;
-        next[documentKey] = { ...prev[documentKey], key: entry.key };
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [data, divergencias]);
-
-  const onSelect = (nextItem: any) => {
-    const next =
-      typeof nextItem === "string" ? nextItem : String(nextItem ?? "");
-    console.log(next);
-    setItem(next);
-  };
-
-  const totalDocumentos = divergencias.length;
-  const enviados = divergencias.filter((documentKey: string) => {
-    if (documentKey === "openfinance") {
-      return selectedFiles.openfinance?.key === "connected";
-    }
-    return Boolean(selectedFiles[documentKey]?.key);
-  }).length;
-
-  const isAllSelected = divergencias.length > 0 && enviados === totalDocumentos;
-
-  const checkProgress = 0.75;
-  const checkRingSize = 64;
-  const checkRingStrokeWidth = 6;
-  const checkRingRadius = (checkRingSize - checkRingStrokeWidth) / 2;
-  const checkRingCircumference = 2 * Math.PI * checkRingRadius;
-  const checkRingDashoffset =
-    checkRingCircumference * (1 - Math.max(0, Math.min(1, checkProgress)));
-
-  const normalizeSelected = (value: any): Selected | null => {
-    const rawUri = typeof value?.uri === "string" ? value.uri : "";
-    if (!rawUri) return null;
-
-    const uri = rawUri.trim();
-    if (!uri) return null;
-
-    const nameFromUri =
-      uri.split("?")[0].split("#")[0].split("/").pop()?.trim() || "arquivo";
-    const name =
-      typeof value?.name === "string" && value.name.trim()
-        ? value.name.trim()
-        : nameFromUri;
-
-    const rawMimeType =
-      typeof value?.mimeType === "string" ? value.mimeType.trim() : "";
-    const mimeType =
-      rawMimeType ||
-      (name.toLowerCase().endsWith(".pdf")
-        ? "application/pdf"
-        : name.toLowerCase().endsWith(".mp4") ||
-            name.toLowerCase().endsWith(".mov") ||
-            name.toLowerCase().endsWith(".m4v")
-          ? "video/mp4"
-          : "image/jpeg");
-
-    const type: Selected["type"] =
-      value?.type === "pdf" ||
-      value?.type === "image" ||
-      value?.type === "video"
-        ? value.type
-        : mimeType.includes("pdf")
-          ? "pdf"
-          : mimeType.startsWith("video/")
-            ? "video"
-            : "image";
-
-    return { uri, name, mimeType, type };
-  };
-
-  const extractFaceSelected = (payload: any): Selected | null => {
-    const candidate = payload?.file?.uri
-      ? payload.file
-      : payload?.file?.file?.uri
-        ? payload.file.file
-        : payload?.data?.file?.uri
-          ? payload.data.file
-          : payload?.data?.file?.file?.uri
-            ? payload.data.file.file
-            : null;
-
-    if (!candidate) return null;
-
-    const selected = normalizeSelected({
-      uri: candidate.uri,
-      name: candidate.name || `face_${Date.now()}.jpg`,
-      mimeType: candidate.mimeType || "image/jpeg",
-      type: "image",
-    });
-    return selected;
-  };
-
-  const uploadDocument = async (
-    selected: Selected | null,
-    documentKey?: string,
-  ) => {
-    const currentItem =
-      typeof (documentKey ?? item) === "string"
-        ? (documentKey ?? item)
-        : String(documentKey ?? item ?? "");
-    const normalized = normalizeSelected(selected);
-
-    if (!normalized || !currentItem) {
-      showWarning("Atenção", "Selecione um arquivo válido antes de continuar.");
-      return;
-    }
-
-    if (isUploadingRef.current) return;
-    isUploadingRef.current = true;
-
+  const uploadDocument = async (selected: Selected | null) => {
     setLoading(true);
+
     try {
-      const url = await uploadDocumentService(normalized);
-      if (!url || typeof url !== "string") {
-        throw new Error("Não foi possível enviar o arquivo.");
-      }
-
-      await updateUserService({
-        request: { [currentItem]: url },
-      });
-
-      if (!isMountedRef.current) return;
-
-      setData({
-        ...(useRegisterStore.getState().data || {}),
-        [currentItem]: url,
-      });
+      const url = await uploadDocumentService(selected as Selected);
       setSelectedFiles((prev) => ({
         ...prev,
-        [currentItem]: { key: url, selected: normalized },
+        [item]: { key: url, selected: selected! },
       }));
       setItem("");
     } catch (error: any) {
@@ -220,9 +74,18 @@ const DivergenciaScreen: React.FC = () => {
           "Não foi possível enviar os documentos. Tente novamente.",
       );
     } finally {
-      isUploadingRef.current = false;
-      if (isMountedRef.current) setLoading(false);
+      setLoading(false);
     }
+  };
+
+  const clearSelectedFile = (documentKey: string) => {
+    setSelectedFiles((prev) => {
+      if (!prev[documentKey]) return prev;
+
+      const next = { ...prev };
+      delete next[documentKey];
+      return next;
+    });
   };
 
   const onSubmit = async () => {
@@ -231,52 +94,98 @@ const DivergenciaScreen: React.FC = () => {
       return;
     }
 
-    if (!isAllSelected) {
+    if (hasPendingDocuments) {
       showWarning(
         "Atenção",
         "Envie todos os documentos divergentes antes de continuar.",
       );
       return;
     }
-    setLoadingSubmit(true);
+    setLoading(true);
     try {
       await api.post("/v1/analise/otp");
       setIsOtpSend(true);
     } catch (error) {
       return;
     } finally {
-      setLoadingSubmit(false);
+      setLoading(false);
     }
+  };
+
+  const onSelect = (nextItem: any) => {
+    const item =
+      typeof nextItem === "string" ? nextItem : String(nextItem ?? "");
+
+    if (item === "face" && !canOpenFaceRecognition) {
+      showWarning(
+        "Atenção",
+        "Envie a foto da frente e do verso do documento antes do reconhecimento facial.",
+      );
+      return;
+    }
+
+    setItem(item);
   };
 
   if (loading) {
     return (
+      <PulsingImageLoader
+        source={require("@/assets/images/logo-verde.png")}
+        text={hasPendingDocuments ? "Enviando arquivo..." : "Finalizando..."}
+      />
+    );
+  }
+
+  if (data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
+    return <ExpiredDocument />;
+  }
+
+  if (isOtpSend) {
+    return <OtpDivergencia back={() => setIsOtpSend(false)} />;
+  }
+
+  if (item && item !== "face" && item !== "openfinance") {
+    return (
       <>
-        <AlertDisplay />
-        <PulsingImageLoader
-          source={require("@/assets/images/logo-verde.png")}
-          text="Enviando arquivo..."
+        <SendDocument
+          item={item}
+          initialSelected={getInitialSelectedForItem(item, selectedFiles)}
+          back={(currentSelected) => {
+            if (!currentSelected) {
+              clearSelectedFile(item);
+            }
+            setItem("");
+          }}
+          onSubmit={uploadDocument}
         />
       </>
     );
   }
 
-  if (loadingSubmit) {
+  if (item && item === "face") {
     return (
-      <>
-        <AlertDisplay />
-        <PulsingImageLoader
-          source={require("@/assets/images/logo-verde.png")}
-          text="Confirmando dados..."
-        />
-      </>
+      <FaceCaptureWebView
+        visible
+        onSuccess={(payload: any) => {
+          setItem("");
+          // const faceSelected = extractFaceSelected(payload);
+          if (!payload) {
+            showError(
+              "Erro",
+              "Não foi possível obter a captura. Tente novamente.",
+            );
+            return;
+          }
+          uploadDocument(payload.file);
+        }}
+        onClose={() => setItem("")}
+      />
     );
   }
 
   if (item && item === "palenca") {
     return (
       <>
-        <AlertDisplay />
         <PalencaDivergente />
       </>
     );
@@ -285,7 +194,6 @@ const DivergenciaScreen: React.FC = () => {
   if (item && item === "openfinance") {
     return (
       <>
-        <AlertDisplay />
         <Openfinance
           back={() => setItem("")}
           onConnected={() => {
@@ -300,62 +208,21 @@ const DivergenciaScreen: React.FC = () => {
     );
   }
 
-  if (item && item !== "face" && item !== "openfinance") {
-    return (
-      <>
-        <AlertDisplay />
-        <SendDocument
-          item={item}
-          initialSelected={getInitialSelectedForItem(item, selectedFiles)}
-          back={() => setItem("")}
-          onSubmit={uploadDocument}
-        />
-      </>
-    );
-  }
-
-  if (item && item === "face") {
-    return (
-      <>
-        <AlertDisplay />
-        <FaceCaptureWebView
-          visible
-          onSuccess={(payload: any) => {
-            setItem("");
-            const faceSelected = extractFaceSelected(payload);
-            if (!faceSelected) {
-              showError(
-                "Erro",
-                "Não foi possível obter a captura. Tente novamente.",
-              );
-              return;
-            }
-            uploadDocument(faceSelected, "face");
-          }}
-          onClose={() => setItem("")}
-        />
-      </>
-    );
-  }
-
-  console.log("item", item);
-
-  if (data?.status === StatusCadastro.PROPOSTA_EXPIRADO) {
-    return <ExpiredDocument />;
-  }
-
-  if (isOtpSend) {
-    return <OtpDivergencia back={() => setIsOtpSend(false)} />;
-  }
-
   const renderDocumentRequests = () => {
     return divergencias.map((documentKey: string, index: number) => {
+      const initialSelected = getInitialSelectedForItem(
+        documentKey,
+        selectedFiles,
+      );
+
       return (
         <ItemDivergente
           key={index}
           item={documentKey}
-          selectedUri={selectedFiles[documentKey]?.key}
+          selectedUri={initialSelected?.uri}
           onSelect={onSelect}
+          disabled={documentKey === "face" && !canOpenFaceRecognition}
+          disabledLabel="Enviar docs"
         />
       );
     });
@@ -369,7 +236,7 @@ const DivergenciaScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {!isPrimeiraAnalise ? (
+        {!isPrimeiraAnalise && (
           <>
             <Text style={styles.title}>Documentos Divergentes</Text>
             <Text style={styles.subtitle}>
@@ -382,106 +249,33 @@ const DivergenciaScreen: React.FC = () => {
               <Text style={styles.observacoesText}>{data?.observacoes}</Text>
             </View>
           </>
-        ) : (
-          <>
-            <View style={styles.headerCard}>
-              <View style={styles.headerPill}>
-                <Text style={styles.headerPillText}>
-                  ETAPA 2 DE 2 · ÚLTIMA ETAPA
-                </Text>
-              </View>
+        )}
 
-              <View style={styles.headerIconCircle}>
-                <Svg
-                  width={checkRingSize}
-                  height={checkRingSize}
-                  style={styles.headerIconRing}
-                >
-                  <Circle
-                    cx={checkRingSize / 2}
-                    cy={checkRingSize / 2}
-                    r={checkRingRadius}
-                    stroke="#E6F4F1"
-                    strokeWidth={checkRingStrokeWidth}
-                    fill="none"
-                  />
-                  <Circle
-                    cx={checkRingSize / 2}
-                    cy={checkRingSize / 2}
-                    r={checkRingRadius}
-                    stroke={Colors.green.primary}
-                    strokeWidth={checkRingStrokeWidth}
-                    strokeDasharray={`${checkRingCircumference} ${checkRingCircumference}`}
-                    strokeDashoffset={checkRingDashoffset}
-                    strokeLinecap="round"
-                    fill="none"
-                    transform={`rotate(-90 ${checkRingSize / 2} ${checkRingSize / 2})`}
-                  />
-                </Svg>
-                <FontAwesome5
-                  name="check"
-                  size={26}
-                  color={Colors.green.primary}
-                />
-              </View>
+        {isPrimeiraAnalise && <HeaderDivergente />}
 
-              <Text style={styles.headerTitle}>
-                Falta pouco pra concluir seu cadastro
-              </Text>
-
-              <Text style={styles.headerLabel}>O que falta:</Text>
-
-              <View style={styles.headerBox}>
-                <Text style={styles.headerBoxText}>
-                  Envie os documentos abaixo pra concluir seu cadastro.{" "}
-                  <Text style={styles.headerBoxTextBold}>
-                    O envio leva menos de 5 minutos.
-                  </Text>
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.headerHint}>
-              Preencha os dados e envie os documentos solicitados abaixo
-            </Text>
-
-            {!isPrimeiraAnalise && (
-              <View style={styles.observacoesContainer}>
-                <Text style={styles.observacoesTitle}>Observações</Text>
-                <Text style={styles.observacoesText}>{data?.observacoes}</Text>
-              </View>
-            )}
-          </>
+        {!isPrimeiraAnalise && (
+          <View style={styles.observacoesContainer}>
+            <Text style={styles.observacoesTitle}>Observações</Text>
+            <Text style={styles.observacoesText}>{data?.observacoes}</Text>
+          </View>
         )}
 
         <View style={styles.itemsContainer}>{renderDocumentRequests()}</View>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          disabled={!isAllSelected || loadingSubmit || loading}
-          style={[
-            styles.submitButton,
-            (!isAllSelected || loadingSubmit || loading) &&
-              styles.submitButtonDisabled,
-          ]}
-          onPress={() => onSubmit()}
-        >
-          <Text
-            style={[
-              styles.textButton,
-              (!isAllSelected || loadingSubmit || loading) &&
-                styles.textButtonDisabled,
-            ]}
-          >
-            {isPrimeiraAnalise ? "Concluir cadastro" : "Enviar novamente"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <ButtonChat botton={113} />
+        <View style={styles.footer}>
+          <ButtonComponent
+            title={isPrimeiraAnalise ? "Concluir cadastro" : "Enviar novamente"}
+            onPress={() => onSubmit()}
+            iconLeft={null}
+            iconRight={null}
+            disabled={loading || hasPendingDocuments}
+          />
+        </View>
+      </ScrollView>
+      <ButtonChat />
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -490,7 +284,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 50,
   },
   title: {
     fontSize: 20,
@@ -504,85 +298,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 24,
   },
-  headerCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 18,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  headerPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#E6F4F1",
-    marginBottom: 14,
-  },
-  headerPillText: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.2,
-    color: "#0F766E",
-  },
-  headerIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-    backgroundColor: Colors.white,
-  },
-  headerIconRing: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#11181C",
-    textAlign: "center",
-    marginBottom: 14,
-  },
-  headerLabel: {
-    alignSelf: "flex-start",
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#11181C",
-    marginBottom: 8,
-  },
-  headerBox: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#0F766E",
-    borderRadius: 12,
-    padding: 14,
-  },
-  headerBoxText: {
-    fontSize: 14,
-    color: "#11181C",
-    lineHeight: 20,
-  },
-  headerBoxTextBold: {
-    fontWeight: "800",
-    color: "#11181C",
-  },
-  headerHint: {
-    marginTop: 16,
-    marginBottom: 24,
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-  },
   observacoesContainer: {
-    marginTop: 4,
-    marginBottom: 16,
+    marginVertical: 14,
   },
   observacoesTitle: {
     fontSize: 16,
@@ -596,61 +313,14 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   itemsContainer: {
-    gap: 12,
+    marginVertical: 20,
   },
   footer: {
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 20,
-    backgroundColor: "#F9FAFB",
+
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
   },
-  submitButton: {
-    backgroundColor: Colors.green.button,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#E5E7EB",
-  },
-  textButton: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  textButtonDisabled: {
-    color: "#9CA3AF",
-  },
-  loadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 50,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  spinnerWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  spinnerLogo: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-  },
-  loadingText: {
-    marginTop: 20,
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.green.primary,
-  },
 });
-
-export default DivergenciaScreen;

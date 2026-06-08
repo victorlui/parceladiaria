@@ -233,7 +233,7 @@ export default function OtpDivergencia({
     setIsLoading(true);
     try {
       if (hasPhoneChangeFlow) {
-        const response = await api.put("/analise/phone/confirm", {
+        const response = await api.put("/v1/analise/phone/confirm", {
           otp: otpDigits,
         });
 
