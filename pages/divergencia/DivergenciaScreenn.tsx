@@ -10,6 +10,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
+import { useRegisterQuery } from "../register/query/useRegisterQuerys";
 import ExpiredDocument from "./components/ExpiredDocument";
 import HeaderDivergente from "./components/HeaderDivergente";
 import ItemDivergente from "./components/ItemDivergente";
@@ -22,6 +23,7 @@ import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
 
 export default function DivergenciaScreenn() {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
+  const { mutateAsync, isPending } = useRegisterQuery();
   const { data, setData } = useRegisterStore();
   const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
   const [selectedFiles, setSelectedFiles] = useState<
@@ -61,6 +63,11 @@ export default function DivergenciaScreenn() {
 
     try {
       const url = await uploadDocumentService(selected as Selected);
+      await mutateAsync({
+        request: {
+          item: url,
+        },
+      });
       setSelectedFiles((prev) => ({
         ...prev,
         [item]: { key: url, selected: selected! },
@@ -127,11 +134,11 @@ export default function DivergenciaScreenn() {
     setItem(item);
   };
 
-  if (loading) {
+  if (loading || isPending) {
     return (
       <PulsingImageLoader
         source={require("@/assets/images/logo-verde.png")}
-        text={hasPendingDocuments ? "Enviando arquivo..." : "Finalizando..."}
+        text={hasPendingDocuments ? "Enviando arquivo...." : "Finalizando..."}
       />
     );
   }
