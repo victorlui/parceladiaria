@@ -2,7 +2,7 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.1.5",
+    "version": "1.1.8",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "scheme": "parceladiaria",
@@ -155,7 +155,7 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.1.5",
+    "runtimeVersion": "1.1.8",
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557",
       "checkAutomatically": "ON_LOAD",

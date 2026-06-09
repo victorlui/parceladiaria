@@ -49,13 +49,11 @@ export default function DivergenciaScreenn() {
   const isOnlyFaceDivergence =
     divergencias.length === 1 && divergencias[0] === "face";
   const hasPendingDocuments = useMemo(() => {
-    if (isOnlyFaceDivergence) return false;
-
     return divergencias.some(
       (documentKey: string) =>
-        selectedFiles[documentKey]?.selected === undefined,
+        !getInitialSelectedForItem(documentKey, selectedFiles),
     );
-  }, [divergencias, isOnlyFaceDivergence, selectedFiles]);
+  }, [divergencias, selectedFiles]);
   const hasFrontDocument = Boolean(selectedFiles.foto_frente_doc?.selected);
   const hasBackDocument = Boolean(selectedFiles.foto_verso_doc?.selected);
   const canOpenFaceRecognition = hasFrontDocument && hasBackDocument;
