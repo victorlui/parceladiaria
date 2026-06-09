@@ -1,30 +1,35 @@
+import { useNavigationFlow } from "@/hooks/useNavigationFlow";
+import api from "@/services/api";
 import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
+import { Etapas } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 
 export function useRegisterQuery() {
+  const { handleFlow } = useNavigationFlow();
   return useMutation({
     mutationFn: (request: any) => {
       return updateUserService({ request: request.request });
     },
-    onSuccess: (data: any) => {
-      if (data.etapa) {
-        const {
-          data: currentData,
-          setData,
-          setEtapa,
-        } = useRegisterStore.getState();
+    onSuccess: async (data: any) => {
+      try {
+        const response = await api.get("/v1/client");
+        const clientData =
+          response.data?.data?.data ?? response.data?.data ?? response.data;
 
-        setEtapa(data.etapa);
+        if (clientData?.etapa === Etapas.FINALIZADO) {
+          const path = handleFlow(
+            clientData?.type,
+            Etapas.FINALIZADO,
+            clientData?.status,
+          );
 
-        if (currentData) {
-          setData({
-            ...currentData,
-            etapa: data.etapa,
-          });
+          router.replace(path as any);
         }
+      } catch (error) {
+        console.warn("useRegisterQuery:onSuccess /v1/client failed", error);
       }
 
       return data;
