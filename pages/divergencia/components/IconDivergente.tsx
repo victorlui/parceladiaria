@@ -40,7 +40,7 @@ const ICONS: Record<string, IconInfo> = {
 };
 
 const getIconInfo = (item: string): IconInfo => {
-  if (item === "face") return ICONS.face;
+  if (item === "face" || item === "facial") return ICONS.face;
   if (item === "ganhos_app" || item.includes("video")) return ICONS.video;
   if (item === "palenca") return ICONS.palenca;
   return ICONS.default;

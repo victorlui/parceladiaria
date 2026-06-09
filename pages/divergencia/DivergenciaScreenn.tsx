@@ -148,7 +148,13 @@ export default function DivergenciaScreenn() {
     return <OtpDivergencia back={() => setIsOtpSend(false)} />;
   }
 
-  if (item && item !== "face" && item !== "openfinance") {
+  if (
+    item &&
+    item !== "face" &&
+    item !== "openfinance" &&
+    item !== "facial" &&
+    item !== "palenca"
+  ) {
     return (
       <>
         <SendDocument
@@ -166,7 +172,7 @@ export default function DivergenciaScreenn() {
     );
   }
 
-  if (item && item === "face") {
+  if (item && (item === "face" || item === "facial")) {
     return (
       <FaceCaptureWebView
         visible

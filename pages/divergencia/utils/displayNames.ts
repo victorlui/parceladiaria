@@ -17,6 +17,7 @@ export const documentDisplayNames: Record<string, string> = {
   video_interior: "Vídeo do Interior",
   mei: "Certificado de MEI",
   face: "Reconhecimento Facial",
+  facial: "Reconhecimento Facial",
   video_perfil_app: "Vídeo do Perfil no App",
   openfinance: "Open Finance",
   palenca: "Palenca",
