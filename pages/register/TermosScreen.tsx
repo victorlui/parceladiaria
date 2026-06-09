@@ -24,8 +24,8 @@ import PulsingImageLoader from "./components/PulsingImageLoader";
 import { useRegisterQuery } from "./query/useRegisterQuerys";
 
 const TermosScreen: React.FC = () => {
-  const { mutate, isPending, isSuccess } = useRegisterQuery();
-  const { setStep, clean, data, token, hydrated, setData, setToken } =
+  const { mutateAsync, isPending, isSuccess } = useRegisterQuery();
+  const { setStep, data, token, hydrated, setData, setToken, setEtapa } =
     useRegisterStore();
   const navigation = useNavigation();
 
@@ -34,6 +34,21 @@ const TermosScreen: React.FC = () => {
   const [accepted, setAccepted] = useState(false);
   const isLeaving = useRef(false);
   const hasLoadedTerms = useRef(false);
+  const [isFinalized, setIsFinalized] = useState(false);
+  console.log("termos", data?.etapa);
+
+  const markAsFinalized = useCallback(() => {
+    const currentData = useRegisterStore.getState().data;
+
+    setEtapa(Etapas.FINALIZADO);
+
+    if (currentData) {
+      setData({
+        ...currentData,
+        etapa: Etapas.FINALIZADO,
+      });
+    }
+  }, [setData, setEtapa]);
 
   const onBackPress = useCallback(() => {
     if (isLeaving.current) return true;
@@ -96,14 +111,23 @@ const TermosScreen: React.FC = () => {
       return;
     }
 
+    if (data?.etapa === Etapas.FINALIZADO) {
+      markAsFinalized();
+      setIsFinalized(true);
+      return;
+    }
+
     try {
-      mutate({
+      await mutateAsync({
         request: {
           etapa: Etapas.FINALIZADO,
           flow: 1,
         },
       });
+      markAsFinalized();
     } catch (error) {
+      markAsFinalized();
+      setIsFinalized(true);
       return error;
     }
   };
@@ -193,7 +217,7 @@ const TermosScreen: React.FC = () => {
     );
   }
 
-  if (isSuccess) {
+  if (isSuccess || isFinalized) {
     return <FinalScreenComponent complete={completeRegistration} />;
   }
 

@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import api from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
+import { Etapas } from "@/utils";
 import { router, useFocusEffect } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
@@ -44,12 +45,15 @@ export default function Palenca() {
           const hasCompletedPalenca =
             dataClient.data.data.palenca_status !== null;
 
-          console.log("data", dataClient);
+          console.log("data palenca", dataClient);
 
           if (isDriver && isPalencaEnabled && !hasCompletedPalenca) {
             setIsEligible(true);
           } else {
             // Skip to next screen
+            await api.put("/v1/client/update", {
+              etapa: Etapas.ACEITANDO_TERMOS,
+            });
             router.replace("/(register)/termos");
           }
         } catch (_e) {

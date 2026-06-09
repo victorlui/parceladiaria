@@ -74,6 +74,13 @@ export function useNavigationFlow() {
           return "/divergencia_screen";
         }
 
+        if (
+          etapa === Etapas.ACEITANDO_TERMOS &&
+          status === StatusCadastro.DIVERGENTE
+        ) {
+          return "/(register)/termos";
+        }
+
         if (etapa === Etapas.FINALIZADO) {
           if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
             return "/divergencia_screen";

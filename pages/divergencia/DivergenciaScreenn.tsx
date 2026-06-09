@@ -24,7 +24,7 @@ import { getInitialSelectedForItem, safeParseArray } from "./utils/parse";
 export default function DivergenciaScreenn() {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
   const { mutateAsync, isPending } = useRegisterQuery();
-  const { data, setData } = useRegisterStore();
+  const { data } = useRegisterStore();
   const isPrimeiraAnalise = Number(data?.primeira_analise) === 1;
   const [selectedFiles, setSelectedFiles] = useState<
     Record<string, { key: string; selected?: Selected }>
@@ -46,17 +46,21 @@ export default function DivergenciaScreenn() {
     [data?.divergencias],
   );
 
-  const hasPendingDocuments = useMemo(
-    () =>
-      divergencias.some(
-        (documentKey: string) =>
-          selectedFiles[documentKey]?.selected === undefined,
-      ),
-    [divergencias, selectedFiles],
-  );
+  const isOnlyFaceDivergence =
+    divergencias.length === 1 && divergencias[0] === "face";
+  const hasPendingDocuments = useMemo(() => {
+    if (isOnlyFaceDivergence) return false;
+
+    return divergencias.some(
+      (documentKey: string) =>
+        selectedFiles[documentKey]?.selected === undefined,
+    );
+  }, [divergencias, isOnlyFaceDivergence, selectedFiles]);
   const hasFrontDocument = Boolean(selectedFiles.foto_frente_doc?.selected);
   const hasBackDocument = Boolean(selectedFiles.foto_verso_doc?.selected);
   const canOpenFaceRecognition = hasFrontDocument && hasBackDocument;
+  const canSelectFaceRecognition =
+    isOnlyFaceDivergence || canOpenFaceRecognition;
 
   const uploadDocument = async (selected: Selected | null) => {
     setLoading(true);
@@ -65,7 +69,7 @@ export default function DivergenciaScreenn() {
       const url = await uploadDocumentService(selected as Selected);
       await mutateAsync({
         request: {
-          item: url,
+          [item]: url,
         },
       });
       setSelectedFiles((prev) => ({
@@ -75,11 +79,6 @@ export default function DivergenciaScreenn() {
       setItem("");
     } catch (error: any) {
       if (error?.response?.status === 401) return;
-      showError(
-        "Erro",
-        error?.message ||
-          "Não foi possível enviar os documentos. Tente novamente.",
-      );
     } finally {
       setLoading(false);
     }
@@ -123,7 +122,7 @@ export default function DivergenciaScreenn() {
     const item =
       typeof nextItem === "string" ? nextItem : String(nextItem ?? "");
 
-    if (item === "face" && !canOpenFaceRecognition) {
+    if (item === "face" && !canSelectFaceRecognition) {
       showWarning(
         "Atenção",
         "Envie a foto da frente e do verso do documento antes do reconhecimento facial.",
@@ -228,7 +227,7 @@ export default function DivergenciaScreenn() {
           item={documentKey}
           selectedUri={initialSelected?.uri}
           onSelect={onSelect}
-          disabled={documentKey === "face" && !canOpenFaceRecognition}
+          disabled={documentKey === "face" && !canSelectFaceRecognition}
           disabledLabel="Enviar docs"
         />
       );
@@ -259,13 +258,6 @@ export default function DivergenciaScreenn() {
         )}
 
         {isPrimeiraAnalise && <HeaderDivergente />}
-
-        {!isPrimeiraAnalise && (
-          <View style={styles.observacoesContainer}>
-            <Text style={styles.observacoesTitle}>Observações</Text>
-            <Text style={styles.observacoesText}>{data?.observacoes}</Text>
-          </View>
-        )}
 
         <View style={styles.itemsContainer}>{renderDocumentRequests()}</View>
 
