@@ -126,8 +126,8 @@ const TermosScreen: React.FC = () => {
       });
       markAsFinalized();
     } catch (error) {
-      markAsFinalized();
-      setIsFinalized(true);
+      // markAsFinalized();
+      // setIsFinalized(true);
       return error;
     }
   };
