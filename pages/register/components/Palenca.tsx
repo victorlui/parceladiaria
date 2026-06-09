@@ -24,7 +24,7 @@ interface PalencaConfig {
 }
 
 export default function Palenca() {
-  const { data: dataRegister, setStep } = useRegisterStore();
+  const { data: dataRegister, setStep, setData } = useRegisterStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isEligible, setIsEligible] = useState(false);
   const [palencaConfig, setPalencaConfig] = useState<PalencaConfig | null>(
@@ -52,6 +52,10 @@ export default function Palenca() {
           } else {
             // Skip to next screen
             await api.put("/v1/client/update", {
+              etapa: Etapas.ACEITANDO_TERMOS,
+            });
+            setData({
+              ...dataRegister,
               etapa: Etapas.ACEITANDO_TERMOS,
             });
             router.replace("/(register)/termos");

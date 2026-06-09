@@ -25,7 +25,7 @@ import { useRegisterQuery } from "./query/useRegisterQuerys";
 
 const TermosScreen: React.FC = () => {
   const { mutateAsync, isPending, isSuccess } = useRegisterQuery();
-  const { setStep, data, token, hydrated, setData, setToken, setEtapa } =
+  const { setStep, data, token, hydrated, setData, setToken, setEtapa, etapa } =
     useRegisterStore();
   const navigation = useNavigation();
 
@@ -35,7 +35,7 @@ const TermosScreen: React.FC = () => {
   const isLeaving = useRef(false);
   const hasLoadedTerms = useRef(false);
   const [isFinalized, setIsFinalized] = useState(false);
-  console.log("termos", data?.etapa);
+  const isAlreadyFinalized = (data?.etapa ?? etapa) === Etapas.FINALIZADO;
 
   const markAsFinalized = useCallback(() => {
     const currentData = useRegisterStore.getState().data;
@@ -60,6 +60,7 @@ const TermosScreen: React.FC = () => {
 
   const loadTerms = useCallback(async () => {
     if (hasLoadedTerms.current) return;
+    if (isAlreadyFinalized) return;
     if (terms.trim().length > 0) {
       hasLoadedTerms.current = true;
       return;
@@ -77,7 +78,7 @@ const TermosScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [hydrated, terms, token]);
+  }, [hydrated, isAlreadyFinalized, terms, token]);
 
   useFocusEffect(
     useCallback(() => {
@@ -107,15 +108,18 @@ const TermosScreen: React.FC = () => {
   );
 
   const onSubmit = async () => {
-    if (!accepted) {
+    if (!accepted && !isAlreadyFinalized) {
       return;
     }
 
-    if (data?.etapa === Etapas.FINALIZADO) {
-      markAsFinalized();
-      setIsFinalized(true);
+    if (isAlreadyFinalized) {
       return;
     }
+
+    const previousData = data;
+    const previousEtapa = etapa;
+    markAsFinalized();
+    setIsFinalized(true);
 
     try {
       await mutateAsync({
@@ -126,8 +130,11 @@ const TermosScreen: React.FC = () => {
       });
       markAsFinalized();
     } catch (error) {
-      // markAsFinalized();
-      // setIsFinalized(true);
+      if (previousData) {
+        setData(previousData);
+      }
+      setEtapa(previousEtapa);
+      setIsFinalized(false);
       return error;
     }
   };
@@ -217,7 +224,7 @@ const TermosScreen: React.FC = () => {
     );
   }
 
-  if (isSuccess || isFinalized) {
+  if (isSuccess || isFinalized || isAlreadyFinalized) {
     return <FinalScreenComponent complete={completeRegistration} />;
   }
 

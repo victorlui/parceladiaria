@@ -1,6 +1,5 @@
 import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
-import { Etapas } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
@@ -11,12 +10,21 @@ export function useRegisterQuery() {
       return updateUserService({ request: request.request });
     },
     onSuccess: (data: any) => {
-      if (!data.success) {
-        return data;
-      }
+      if (data.etapa) {
+        const {
+          data: currentData,
+          setData,
+          setEtapa,
+        } = useRegisterStore.getState();
 
-      if (data.etapa === Etapas.FINALIZADO) {
-        return data;
+        setEtapa(data.etapa);
+
+        if (currentData) {
+          setData({
+            ...currentData,
+            etapa: data.etapa,
+          });
+        }
       }
 
       return data;
