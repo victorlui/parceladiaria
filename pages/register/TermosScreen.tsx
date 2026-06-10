@@ -35,6 +35,7 @@ const TermosScreen: React.FC = () => {
   const isLeaving = useRef(false);
   const hasLoadedTerms = useRef(false);
   const [isFinalized, setIsFinalized] = useState(false);
+  const [loading, setLoading] = useState(false);
   const isAlreadyFinalized = (data?.etapa ?? etapa) === Etapas.FINALIZADO;
 
   const markAsFinalized = useCallback(() => {
@@ -108,44 +109,24 @@ const TermosScreen: React.FC = () => {
   );
 
   const onSubmit = async () => {
-    if (!accepted && !isAlreadyFinalized) {
+    if (!accepted) {
       return;
     }
 
-    if (isAlreadyFinalized) {
-      return;
-    }
-
-    const previousData = data;
-    const previousEtapa = etapa;
-    markAsFinalized();
     setIsFinalized(true);
-
-    try {
-      await mutateAsync({
-        request: {
-          etapa: Etapas.FINALIZADO,
-          flow: 1,
-        },
-      });
-      markAsFinalized();
-    } catch (error) {
-      if (previousData) {
-        setData(previousData);
-      }
-      setEtapa(previousEtapa);
-      setIsFinalized(false);
-      return error;
-    }
   };
 
-  const [loading, setLoading] = useState(false);
   const completeRegistration = async () => {
     setLoading(true);
     try {
+      await api.put("/v1/client/update", {
+        etapa: Etapas.FINALIZADO,
+        flow: 1,
+      });
       const response = await api.get("/v1/client");
       const dataClient =
         response.data?.data?.data || response.data?.data || response.data;
+
       if (dataClient?.type === "client") {
         const infoResponse = await api.get("/v1/client/data/info");
         const userData = infoResponse.data.data;
