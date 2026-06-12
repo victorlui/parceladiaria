@@ -1,25 +1,47 @@
-import { useAuthStore } from "@/store/auth";
-import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useRouter } from "expo-router";
-import AlertMessage from "./components/alert";
+import { ANALYTICS_FLOWS, TAB_ANALYTICS_SOURCES } from "@/analytics/events";
+import { Colors } from "@/constants/Colors";
 import HeaderHome from "@/pages/home/components/header";
-import MenuIcon from "@/pages/home/components/menu-icon";
 import HistoryRecent from "@/pages/home/components/history-recent";
-import StatusDocModal from "@/pages/home/components/StatusDocModal";
-import RefinancingModal from "@/pages/home/components/RefinancingModal";
 import MenssagemModal from "@/pages/home/components/mensage-modal";
+import MenuIcon from "@/pages/home/components/menu-icon";
+import RefinancingModal from "@/pages/home/components/RefinancingModal";
+import StatusDocModal from "@/pages/home/components/StatusDocModal";
+import { useAuthStore } from "@/store/auth";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AcordoModal from "./components/AcordoModal";
+import AlertMessage from "./components/alert";
+import { getAcordo } from "./service/acordo";
+import { AcordoResponse } from "./types/acordo";
 
 const HomeScreen: React.FC = () => {
   const { user, token } = useAuthStore();
   const router = useRouter();
-
-  
-
   const [modalVisible, setModalVisible] = useState<
     "status" | "refinanciamento" | null
   >(null);
+  const [acordo, setAcordo] = useState<AcordoResponse | null>(null);
+  const [acordoVisible, setAcordoVisible] = useState<boolean>(false);
+
+  const loadAcordo = useCallback(async (openModal = false) => {
+    try {
+      const data = await getAcordo({
+        flow: ANALYTICS_FLOWS.APP,
+        source: TAB_ANALYTICS_SOURCES.HOME_LOAD_AGREEMENT,
+      });
+      setAcordo(data);
+
+      if (openModal) {
+        setAcordoVisible(Boolean(data?.success));
+      }
+    } catch (error: any) {
+      console.log("error", error.response);
+      setAcordoVisible(false);
+      setAcordo(null);
+    }
+  }, []);
 
   useEffect(() => {
     if (user?.status_doc?.toLowerCase() === "divergente") {
@@ -32,7 +54,9 @@ const HomeScreen: React.FC = () => {
       if (typeof user?.refinanciamento === "string") {
         setModalVisible("refinanciamento");
       }
-    }, [user]),
+
+      loadAcordo(true);
+    }, [user, loadAcordo]),
   );
 
   const installments = useMemo(
@@ -89,6 +113,24 @@ const HomeScreen: React.FC = () => {
         visible={user?.lastLoan?.blocked ?? false}
         onClose={() => setModalVisible(null)}
       />
+      {acordo?.success ? (
+        <TouchableOpacity
+          style={styles.floatingButton}
+          activeOpacity={0.9}
+          onPress={() => setAcordoVisible(true)}
+        >
+          <Text style={styles.floatingButtonText}>Acordo disponivel</Text>
+        </TouchableOpacity>
+      ) : null}
+      <AcordoModal
+        visible={acordoVisible}
+        onClose={() => setAcordoVisible(false)}
+        onFirmado={() => {
+          setAcordoVisible(false);
+          setAcordo(null);
+        }}
+        acordo={acordo}
+      />
     </SafeAreaView>
   );
 };
@@ -98,6 +140,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     gap: 20,
+  },
+  floatingButton: {
+    position: "absolute",
+    left: 20,
+    bottom: 28,
+    backgroundColor: Colors.green.button,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 999,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  floatingButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
 

@@ -77,7 +77,6 @@ export default function PhoneEmail() {
       await api.post(`/v1/client/change/${typeValue}/otp`, request);
       setOtpVisible(true);
     } catch (error: any) {
-      console.log(error.response?.data);
       showError(
         "Atenção",
         error.response?.data?.message || "Erro ao enviar código",

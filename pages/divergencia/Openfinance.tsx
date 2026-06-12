@@ -1,7 +1,13 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { AlertCircle, Landmark, Lock, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -32,15 +38,28 @@ export default function Openfinance({ back, onConnected }: Props) {
   const appState = useRef(AppState.currentState);
   const isLeaving = useRef(false);
 
+  useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.OPEN_FINANCE, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+    });
+  }, []);
+
   const connectKlavi = useCallback(async () => {
     if (isLeaving.current) return;
 
     try {
       setFlowState("connecting");
 
-      const { data } = await api.post("/v1/klavi/connect", {
-        redirect: "expotemplatebase://register-openfinance",
-      });
+      const { data } = await api.post(
+        "/v1/klavi/connect",
+        {
+          redirect: "expotemplatebase://register-openfinance",
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.OPEN_FINANCE_CONNECT,
+        }),
+      );
 
       if (isLeaving.current) return;
 
@@ -65,7 +84,13 @@ export default function Openfinance({ back, onConnected }: Props) {
     if (isLeaving.current) return;
 
     try {
-      const { data } = await api.get("/v1/cliente/check-status");
+      const { data } = await api.get(
+        "/v1/cliente/check-status",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.OPEN_FINANCE_CHECK_STATUS,
+        }),
+      );
       if (isLeaving.current) return;
 
       const status = data?.status;

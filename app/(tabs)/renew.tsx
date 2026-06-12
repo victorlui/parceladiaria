@@ -1,3 +1,9 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  TAB_ANALYTICS_SOURCES,
+  TAB_SCREENS,
+} from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
 import { renewStatus } from "@/services/renew";
 import { useRenewStore } from "@/store/renew";
@@ -35,10 +41,17 @@ const RenewScreen: React.FC = () => {
     React.useCallback(() => {
       let isActive = true;
 
+      AnalyticsService.screen(TAB_SCREENS.RENEW, {
+        flow: ANALYTICS_FLOWS.APP,
+      });
+
       const run = async () => {
         setIsLoadingStatus(true);
         try {
-          const response = await renewStatus();
+          const response = await renewStatus({
+            flow: ANALYTICS_FLOWS.APP,
+            source: TAB_ANALYTICS_SOURCES.RENEW_STATUS,
+          });
           if (!isActive) return;
           setRenew(response.data.data);
         } finally {

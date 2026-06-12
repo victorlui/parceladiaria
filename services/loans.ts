@@ -1,8 +1,10 @@
 import api from "./api";
+import { withAnalytics } from "./api";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { QRCodeData } from "@/store/qrcode";
 import { errorHandler } from "@/utils";
+import type { PostHogEventProperties } from "@posthog/core";
 
 export type Loan = {
   id: number;
@@ -62,9 +64,14 @@ export async function getLoansOpen(id: number | null) {
   }
 }
 
-export async function getLoans(): Promise<Loan[]> {
+export async function getLoans(
+  analyticsContext?: PostHogEventProperties,
+): Promise<Loan[]> {
   try {
-    const response = await api.get("/v1/loan");
+    const response = await api.get(
+      "/v1/loan",
+      analyticsContext ? withAnalytics(analyticsContext) : undefined,
+    );
     return response.data.data.data;
   } catch (error: unknown) {
     throw error;
@@ -106,11 +113,18 @@ export async function getClientInfo(): Promise<PropsDataUser> {
 }
 
 // trocar a senha
-export async function changePassword(password: string) {
+export async function changePassword(
+  password: string,
+  analyticsContext?: PostHogEventProperties,
+) {
   try {
-    await api.post("/v1/client/change-password", {
-      password: password,
-    });
+    await api.post(
+      "/v1/client/change-password",
+      {
+        password: password,
+      },
+      analyticsContext ? withAnalytics(analyticsContext) : undefined,
+    );
     Alert.alert("Sucesso", "Senha alterada com sucesso.");
     router.back();
   } catch (error: unknown) {

@@ -1,9 +1,15 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  AUTH_SCREENS,
+  VERIFICATION_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import LogoComponent from "@/components/ui/Logo";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useVerificationStore } from "@/store/validation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -47,14 +53,30 @@ const VerificationScreen: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [resendTimer]);
 
+  useEffect(() => {
+    AnalyticsService.screen(AUTH_SCREENS.VERIFICATION_OTP, {
+      flow: ANALYTICS_FLOWS.VERIFICATION,
+      has_password: !!data?.password,
+      first_login: !!data?.first_login,
+    });
+  }, [data?.first_login, data?.password]);
+
   const handleConfirm = async () => {
     Keyboard.dismiss();
     setLoading(true);
     try {
-      await api.post("/auth/login-otp", {
-        cpf: data?.cpf,
-        otp: code,
-      });
+      await api.post(
+        "/auth/login-otp",
+        {
+          cpf: data?.cpf,
+          otp: code,
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.VERIFICATION,
+          source: VERIFICATION_ANALYTICS_SOURCES.CONFIRM_OTP,
+          first_login: !!data?.first_login,
+        }),
+      );
 
       if (!data?.password) {
         showError(
@@ -67,6 +89,8 @@ const VerificationScreen: React.FC = () => {
       await loginMutation.mutateAsync({
         cpf: data.cpf || "",
         password: data.password,
+        analyticsFlow: ANALYTICS_FLOWS.VERIFICATION,
+        analyticsSource: VERIFICATION_ANALYTICS_SOURCES.COMPLETE_LOGIN,
       });
 
       showSuccess("Sucesso", "Código validado com sucesso.");
@@ -86,9 +110,18 @@ const VerificationScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      await api.post("auth/otp", {
-        cpf: data?.cpf || "",
-      });
+      await api.post(
+        "auth/otp",
+        {
+          cpf: data?.cpf || "",
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.VERIFICATION,
+          source: VERIFICATION_ANALYTICS_SOURCES.RESEND_SMS,
+          channel: "sms",
+          first_login: !!data?.first_login,
+        }),
+      );
       showSuccess("Sucesso", "Código reenviado com sucesso");
       setResendTimer(60);
     } catch (error: any) {
@@ -107,10 +140,19 @@ const VerificationScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      await api.post("auth/otp", {
-        cpf: data?.cpf || "",
-        channel: "email",
-      });
+      await api.post(
+        "auth/otp",
+        {
+          cpf: data?.cpf || "",
+          channel: "email",
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.VERIFICATION,
+          source: VERIFICATION_ANALYTICS_SOURCES.RESEND_EMAIL,
+          channel: "email",
+          first_login: !!data?.first_login,
+        }),
+      );
       showSuccess("Sucesso", "Código reenviado com sucesso");
       setResendTimer(60);
     } catch (error: any) {

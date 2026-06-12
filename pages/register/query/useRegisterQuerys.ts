@@ -1,3 +1,4 @@
+import { ANALYTICS_FLOWS } from "@/analytics/events";
 import { updateUserService } from "@/services/register";
 import { useRegisterStore } from "@/store/register_new";
 import { useMutation } from "@tanstack/react-query";
@@ -7,7 +8,15 @@ import { Alert } from "react-native";
 export function useRegisterQuery() {
   return useMutation({
     mutationFn: (request: any) => {
-      return updateUserService({ request: request.request });
+      return updateUserService({
+        request: request.request,
+        analyticsContext: {
+          flow: request.analyticsFlow ?? ANALYTICS_FLOWS.REGISTER,
+          source: request.analyticsSource ?? "useRegisterQuery",
+          register_step: request.registerStep,
+          etapa: request.request?.etapa,
+        },
+      });
     },
     onSuccess: async (data: any) => {
       return data;

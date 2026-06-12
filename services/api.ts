@@ -1,3 +1,6 @@
+import { trackApiAlertShown, trackApiError } from "@/analytics/error-handler";
+import { ANALYTICS_SOURCES, API_ALERT_TYPES } from "@/analytics/events";
+import type { PostHogEventProperties } from "@posthog/core";
 import axios, {
   AxiosError,
   AxiosInstance,
@@ -30,6 +33,8 @@ const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 
 interface RetryRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
+  analyticsContext?: PostHogEventProperties;
+  skipErrorTracking?: boolean;
 }
 
 const api: AxiosInstance = axios.create({
@@ -39,6 +44,26 @@ const api: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export function withAnalytics(
+  analyticsContext: PostHogEventProperties,
+  config: AxiosRequestConfig = {},
+): RetryRequestConfig {
+  return {
+    ...config,
+    analyticsContext,
+  };
+}
+
+function buildAnalyticsContext(
+  properties: Record<string, unknown>,
+): PostHogEventProperties {
+  return Object.fromEntries(
+    Object.entries(properties).filter(
+      ([, value]) => value !== undefined && value !== null,
+    ),
+  ) as PostHogEventProperties;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                               DEVICE UUID                                  */
@@ -123,6 +148,12 @@ function logoutUser() {
 /* -------------------------------------------------------------------------- */
 
 function showSessionExpiredAlert() {
+  trackApiAlertShown(
+    API_ALERT_TYPES.SESSION_EXPIRED,
+    "Sessão expirada",
+    "Sua sessão expirou.",
+  );
+
   Alert.alert("Sessão expirada", "Sua sessão expirou.", [
     {
       text: "OK",
@@ -132,6 +163,12 @@ function showSessionExpiredAlert() {
 }
 
 function showServerErrorAlert() {
+  trackApiAlertShown(
+    API_ALERT_TYPES.SERVER_ERROR,
+    "Erro do servidor",
+    "Ocorreu um erro interno. Tente novamente mais tarde.",
+  );
+
   Alert.alert(
     "Erro do servidor",
     "Ocorreu um erro interno. Tente novamente mais tarde.",
@@ -140,33 +177,56 @@ function showServerErrorAlert() {
 }
 
 function showTimeoutAlert() {
+  trackApiAlertShown(
+    API_ALERT_TYPES.TIMEOUT,
+    "Timeout",
+    "A requisição demorou muito para responder.",
+  );
+
   Alert.alert("Timeout", "A requisição demorou muito para responder.", [
     { text: "OK", onPress: () => {} },
   ]);
 }
 
 function showConnectionErrorAlert() {
+  trackApiAlertShown(
+    API_ALERT_TYPES.CONNECTION_ERROR,
+    "Erro de conexão",
+    "Verifique sua internet e tente novamente.",
+  );
+
   Alert.alert("Erro de conexão", "Verifique sua internet e tente novamente.", [
     { text: "OK", onPress: logoutUser },
   ]);
 }
 
 function showBlockedAlert(message: string) {
+  trackApiAlertShown(API_ALERT_TYPES.BLOCKED, "Acesso bloqueado", message);
+
   Alert.alert("Acesso bloqueado", message, [
     { text: "OK", onPress: logoutUser },
   ]);
 }
 
 function showForbiddenAlert(message: string) {
+  trackApiAlertShown(API_ALERT_TYPES.FORBIDDEN, "Erro", message);
+
   Alert.alert("Erro", message, [{ text: "OK", onPress: () => {} }]);
 }
 
 function showRateLimitAlert(message?: string) {
-  Alert.alert(
+  const alertMessage =
+    message ?? "Limite de requisições excedido. Tente novamente mais tarde.";
+
+  trackApiAlertShown(
+    API_ALERT_TYPES.RATE_LIMIT,
     "Limite de requisições",
-    message ?? "Limite de requisições excedido. Tente novamente mais tarde.",
-    [{ text: "OK", onPress: () => {} }],
+    alertMessage,
   );
+
+  Alert.alert("Limite de requisições", alertMessage, [
+    { text: "OK", onPress: () => {} },
+  ]);
 }
 
 function getBlockedReasonFromErro(erro?: string): string | undefined {
@@ -256,6 +316,19 @@ api.interceptors.response.use(
     console.log("status", status);
     console.log("error", error.response);
     console.log("message", message);
+
+    if (!originalRequest?.skipErrorTracking) {
+      trackApiError(
+        error,
+        buildAnalyticsContext({
+          source: ANALYTICS_SOURCES.API_INTERCEPTOR,
+          endpoint: originalRequest?.url,
+          method: originalRequest?.method?.toUpperCase(),
+          base_url: originalRequest?.baseURL,
+          ...originalRequest?.analyticsContext,
+        }),
+      );
+    }
 
     if (
       status === 401 &&

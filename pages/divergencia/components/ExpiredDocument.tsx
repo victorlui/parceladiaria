@@ -1,3 +1,19 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
+import { useAlerts } from "@/components/useAlert";
+import { Colors } from "@/constants/Colors";
+import { useDocumentPicker } from "@/hooks/useDocumentPicker";
+import FaceCaptureWebView from "@/pages/face/components/FaceCaptureWebView";
+import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
+import { updateUserService } from "@/services/register";
+import { useRegisterStore } from "@/store/register_new";
+import { Etapas } from "@/utils";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -8,17 +24,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRegisterStore } from "@/store/register_new";
-import { Colors } from "@/constants/Colors";
-import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import FaceCaptureWebView from "@/pages/face/components/FaceCaptureWebView";
-import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { uploadDocumentService } from "../service/upload";
-import { Etapas } from "@/utils";
-import { updateUserService } from "@/services/register";
-import { useAlerts } from "@/components/useAlert";
-import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
-import { router } from "expo-router";
 
 export default function ExpiredDocument() {
   const { AlertDisplay, showError, showSuccess, showWarning } = useAlerts();
@@ -33,8 +39,17 @@ export default function ExpiredDocument() {
   const [isFaceOpen, setIsFaceOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  React.useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.EXPIRED_DOCUMENT, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+    });
+  }, []);
+
   const normalizedProfissao = useMemo(
-    () => String(data?.profissao || "").trim().toLowerCase(),
+    () =>
+      String(data?.profissao || "")
+        .trim()
+        .toLowerCase(),
     [data?.profissao],
   );
 
@@ -116,6 +131,10 @@ export default function ExpiredDocument() {
       const url = await uploadDocumentService(selectedFile);
       await updateUserService({
         request: { [updateKey]: url, etapa: Etapas.FINALIZADO },
+        analyticsContext: {
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.EXPIRED_DOCUMENT_SUBMIT,
+        },
       });
 
       showSuccess(
@@ -129,8 +148,7 @@ export default function ExpiredDocument() {
     } catch (error: any) {
       showError(
         "Erro",
-        error?.message ||
-          "Não foi possível enviar o arquivo. Tente novamente.",
+        error?.message || "Não foi possível enviar o arquivo. Tente novamente.",
       );
     } finally {
       setIsSubmitting(false);
@@ -255,7 +273,10 @@ export default function ExpiredDocument() {
         onSuccess={(payload: any) => {
           const file = payload?.file;
           if (!file?.uri) {
-            showError("Erro", "Não foi possível obter a captura. Tente novamente.");
+            showError(
+              "Erro",
+              "Não foi possível obter a captura. Tente novamente.",
+            );
             setIsFaceOpen(false);
             return;
           }

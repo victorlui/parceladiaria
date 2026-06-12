@@ -1,5 +1,7 @@
+import type { PostHogEventProperties } from "@posthog/core";
+
 import { Etapas } from "@/utils";
-import api from "./api";
+import api, { withAnalytics } from "./api";
 
 // etapa para criar a senha
 export async function registerService(
@@ -59,16 +61,24 @@ export async function registerService(
 // etapa para atualizar a data de nascimento
 type RequestProps = {
   request: any;
+  analyticsContext?: PostHogEventProperties;
 };
 
-export async function updateUserService({ request }: RequestProps): Promise<{
+export async function updateUserService({
+  request,
+  analyticsContext,
+}: RequestProps): Promise<{
   message: string;
   success: boolean;
   etapa: Etapas;
 }> {
   console.log("updateUserService", request);
   try {
-    const { data } = await api.put("/v1/client/update", request);
+    const { data } = await api.put(
+      "/v1/client/update",
+      request,
+      withAnalytics(analyticsContext ?? {}),
+    );
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
     if (error.response) {

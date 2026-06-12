@@ -1,3 +1,8 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { Ionicons } from "@expo/vector-icons";
@@ -64,6 +69,16 @@ const SendDocument: React.FC<Props> = ({
   const displayName = documentDisplayNames[item] || item;
   const isVideoItem = item === "video_perfil_app" || item === "ganhos_app";
   const handleBack = () => back(selected);
+
+  useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.SEND_DOCUMENT, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+      divergence_item: item,
+      display_name: displayName,
+      is_video_item: isVideoItem,
+    });
+  }, [displayName, isVideoItem, item]);
+
   const actionButtons = [
     {
       icon: "camera",

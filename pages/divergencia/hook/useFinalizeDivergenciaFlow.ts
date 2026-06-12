@@ -1,6 +1,10 @@
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
@@ -75,14 +79,32 @@ export function useFinalizeDivergenciaFlow() {
     setLoadingSubmit(true);
 
     try {
-      await updateUserService({ request: { etapa: Etapas.FINALIZADO } });
+      await updateUserService({
+        request: { etapa: Etapas.FINALIZADO },
+        analyticsContext: {
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
+        },
+      });
 
-      const response = await api.get("/v1/client");
+      const response = await api.get(
+        "/v1/client",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
+        }),
+      );
       const responseData = response.data?.data?.data;
       const dataClient = responseData || response.data?.data || response.data;
 
       if (dataClient?.type === "client") {
-        const infoResponse = await api.get("/v1/client/data/info");
+        const infoResponse = await api.get(
+          "/v1/client/data/info",
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT_INFO,
+          }),
+        );
         const userData = infoResponse.data?.data || {};
         const user: ApiUserData = {
           nome: userData.name,

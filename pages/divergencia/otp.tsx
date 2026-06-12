@@ -1,10 +1,16 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useFinalizeDivergenciaFlow } from "@/pages/divergencia/hook/useFinalizeDivergenciaFlow";
 import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskPhone } from "@/utils/mask";
 import { Ionicons } from "@expo/vector-icons";
@@ -133,6 +139,7 @@ export default function OtpDivergencia({
     (targetPhoneDigits ? maskPhone(targetPhoneDigits) : "") ||
     "cadastrado";
   const isBusy = isLoading || loadingSubmit;
+  const analyticsMode = screenMode ?? "verify_otp";
 
   useEffect(() => {
     setScreenMode(mode);
@@ -155,6 +162,14 @@ export default function OtpDivergencia({
 
     return () => clearInterval(interval);
   }, [screenMode, timer]);
+
+  useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.OTP, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+      mode: analyticsMode,
+      has_phone_change_flow: hasPhoneChangeFlow,
+    });
+  }, [analyticsMode, hasPhoneChangeFlow]);
 
   const handleChangeOtp = (value: string) => {
     setOtp(value.replace(/\D/g, "").slice(0, 6));
@@ -198,9 +213,17 @@ export default function OtpDivergencia({
     setIsLoading(true);
 
     try {
-      const response = await api.post("/v1/analise/phone/otp", {
-        telefone: phoneValueDigits,
-      });
+      const response = await api.post(
+        "/v1/analise/phone/otp",
+        {
+          telefone: phoneValueDigits,
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.PHONE_CHANGE_SEND_OTP,
+          mode: analyticsMode,
+        }),
+      );
       const maskedPhone =
         response?.data?.data?.phone || maskPhone(phoneValueDigits);
 
@@ -233,9 +256,17 @@ export default function OtpDivergencia({
     setIsLoading(true);
     try {
       if (hasPhoneChangeFlow) {
-        const response = await api.put("/v1/analise/phone/confirm", {
-          otp: otpDigits,
-        });
+        const response = await api.put(
+          "/v1/analise/phone/confirm",
+          {
+            otp: otpDigits,
+          },
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.PHONE_CHANGE_CONFIRM_OTP,
+            mode: analyticsMode,
+          }),
+        );
 
         setData({
           ...(useRegisterStore.getState().data || {}),
@@ -256,9 +287,17 @@ export default function OtpDivergencia({
         return;
       }
 
-      await api.post("/v1/analise/check", {
-        otp: otpDigits,
-      });
+      await api.post(
+        "/v1/analise/check",
+        {
+          otp: otpDigits,
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.CONFIRM_OTP,
+          mode: analyticsMode,
+        }),
+      );
       setOtp("");
       await finalizeDivergenciaFlow();
     } catch (error: any) {
@@ -282,11 +321,27 @@ export default function OtpDivergencia({
     setIsLoading(true);
     try {
       if (hasPhoneChangeFlow) {
-        await api.post("/v1/analise/phone/otp", {
-          telefone: targetPhoneDigits,
-        });
+        await api.post(
+          "/v1/analise/phone/otp",
+          {
+            telefone: targetPhoneDigits,
+          },
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.PHONE_CHANGE_RESEND_OTP,
+            mode: analyticsMode,
+          }),
+        );
       } else {
-        const { data } = await api.post("/v1/analise/otp");
+        const { data } = await api.post(
+          "/v1/analise/otp",
+          {},
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.RESEND_OTP,
+            mode: analyticsMode,
+          }),
+        );
         console.log("resend", data);
       }
       setOtp("");

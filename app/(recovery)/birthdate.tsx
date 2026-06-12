@@ -45,7 +45,6 @@ export default function BirthdateScreen() {
       setData(data.data);
       router.push("/(recovery)/questions");
     } catch (error: any) {
-      console.log("error", error.response.data);
       showWarning("Atenção", error.response.data.message || error.message);
       return;
     } finally {

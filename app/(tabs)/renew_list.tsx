@@ -1,3 +1,9 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  TAB_ANALYTICS_SOURCES,
+  TAB_SCREENS,
+} from "@/analytics/events";
 import ItemRenew from "@/components/renew/item-renew";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
@@ -40,7 +46,10 @@ const RenewList: React.FC = () => {
   const fetchRenewList = async () => {
     try {
       setLoading(true);
-      const response = await renewList();
+      const response = await renewList({
+        flow: ANALYTICS_FLOWS.APP,
+        source: TAB_ANALYTICS_SOURCES.RENEW_LIST,
+      });
 
       const renewWithSelection = response.map((item) => ({
         ...item,
@@ -56,6 +65,9 @@ const RenewList: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
+      AnalyticsService.screen(TAB_SCREENS.RENEW_LIST, {
+        flow: ANALYTICS_FLOWS.APP,
+      });
       // Se o foco voltou por causa do modal, não refaz o fetch
       if (preventRefetch.current) {
         preventRefetch.current = false;

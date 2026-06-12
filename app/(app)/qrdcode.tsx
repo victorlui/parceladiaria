@@ -110,7 +110,7 @@ const QrCodePayment: React.FC = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 ">
+    <SafeAreaView style={{ flex: 1 }}>
       <StatusBar />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {!isLoading && (

@@ -1,5 +1,9 @@
+import {
+  ANALYTICS_FLOWS,
+  REGISTER_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { checkCPF } from "@/services/check-cpf";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
@@ -90,6 +94,11 @@ export function useRegisterHooks() {
 
       const { data: cpfSearch } = await api.get(
         `/auth/search/cpf/${cpf}/${formattedBirthDate}`,
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.STEP1_SEARCH_CPF,
+          register_step: step,
+        }),
       );
 
       if (cpfSearch?.data?.status === "recusado") {
@@ -97,7 +106,11 @@ export function useRegisterHooks() {
         return;
       }
 
-      const response: any = await checkCPF(cpf, formattedBirthDate!);
+      const response: any = await checkCPF(cpf, formattedBirthDate!, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP1_INFO_CPF,
+        register_step: step,
+      });
       if (response.message === "Cadastro Localizado") {
         showWarning("Alerta!", "O CPF informado já está cadastrado. ");
         return;
@@ -175,7 +188,15 @@ export function useRegisterHooks() {
           password: data.password,
         };
 
-        const response = await api.post("/auth/register", registerData);
+        const response = await api.post(
+          "/auth/register",
+          registerData,
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.REGISTER,
+            source: REGISTER_ANALYTICS_SOURCES.STEP3_REGISTER,
+            register_step: step,
+          }),
+        );
         setToken(response.data.data.token);
 
         newData.nome = response.data.data.name;
@@ -187,6 +208,8 @@ export function useRegisterHooks() {
           etapa: Etapas.AFILIADO_CODE,
           phone: cleanedPhone,
         },
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP3_UPDATE_USER,
+        registerStep: step,
       });
 
       setData({
@@ -220,7 +243,11 @@ export function useRegisterHooks() {
         afiliado: code,
       };
 
-      await mutateAsync({ request });
+      await mutateAsync({
+        request,
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.AFFILIATE_CODE,
+        registerStep: step,
+      });
       setData({
         ...data,
         afiliado: code,
@@ -251,13 +278,19 @@ export function useRegisterHooks() {
           etapa: Etapas.REGISTRANDO_PROFISSAO,
           profissao,
         },
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP4_PROFESSION,
+        registerStep: step,
       });
 
       const etapa = item.id === "comerciante" ? Etapas.CNPJ : Etapas.LIMITE;
       const nextStep = etapa === Etapas.CNPJ ? 9 : 5;
 
       try {
-        await mutateAsync({ request: { etapa } });
+        await mutateAsync({
+          request: { etapa },
+          analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP4_PREFETCH,
+          registerStep: step,
+        });
       } catch {}
 
       setData({
@@ -284,6 +317,8 @@ export function useRegisterHooks() {
           cnpj,
           etapa: Etapas.INFORMANDO_TIPO_COMERCIO,
         },
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP_CNPJ,
+        registerStep: step,
       });
       setIsLoading(false);
       setStep(10);
@@ -305,6 +340,8 @@ export function useRegisterHooks() {
           tipo_comercio: businesType,
           etapa: Etapas.LIMITE,
         },
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP_BUSINESS_TYPE,
+        registerStep: step,
       });
       setIsLoading(false);
       setStep(5);
@@ -338,7 +375,11 @@ export function useRegisterHooks() {
         etapa: Etapas.REGISTRANDO_PIX,
       };
 
-      await mutateAsync({ request });
+      await mutateAsync({
+        request,
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP6_EMAIL,
+        registerStep: step,
+      });
       setData({
         ...data,
         email,
@@ -363,7 +404,11 @@ export function useRegisterHooks() {
         etapa: Etapas.REGISTRANDO_ENDERECO,
       };
 
-      await mutateAsync({ request });
+      await mutateAsync({
+        request,
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP7_PIX,
+        registerStep: step,
+      });
       setData({
         ...data,
         chave: selected,
@@ -388,7 +433,11 @@ export function useRegisterHooks() {
         etapa: Etapas.OPEN_FINANCE,
       };
 
-      await mutateAsync({ request: payload });
+      await mutateAsync({
+        request: payload,
+        analyticsSource: REGISTER_ANALYTICS_SOURCES.STEP8_ADDRESS,
+        registerStep: step,
+      });
       setData({
         ...data,
         endereco: address.endereco,

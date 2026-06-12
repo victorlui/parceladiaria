@@ -1,9 +1,12 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import { ANALYTICS_FLOWS, TAB_SCREENS } from "@/analytics/events";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import ContactItem from "@/pages/profile/components/ContactItem";
 import { useAuthStore } from "@/store/auth";
 import { formatCelular, formatCEP, formatCPF } from "@/utils/formats";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,6 +38,14 @@ const InfoRow: React.FC<{
 
 const ProfileTab: React.FC = () => {
   const user = useAuthStore((state) => state.user);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      AnalyticsService.screen(TAB_SCREENS.PROFILE, {
+        flow: ANALYTICS_FLOWS.APP,
+      });
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>

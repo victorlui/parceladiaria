@@ -1,7 +1,12 @@
+import {
+  ANALYTICS_FLOWS,
+  LOGIN_ANALYTICS_SOURCES,
+  VERIFICATION_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
 import { CPFSchema } from "@/lib/cpf_validation";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { checkCPF as checkCPFService } from "@/services/check-cpf";
 import { login } from "@/services/login";
 import { useAuthStore } from "@/store/auth";
@@ -18,7 +23,11 @@ export function useLoginHook() {
   const { handleFlow } = useNavigationFlow();
 
   const checkCPFMutation = useMutation({
-    mutationFn: ({ cpf }: CPFSchema) => checkCPFService(cpf),
+    mutationFn: ({ cpf }: CPFSchema) =>
+      checkCPFService(cpf, undefined, {
+        flow: ANALYTICS_FLOWS.LOGIN,
+        source: LOGIN_ANALYTICS_SOURCES.CHECK_CPF,
+      }),
     onSuccess: ({ data: { type }, message }) => {
       if (!type && message === "Sem cadastro") {
         setStep(0);
@@ -37,8 +46,21 @@ export function useLoginHook() {
   });
 
   const loginMutation = useMutation({
-    mutationFn: ({ cpf, password }: { cpf: string; password: string }) =>
-      login(cpf, password),
+    mutationFn: ({
+      cpf,
+      password,
+      analyticsFlow = ANALYTICS_FLOWS.LOGIN,
+      analyticsSource = LOGIN_ANALYTICS_SOURCES.SUBMIT_PASSWORD,
+    }: {
+      cpf: string;
+      password: string;
+      analyticsFlow?: string;
+      analyticsSource?: string;
+    }) =>
+      login(cpf, password, {
+        flow: analyticsFlow,
+        source: analyticsSource,
+      }),
     onSuccess: async (data: any, variables) => {
       try {
         if ((data as any)?.needs_otp === true) {
@@ -58,11 +80,19 @@ export function useLoginHook() {
         const etapa = data?.data?.etapa;
         const status = data?.data?.status;
 
-        console.log(data?.data);
-
         if (type === "lead") {
           setToken(data?.token);
-          const response = await api.get(`/v1/client`);
+          const response = await api.get(
+            `/v1/client`,
+            withAnalytics({
+              flow: ANALYTICS_FLOWS.REGISTER,
+              source:
+                variables.analyticsSource ===
+                VERIFICATION_ANALYTICS_SOURCES.COMPLETE_LOGIN
+                  ? VERIFICATION_ANALYTICS_SOURCES.LOAD_INCOMPLETE_REGISTRATION
+                  : LOGIN_ANALYTICS_SOURCES.LOAD_INCOMPLETE_REGISTRATION,
+            }),
+          );
 
           setData({
             ...data?.data,
@@ -77,7 +107,20 @@ export function useLoginHook() {
 
         if (type === "client") {
           useAuthStore.getState().setToken(data?.token);
-          const response = await api.get(`/v1/client/data/info`);
+          const response = await api.get(
+            `/v1/client/data/info`,
+            withAnalytics({
+              flow:
+                variables.analyticsFlow === ANALYTICS_FLOWS.VERIFICATION
+                  ? ANALYTICS_FLOWS.VERIFICATION
+                  : ANALYTICS_FLOWS.LOGIN,
+              source:
+                variables.analyticsSource ===
+                VERIFICATION_ANALYTICS_SOURCES.COMPLETE_LOGIN
+                  ? VERIFICATION_ANALYTICS_SOURCES.LOAD_CLIENT_INFO
+                  : LOGIN_ANALYTICS_SOURCES.LOAD_CLIENT_INFO,
+            }),
+          );
           const userData = response?.data?.data || {};
           const user: ApiUserData = {
             ...data?.data,

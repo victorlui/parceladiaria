@@ -1,7 +1,13 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  REGISTER_ANALYTICS_SOURCES,
+  REGISTER_SCREENS,
+} from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
 import { useIsFocused } from "@react-navigation/native";
@@ -60,6 +66,14 @@ const OpenFinanceScreen: React.FC = () => {
   const appState = useRef(AppState.currentState);
   const hasGoneToTerms = useRef(false);
   const isLeaving = useRef(false);
+
+  useEffect(() => {
+    AnalyticsService.screen(REGISTER_SCREENS.OPEN_FINANCE, {
+      flow: ANALYTICS_FLOWS.REGISTER,
+      from: from ?? "register",
+      register_step: step,
+    });
+  }, [from, step]);
 
   const navigateToStep1 = useCallback(() => {
     if (isLeaving.current) return true;
@@ -150,7 +164,15 @@ const OpenFinanceScreen: React.FC = () => {
     // const nextEtapa = Etapas.ACEITANDO_TERMOS;
     // const nextRoute = "/(register)/termos";
     try {
-      await api.put("/v1/client/update", { etapa: nextEtapa });
+      await api.put(
+        "/v1/client/update",
+        { etapa: nextEtapa },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_NEXT_STEP,
+          register_step: step,
+        }),
+      );
 
       if (isLeaving.current) return;
 
@@ -176,9 +198,17 @@ const OpenFinanceScreen: React.FC = () => {
     try {
       setFlowState("connecting");
 
-      const { data } = await api.post("/v1/klavi/connect", {
-        redirect: "expotemplatebase://register-openfinance",
-      });
+      const { data } = await api.post(
+        "/v1/klavi/connect",
+        {
+          redirect: "expotemplatebase://register-openfinance",
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CONNECT,
+          register_step: step,
+        }),
+      );
 
       if (isLeaving.current) return;
 
@@ -204,7 +234,14 @@ const OpenFinanceScreen: React.FC = () => {
     if (isLeaving.current) return;
 
     try {
-      const { data } = await api.get("/v1/cliente/check-status");
+      const { data } = await api.get(
+        "/v1/cliente/check-status",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CHECK_STATUS,
+          register_step: step,
+        }),
+      );
       if (isLeaving.current) return;
 
       const status = data?.status;
@@ -258,7 +295,14 @@ const OpenFinanceScreen: React.FC = () => {
         try {
           const shouldAutoAdvance = from !== "termos";
 
-          const { data } = await api.get("v1/register/settings");
+          const { data } = await api.get(
+            "v1/register/settings",
+            withAnalytics({
+              flow: ANALYTICS_FLOWS.REGISTER,
+              source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_INITIALIZE_SETTINGS,
+              register_step: step,
+            }),
+          );
           if (cancelled || isLeaving.current) return;
 
           const currentStore = useRegisterStore.getState();
@@ -284,7 +328,15 @@ const OpenFinanceScreen: React.FC = () => {
               }
               return;
             }
-            const { data: klaviData } = await api.get("/v1/klavi");
+            const { data: klaviData } = await api.get(
+              "/v1/klavi",
+              withAnalytics({
+                flow: ANALYTICS_FLOWS.REGISTER,
+                source:
+                  REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_INITIALIZE_KLAVI_DRIVER,
+                register_step: step,
+              }),
+            );
             if (cancelled || isLeaving.current) return;
             setAttempts(klaviData?.r_attempts || 0);
 
@@ -319,7 +371,15 @@ const OpenFinanceScreen: React.FC = () => {
               return;
             }
 
-            const { data: klaviData } = await api.get("/v1/klavi");
+            const { data: klaviData } = await api.get(
+              "/v1/klavi",
+              withAnalytics({
+                flow: ANALYTICS_FLOWS.REGISTER,
+                source:
+                  REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_INITIALIZE_KLAVI_BUSINESS,
+                register_step: step,
+              }),
+            );
             if (cancelled || isLeaving.current) return;
 
             setAttempts(klaviData?.r_attempts || 0);

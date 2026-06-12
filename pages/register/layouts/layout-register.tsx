@@ -1,6 +1,8 @@
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
-import React, { useMemo, useRef } from "react";
+import { AnalyticsService } from "@/analytics/analytics.service";
+import type { PostHogEventProperties } from "@posthog/core";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -20,6 +22,8 @@ interface Props {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
+  screenName?: string;
+  screenProps?: PostHogEventProperties;
   isCenter?: boolean;
   showBackButton?: boolean;
   onBack?: () => void;
@@ -29,6 +33,8 @@ const LayoutRegister: React.FC<Props> = ({
   children,
   title,
   subtitle,
+  screenName,
+  screenProps,
   isCenter = true,
   showBackButton = false,
   onBack,
@@ -42,6 +48,12 @@ const LayoutRegister: React.FC<Props> = ({
     () => ({ top: insets.top + 10, left: 16 }),
     [insets.top],
   );
+
+  useEffect(() => {
+    if (!screenName) return;
+
+    AnalyticsService.screen(screenName, screenProps);
+  }, [screenName, screenProps]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

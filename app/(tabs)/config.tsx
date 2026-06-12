@@ -1,5 +1,21 @@
-import React, { useState, useCallback, useEffect } from "react";
+import { AnalyticsService } from "@/analytics/analytics.service";
 import {
+  ANALYTICS_FLOWS,
+  TAB_ANALYTICS_SOURCES,
+  TAB_SCREENS,
+} from "@/analytics/events";
+import ModalTerms from "@/components/config/modal-terms";
+import StatusBar from "@/components/ui/StatusBar";
+import { Colors } from "@/constants/Colors";
+import { Device } from "@/interfaces/devices";
+import api, { withAnalytics } from "@/services/api";
+import { changePassword } from "@/services/loans";
+import { useAuthStore } from "@/store/auth";
+import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
   Alert,
   Keyboard,
   ScrollView,
@@ -8,18 +24,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome, Ionicons, Feather } from "@expo/vector-icons";
-import StatusBar from "@/components/ui/StatusBar";
-import { Colors } from "@/constants/Colors";
-import ModalTerms from "@/components/config/modal-terms";
-import { router } from "expo-router";
-import { useAuthStore } from "@/store/auth";
-import { changePassword } from "@/services/loans";
-import api from "@/services/api";
-import { Device } from "@/interfaces/devices";
 
 // --- Sub-componente para o Item de Dispositivo ---
 const DeviceItem = ({
@@ -73,7 +79,13 @@ const ConfigTab: React.FC = () => {
   const fetchDevices = useCallback(async () => {
     try {
       setLoadingDevices(true);
-      const { data } = await api.get("/v1/client/trusted-devices");
+      const { data } = await api.get(
+        "/v1/client/trusted-devices",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.APP,
+          source: TAB_ANALYTICS_SOURCES.CONFIG_LOAD_DEVICES,
+        }),
+      );
       setDevices(data.data);
     } catch {
       setDevices([]);
@@ -82,9 +94,14 @@ const ConfigTab: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+  useFocusEffect(
+    useCallback(() => {
+      AnalyticsService.screen(TAB_SCREENS.CONFIG, {
+        flow: ANALYTICS_FLOWS.APP,
+      });
+      fetchDevices();
+    }, [fetchDevices]),
+  );
 
   const handleSave = async () => {
     Keyboard.dismiss();
@@ -109,7 +126,10 @@ const ConfigTab: React.FC = () => {
 
     try {
       setIsSaving(true);
-      await changePassword(newPassword);
+      await changePassword(newPassword, {
+        flow: ANALYTICS_FLOWS.APP,
+        source: TAB_ANALYTICS_SOURCES.CONFIG_CHANGE_PASSWORD,
+      });
       setNewPassword("");
       setConfirmPassword("");
       Alert.alert("Sucesso", "Senha alterada com sucesso!");
@@ -134,7 +154,14 @@ const ConfigTab: React.FC = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              await api.delete(`/v1/client/trusted-devices/${id}`);
+              await api.delete(
+                `/v1/client/trusted-devices/${id}`,
+                withAnalytics({
+                  flow: ANALYTICS_FLOWS.APP,
+                  source: TAB_ANALYTICS_SOURCES.CONFIG_REVOKE_DEVICE,
+                  trusted_device_id: id,
+                }),
+              );
               fetchDevices();
             } catch {
               Alert.alert("Erro", "Não foi possível revogar o dispositivo.");
@@ -147,7 +174,13 @@ const ConfigTab: React.FC = () => {
 
   const openTerms = useCallback(async () => {
     try {
-      const { data } = await api.get("/termos/termos_condicao");
+      const { data } = await api.get(
+        "/termos/termos_condicao",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.APP,
+          source: TAB_ANALYTICS_SOURCES.CONFIG_LOAD_TERMS,
+        }),
+      );
       setTermsHtml(data.termo.content);
     } catch {
       setTermsHtml(

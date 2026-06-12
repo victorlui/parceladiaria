@@ -84,7 +84,7 @@ const TermsFinalScreen: React.FC<Props> = ({ loadingAccept, onAccept }) => {
           enableAntialiasing
           trustAllCerts={false}
           onLoadComplete={(numberOfPages) => {
-            console.log("Total de páginas:", numberOfPages);
+            return numberOfPages;
           }}
           onError={(error) => {
             Alert.alert("Erro", "Ocorreu um erro ao carregar o contrato.");

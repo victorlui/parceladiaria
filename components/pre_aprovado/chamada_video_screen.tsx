@@ -120,12 +120,6 @@ const ChamadaVideoScreen: React.FC = () => {
       showError(
         "Atenção",
         "Não foi possível iniciar a chamada porque faltam CPF, nome ou telefone. Faça login novamente para atualizar seus dados.",
-        false,
-        async () => {
-          clean();
-          await logout();
-          router.replace("/login");
-        },
       );
       throw new Error(missingRequiredDataError);
     }

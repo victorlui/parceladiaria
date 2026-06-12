@@ -1,3 +1,4 @@
+import { ANALYTICS_FLOWS, TAB_ANALYTICS_SOURCES } from "@/analytics/events";
 import ButtonChat from "@/components/ui/ButtonChat";
 import { Colors } from "@/constants/Colors";
 import { useQueryDataClient } from "@/hooks/useQueryClient";
@@ -21,7 +22,10 @@ import Skeleton from "./components/skeleton";
 
 const PaymentsScreen: React.FC = () => {
   const { user } = useAuthStore();
-  const { refetch, isFetching } = useQueryDataClient();
+  const { refetch, isFetching } = useQueryDataClient({
+    flow: ANALYTICS_FLOWS.APP,
+    source: TAB_ANALYTICS_SOURCES.PAYMENTS_REFRESH_CLIENT,
+  });
   const { generateQRCode } = useQRCodeStore();
   const router = useRouter();
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>(

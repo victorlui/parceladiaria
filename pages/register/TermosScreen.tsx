@@ -1,7 +1,13 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  REGISTER_ANALYTICS_SOURCES,
+  REGISTER_SCREENS,
+} from "@/analytics/events";
 import CreditProposalScreen from "@/components/CreditProposal";
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf, maskPhone } from "@/utils/mask";
 import { FontAwesome } from "@expo/vector-icons";
@@ -24,8 +30,8 @@ import PulsingImageLoader from "./components/PulsingImageLoader";
 import { useRegisterQuery } from "./query/useRegisterQuerys";
 
 const TermosScreen: React.FC = () => {
-  const { mutateAsync, isPending, isSuccess } = useRegisterQuery();
-  const { setStep, data, token, hydrated, setData, setToken, setEtapa, etapa } =
+  const { isPending, isSuccess } = useRegisterQuery();
+  const { setStep, data, token, hydrated, setData, setToken, etapa, step } =
     useRegisterStore();
   const navigation = useNavigation();
 
@@ -38,18 +44,13 @@ const TermosScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const isAlreadyFinalized = (data?.etapa ?? etapa) === Etapas.FINALIZADO;
 
-  const markAsFinalized = useCallback(() => {
-    const currentData = useRegisterStore.getState().data;
-
-    setEtapa(Etapas.FINALIZADO);
-
-    if (currentData) {
-      setData({
-        ...currentData,
-        etapa: Etapas.FINALIZADO,
-      });
-    }
-  }, [setData, setEtapa]);
+  React.useEffect(() => {
+    AnalyticsService.screen(REGISTER_SCREENS.TERMS, {
+      flow: ANALYTICS_FLOWS.REGISTER,
+      register_step: step,
+      etapa: data?.etapa ?? etapa,
+    });
+  }, [data?.etapa, etapa, step]);
 
   const onBackPress = useCallback(() => {
     if (isLeaving.current) return true;
@@ -70,7 +71,14 @@ const TermosScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await api.get("termos/Proposta_condicionada");
+      const response = await api.get(
+        "termos/Proposta_condicionada",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.TERMS_LOAD,
+          register_step: step,
+        }),
+      );
       const content = response?.data?.termo?.content || "";
       setTerms(content);
       hasLoadedTerms.current = true;
@@ -119,16 +127,38 @@ const TermosScreen: React.FC = () => {
   const completeRegistration = async () => {
     setLoading(true);
     try {
-      await api.put("/v1/client/update", {
-        etapa: Etapas.FINALIZADO,
-        flow: 1,
-      });
-      const response = await api.get("/v1/client");
+      await api.put(
+        "/v1/client/update",
+        {
+          etapa: Etapas.FINALIZADO,
+          flow: 1,
+        },
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.TERMS_COMPLETE_UPDATE,
+          register_step: step,
+        }),
+      );
+      const response = await api.get(
+        "/v1/client",
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.TERMS_COMPLETE_CLIENT,
+          register_step: step,
+        }),
+      );
       const dataClient =
         response.data?.data?.data || response.data?.data || response.data;
 
       if (dataClient?.type === "client") {
-        const infoResponse = await api.get("/v1/client/data/info");
+        const infoResponse = await api.get(
+          "/v1/client/data/info",
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.REGISTER,
+            source: REGISTER_ANALYTICS_SOURCES.TERMS_COMPLETE_CLIENT_INFO,
+            register_step: step,
+          }),
+        );
         const userData = infoResponse.data.data;
         const user = {
           nome: userData.name,

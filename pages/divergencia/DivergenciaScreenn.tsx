@@ -1,11 +1,17 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import ButtonChat from "@/components/ui/ButtonChat";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
@@ -46,6 +52,14 @@ export default function DivergenciaScreenn() {
     [data?.divergencias],
   );
 
+  useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.HOME, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+      primeira_analise: isPrimeiraAnalise,
+      divergencias_count: divergencias.length,
+    });
+  }, [divergencias.length, isPrimeiraAnalise]);
+
   const isOnlyFaceDivergence =
     divergencias.length === 1 && divergencias[0] === "face";
   const hasPendingDocuments = useMemo(() => {
@@ -69,6 +83,8 @@ export default function DivergenciaScreenn() {
         request: {
           [item]: url,
         },
+        analyticsFlow: ANALYTICS_FLOWS.DIVERGENCIA,
+        analyticsSource: DIVERGENCIA_ANALYTICS_SOURCES.UPLOAD_DOCUMENT,
       });
       setSelectedFiles((prev) => ({
         ...prev,
@@ -107,7 +123,14 @@ export default function DivergenciaScreenn() {
     }
     setLoading(true);
     try {
-      await api.post("/v1/analise/otp");
+      await api.post(
+        "/v1/analise/otp",
+        {},
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.SEND_OTP,
+        }),
+      );
       setIsOtpSend(true);
     } catch (error) {
       return;

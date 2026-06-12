@@ -1,4 +1,10 @@
 // Componente LoansTab
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  TAB_ANALYTICS_SOURCES,
+  TAB_SCREENS,
+} from "@/analytics/events";
 import ItemLoan from "@/components/loans/item-loan";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
@@ -36,7 +42,10 @@ const LoansTab: React.FC = () => {
 
   const fetchLoans = async () => {
     try {
-      const response = await getLoans();
+      const response = await getLoans({
+        flow: ANALYTICS_FLOWS.APP,
+        source: TAB_ANALYTICS_SOURCES.LOANS_LOAD,
+      });
       const enhanced = (response || []).map((loan: any) =>
         enhanceLoan(loan as LoansProps),
       );
@@ -51,6 +60,9 @@ const LoansTab: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
+      AnalyticsService.screen(TAB_SCREENS.LOANS, {
+        flow: ANALYTICS_FLOWS.APP,
+      });
       fetchLoans();
     }, []), // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -60,7 +72,10 @@ const LoansTab: React.FC = () => {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8FAFC]">
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+    >
       <StatusBar />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Meus Empréstimos</Text>

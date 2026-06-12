@@ -1,3 +1,5 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import { ANALYTICS_FLOWS, AUTH_SCREENS } from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
@@ -25,12 +27,19 @@ import { useLoginHook } from "./hooks/useLoginHook";
 const InsertPasswordScreen: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
-  const { data, setData } = useRegisterStore();
+  const { data } = useRegisterStore();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const senhaRef = useRef<TextInput>(null);
   const hasShownError = useRef(false);
+
+  useEffect(() => {
+    AnalyticsService.screen(AUTH_SCREENS.LOGIN_PASSWORD, {
+      flow: ANALYTICS_FLOWS.LOGIN,
+      has_cpf: !!data?.cpf,
+    });
+  }, [data?.cpf]);
 
   useEffect(() => {
     if (!loginMutation.error) {

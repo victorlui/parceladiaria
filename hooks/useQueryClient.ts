@@ -1,13 +1,20 @@
-import api from "@/services/api";
+import type { PostHogEventProperties } from "@posthog/core";
+
+import api, { withAnalytics } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useQuery } from "@tanstack/react-query";
 
-export function useQueryDataClient() {
+export function useQueryDataClient(
+  analyticsContext?: PostHogEventProperties,
+) {
   return useQuery({
     queryKey: ["client"],
     queryFn: async () => {
       try {
-        const { data } = await api.get("v1/client");
+        const { data } = await api.get(
+          "v1/client",
+          analyticsContext ? withAnalytics(analyticsContext) : undefined,
+        );
 
         const authStore = useAuthStore.getState();
         const currentUser = authStore.user;

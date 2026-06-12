@@ -1,3 +1,5 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import { ANALYTICS_FLOWS, AUTH_SCREENS } from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
@@ -5,7 +7,7 @@ import { Colors } from "@/constants/Colors";
 import { useRegisterStore } from "@/store/register_new";
 import { validateCPF } from "@/utils/validation";
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -20,6 +22,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLoginHook } from "./hooks/useLoginHook";
 
 const LoginScreen: React.FC = () => {
+  useEffect(() => {
+    AnalyticsService.screen(AUTH_SCREENS.LOGIN_CPF, {
+      flow: ANALYTICS_FLOWS.LOGIN,
+    });
+  }, []);
+
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { checkCPFMutation } = useLoginHook();
   const { setData } = useRegisterStore();

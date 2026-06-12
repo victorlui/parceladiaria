@@ -38,7 +38,6 @@ export default function CPFScreen() {
       const { data } = await api.post("/auth/recovery/start", {
         cpf,
       });
-      console.log("data", data);
 
       setCpfValid(cpf);
 

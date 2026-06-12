@@ -1,7 +1,13 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  DIVERGENCIA_ANALYTICS_SOURCES,
+  DIVERGENCIA_SCREENS,
+} from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -30,10 +36,23 @@ export default function PalencaDivergente() {
     null,
   );
 
+  useEffect(() => {
+    AnalyticsService.screen(DIVERGENCIA_SCREENS.PALENCA, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+    });
+  }, []);
+
   const handleConnect = async () => {
     try {
       setIsLoading(true);
-      const response = await api.post("/v1/palenca/init");
+      const response = await api.post(
+        "/v1/palenca/init",
+        {},
+        withAnalytics({
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.PALENCA_INIT,
+        }),
+      );
       console.log("response", response);
       const config = response.data?.data || response.data;
       setPalencaConfig(config);

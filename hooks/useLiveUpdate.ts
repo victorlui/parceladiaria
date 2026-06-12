@@ -46,12 +46,8 @@ export function useLiveUpdate() {
 
     async function fetchUpdate() {
       if (AppState.currentState !== "active") return;
-      console.log("fetchUpdate");
 
       if (__DEV__ || !Updates.isEnabled) {
-        console.log(
-          `LiveUpdate desabilitado (DEV=${__DEV__}, enabled=${Updates.isEnabled})`,
-        );
         return;
       }
 

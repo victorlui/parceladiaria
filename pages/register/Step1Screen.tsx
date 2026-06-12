@@ -1,5 +1,6 @@
+import { ANALYTICS_FLOWS, getRegisterStepScreenName } from "@/analytics/events";
 import ButtonChat from "@/components/ui/ButtonChat";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AffiliateCode from "./AffiliateCode";
 import Step1Component from "./components/Step1Component";
 import Step2Component from "./components/Step2Component";
@@ -40,6 +41,20 @@ const Step1Register: React.FC = () => {
   });
 
   const currentStep = steps[step] ?? steps[0];
+  const registerScreenName = useMemo(
+    () => getRegisterStepScreenName(step),
+    [step],
+  );
+
+  const registerScreenProps = useMemo(
+    () => ({
+      flow: ANALYTICS_FLOWS.REGISTER,
+      register_step: step,
+      screen_title: currentStep.title ?? "Olá! Vamos começar.",
+    }),
+    [currentStep.title, step],
+  );
+
   return (
     <>
       <LayoutRegister
@@ -48,6 +63,8 @@ const Step1Register: React.FC = () => {
           currentStep.subtitle ??
           "Para iniciar seu cadastro, informe seu CPF e data de nascimento."
         }
+        screenName={registerScreenName}
+        screenProps={registerScreenProps}
         showBackButton={step >= 0}
         onBack={handlePrevStep}
       >
