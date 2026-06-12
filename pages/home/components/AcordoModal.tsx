@@ -400,7 +400,7 @@ const AcordoModal = ({
   }
 
   const paddingSafeAreView: string[] =
-    Platform.OS === "ios" ? ["top", "bottom"] : ["top"];
+    Platform.OS === "ios" ? ["top", "bottom"] : ["top", "bottom"];
 
   return (
     <>
