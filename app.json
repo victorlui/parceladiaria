@@ -2,9 +2,9 @@
   "expo": {
     "name": "Parcela Diaria",
     "slug": "parceladiaria",
-    "version": "1.1.6",
+    "version": "1.2.1",
     "orientation": "portrait",
-    "icon": "./assets/images/adaptive-icon.png",
+    "icon": "./assets/icons/icon.png",
     "scheme": "parceladiaria",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     },
     "androidStatusBar": {
       "barStyle": "light-content",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#053E38"
     },
     "androidNavigationBar": {
       "barStyle": "dark-content",
@@ -33,13 +33,13 @@
         "AppStoreCountry": "br"
       },
       "bundleIdentifier": "br.com.parceladiaria",
-      "icon": "./assets/images/ios-icon.png",
-      "buildNumber": "59"
+      "icon": "./assets/icons/ios-icon.png",
+      "buildNumber": "60"
     },
     "android": {
-      "versionCode": 57,
+      "versionCode": 59,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/icons/android-icon-foreground.png",
         "backgroundColor": "#053E38"
       },
       "edgeToEdgeEnabled": true,
@@ -60,10 +60,7 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "package": "br.com.parceladiaria",
@@ -80,9 +77,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon_new.png",
+          "image": "./assets/icons/ios-icon.png",
           "resizeMode": "cover",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#053E38"
         }
       ],
       [
@@ -159,7 +156,7 @@
         "projectId": "60539f4b-9218-4b0e-bc11-36087752f557"
       }
     },
-    "runtimeVersion": "1.1.6",
+    "runtimeVersion": "1.2.1",
     "updates": {
       "url": "https://u.expo.dev/60539f4b-9218-4b0e-bc11-36087752f557",
       "checkAutomatically": "ON_LOAD",
