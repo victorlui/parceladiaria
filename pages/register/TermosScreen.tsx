@@ -10,21 +10,15 @@ import { Colors } from "@/constants/Colors";
 import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf, maskPhone } from "@/utils/mask";
-import { FontAwesome } from "@expo/vector-icons";
 import React, { useCallback, useRef, useState } from "react";
-import {
-  BackHandler,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { BackHandler, StyleSheet, Text, View } from "react-native";
 import LayoutRegister from "./layouts/layout-register";
 
 import ButtonChat from "@/components/ui/ButtonChat";
 import { useAuthStore } from "@/store/auth";
 import { Etapas } from "@/utils";
 import { router, useFocusEffect, useNavigation } from "expo-router";
+import CheckboxTerms from "./components/CheckboxTerms";
 import FinalScreenComponent from "./components/FinalScreenComponent";
 import PulsingImageLoader from "./components/PulsingImageLoader";
 import { useRegisterQuery } from "./query/useRegisterQuerys";
@@ -37,7 +31,13 @@ const TermosScreen: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [terms, setTerms] = useState("");
+  const [scrConsulta, setScrConsulta] = useState("");
+  const [scrCompartilhamento, setScrCompartilhamento] = useState("");
+  const [allAccepted, setAllAccepted] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [acceptedConsult, setAcceptedConsult] = useState(false);
+  const [acceptedShare, setAcceptedShare] = useState(false);
+
   const isLeaving = useRef(false);
   const hasLoadedTerms = useRef(false);
   const [isFinalized, setIsFinalized] = useState(false);
@@ -80,6 +80,14 @@ const TermosScreen: React.FC = () => {
         }),
       );
       const content = response?.data?.termo?.content || "";
+      const { data: scrConsultaResponse } = await api.get(
+        "/termos/SCR_consulta",
+      );
+      const { data: scrCompartilhamentoResponse } = await api.get(
+        "/termos/SCR_compartilhamento",
+      );
+      setScrConsulta(scrConsultaResponse?.termo.content || "");
+      setScrCompartilhamento(scrCompartilhamentoResponse?.termo.content || "");
       setTerms(content);
       hasLoadedTerms.current = true;
     } catch (error) {
@@ -120,8 +128,18 @@ const TermosScreen: React.FC = () => {
     if (!accepted) {
       return;
     }
-
-    setIsFinalized(true);
+    setIsLoading(true);
+    try {
+      await api.post("/v1/client/scr-consent", {
+        consulta: acceptedConsult,
+        compartilhamento: acceptedShare,
+      });
+      setIsFinalized(true);
+    } catch (error) {
+      return error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const completeRegistration = async () => {
@@ -269,22 +287,31 @@ const TermosScreen: React.FC = () => {
         <View style={{ marginHorizontal: 25, width: "100%" }}>
           <CreditProposalScreen terms={terms} />
         </View>
-        <TouchableOpacity
-          onPress={() => setAccepted((prev) => !prev)}
-          style={styles.checkboxRow}
-        >
-          <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
-            {accepted && (
-              <FontAwesome name="check" size={14} color={Colors.white} />
-            )}
-          </View>
-          <View>
-            <Text style={styles.checkboxText}>
-              Li e concordo com as condições acima.
-            </Text>
-            <Text style={styles.termsLink}>26x R$ 30,30 por dia</Text>
-          </View>
-        </TouchableOpacity>
+
+        <CheckboxTerms
+          accepted={accepted}
+          setAccepted={() => {
+            setAccepted(!accepted);
+            setAcceptedConsult(!acceptedConsult);
+            setAcceptedShare(!acceptedShare);
+          }}
+          content="Li e concordo com as condições acima."
+          link={true}
+        />
+        <CheckboxTerms
+          accepted={acceptedConsult}
+          setAccepted={setAcceptedConsult}
+          content={scrConsulta}
+          showReadMore={true}
+        />
+
+        <CheckboxTerms
+          accepted={acceptedShare}
+          setAccepted={setAcceptedShare}
+          content={scrCompartilhamento}
+          showReadMore={true}
+        />
+
         <ButtonComponent
           iconLeft={null}
           iconRight={"checkmark"}
@@ -320,33 +347,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "bold",
     width: 250,
-  },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    gap: 10,
-    padding: 10,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: Colors.green.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.green.primary,
-  },
-  checkboxText: {
-    color: Colors.black,
-    fontSize: 14,
-  },
-  termsLink: {
-    color: Colors.green.primary,
-    fontWeight: "bold",
   },
 
   propostaContainer: {

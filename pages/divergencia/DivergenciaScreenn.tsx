@@ -12,7 +12,7 @@ import api, { withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
 import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 50,
+    paddingBottom: Platform.OS === "ios" ? 80 : 80,
   },
   title: {
     fontSize: 20,

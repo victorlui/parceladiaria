@@ -33,13 +33,17 @@
         "AppStoreCountry": "br"
       },
       "bundleIdentifier": "br.com.parceladiaria",
-      "icon": "./assets/icons/ios-icon.png",
-      "buildNumber": "60"
+      "icon": {
+        "light": "./assets/icons/ios-icon/ios-icon-iOS-Default.png",
+        "dark": "./assets/icons/ios-icon/ios-icon-iOS-Dark.png",
+        "tinted": "./assets/icons/ios-icon/ios-icon-iOS-TintedDark.png",
+        "monochrome": "./assets/icons/ios-icon/ios-icon-iOS-ClearDark.png"
+      },
+      "buildNumber": "62"
     },
     "android": {
-      "versionCode": 59,
+      "versionCode": 61,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/android-icon-foreground.png",
         "backgroundColor": "#053E38"
       },
       "edgeToEdgeEnabled": true,
@@ -60,7 +64,10 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "br.com.parceladiaria",
@@ -77,7 +84,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icons/ios-icon.png",
+          "image": "./assets/icons/icon.png",
           "resizeMode": "cover",
           "backgroundColor": "#053E38"
         }
