@@ -1,8 +1,15 @@
+import { trackAppError } from "@/analytics/error-handler";
+import { AnalyticsService } from "@/analytics/analytics.service";
+import {
+  ANALYTICS_FLOWS,
+  EVENTS,
+  PRE_APPROVED_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import ChamadaVideoScreen from "@/components/pre_aprovado/chamada_video_screen";
 import TermsFinalScreen from "@/components/pre_aprovado/terms_final_screen";
 import { useAlerts } from "@/components/useAlert";
 import { useCheckStatus } from "@/hooks/useCheckStatus";
-import api from "@/services/api";
+import api, { withAnalytics } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { convertData } from "@/utils";
@@ -18,6 +25,13 @@ const PreAprovado: React.FC = () => {
   const { data: registerData, clean } = useRegisterStore();
   const [loadingAccept, setLoadingAccept] = useState(false);
   const { showSuccess, showError, AlertDisplay } = useAlerts();
+
+  const analyticsContext = {
+    flow: ANALYTICS_FLOWS.APP,
+    screen: "pre_aprovado_screen",
+    source: PRE_APPROVED_ANALYTICS_SOURCES.ACCEPT_TERMS,
+  } as const;
+
   if (redirectPath) {
     return <Redirect href={redirectPath as any} />;
   }
@@ -31,6 +45,14 @@ const PreAprovado: React.FC = () => {
       const state = rawState ? tratarEstado(rawState) : "";
 
       if (!ip || !city || !rawState || state === "Estado Inválido") {
+        trackAppError(new Error("Dados invalidos para aceite dos termos"), {
+          ...analyticsContext,
+          has_ip: Boolean(ip),
+          has_city: Boolean(city),
+          has_state: Boolean(rawState),
+          state_is_valid: state !== "Estado Inválido",
+        });
+
         showError(
           "Atenção",
           "Não foi possível aceitar os termos porque faltam cidade, estado ou IP. Faça login novamente para atualizar seus dados.",
@@ -46,7 +68,13 @@ const PreAprovado: React.FC = () => {
         sign_info_country: "BR",
       };
 
-      await api.post("v1/client/acept-term", payload);
+      await api.post(
+        "v1/client/acept-term",
+        payload,
+        withAnalytics(analyticsContext),
+      );
+
+      AnalyticsService.track(EVENTS.TERMS_ACCEPTED, analyticsContext);
       showSuccess(
         "Concluido!",
         "Termos aceitos com sucesso! Você será redirecionado para a página de login para finalizar o processo.",

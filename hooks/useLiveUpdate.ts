@@ -2,13 +2,26 @@ import * as Updates from "expo-updates";
 import { useEffect, useRef } from "react";
 import { Alert, AppState, AppStateStatus } from "react-native";
 
+import { AnalyticsService } from "@/analytics/analytics.service";
+
+// Global lock to prevent concurrent update operations
+let updateInProgress = false;
+
 export function useLiveUpdate() {
   const { isUpdatePending, isChecking, isDownloading } = Updates.useUpdates();
   const alertShown = useRef(false);
   const lastChecked = useRef<number>(0);
+  const isMountedRef = useRef(true);
 
   // Guardamos o status atualizado em um Ref
   const statusRef = useRef({ isChecking, isDownloading, isUpdatePending });
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     statusRef.current = { isChecking, isDownloading, isUpdatePending };
@@ -31,7 +44,21 @@ export function useLiveUpdate() {
           {
             text: "Atualizar Agora",
             onPress: async () => {
-              await Updates.reloadAsync();
+              if (updateInProgress) return;
+              updateInProgress = true;
+
+              try {
+                await Updates.reloadAsync();
+              } catch (error) {
+                AnalyticsService.error(
+                  error instanceof Error
+                    ? error
+                    : new Error(String(error)),
+                  { source: "useLiveUpdate", action: "reload" },
+                );
+              } finally {
+                updateInProgress = false;
+              }
             },
           },
         ],
@@ -42,10 +69,12 @@ export function useLiveUpdate() {
 
   // 2. Controle de checagem inteligente (Intervalo + AppState)
   useEffect(() => {
-    const CHECK_INTERVAL_MS = 1000 * 30; // 5 minutos
+    const CHECK_INTERVAL_MS = 1000 * 30; // 30 segundos
 
     async function fetchUpdate() {
+      if (!isMountedRef.current) return;
       if (AppState.currentState !== "active") return;
+      if (updateInProgress) return;
 
       if (__DEV__ || !Updates.isEnabled) {
         return;
@@ -60,13 +89,28 @@ export function useLiveUpdate() {
         // Atualiza o timestamp imediatamente para evitar que múltiplos gatilhos rápidos disparem juntos
         lastChecked.current = Date.now();
 
+        AnalyticsService.track("Checking update", {
+          source: "useLiveUpdate",
+        });
+
         const update = await Updates.checkForUpdateAsync();
 
+        if (!isMountedRef.current) return;
+
         if (update.isAvailable) {
+          AnalyticsService.track("Update available", {
+            source: "useLiveUpdate",
+          });
+
           await Updates.fetchUpdateAsync();
         }
       } catch (error) {
         console.log("Erro no LiveUpdate:", error);
+
+        AnalyticsService.error(
+          error instanceof Error ? error : new Error(String(error)),
+          { source: "useLiveUpdate", action: "checkUpdate" },
+        );
       }
     }
 

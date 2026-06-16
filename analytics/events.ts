@@ -5,6 +5,7 @@ export const EVENTS = {
   SCREEN_VIEW: "visualizacao_tela",
   MODAL_OPENED: "modal_aberto",
   MODAL_CLOSED: "modal_fechado",
+  TERMS_ACCEPTED: "termos_finais_aceitos",
 
   DOCUMENT_SENT: "documento_enviado",
   SELFIE_SENT: "selfie_enviada",
@@ -95,6 +96,10 @@ export const DIVERGENCIA_ANALYTICS_SOURCES = {
   FINALIZE_CLIENT: "divergencia_finalizar_cliente",
   FINALIZE_CLIENT_INFO: "divergencia_finalizar_dados_cliente",
   EXPIRED_DOCUMENT_SUBMIT: "divergencia_proposta_expirada_enviar_documento",
+} as const;
+
+export const PRE_APPROVED_ANALYTICS_SOURCES = {
+  ACCEPT_TERMS: "pre_aprovado_aceitar_termos",
 } as const;
 
 export const TAB_SCREENS = {

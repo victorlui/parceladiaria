@@ -36,8 +36,7 @@
       "icon": {
         "light": "./assets/icons/ios-icon/ios-icon-iOS-Default.png",
         "dark": "./assets/icons/ios-icon/ios-icon-iOS-Dark.png",
-        "tinted": "./assets/icons/ios-icon/ios-icon-iOS-TintedDark.png",
-        "monochrome": "./assets/icons/ios-icon/ios-icon-iOS-ClearDark.png"
+        "tinted": "./assets/icons/ios-icon/ios-icon-iOS-TintedDark.png"
       },
       "buildNumber": "62"
     },
@@ -64,10 +63,7 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "package": "br.com.parceladiaria",
