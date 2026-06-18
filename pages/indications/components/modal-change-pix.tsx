@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { Modal, Text, TextInput, View } from "react-native";
 import { validateEmail, validatePhone } from "@/utils/validation";
 import { useAlerts } from "@/components/useAlert";
-import api from "@/services/api";
+import { api } from "@/services/api";
 
 type Props = {
   visible: boolean;

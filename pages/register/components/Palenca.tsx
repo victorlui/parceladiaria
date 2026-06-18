@@ -1,5 +1,10 @@
+import { trackAppError } from "@/analytics/error-handler";
+import {
+  ANALYTICS_FLOWS,
+  REGISTER_ANALYTICS_SOURCES,
+} from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
 import { router, useFocusEffect } from "expo-router";
@@ -61,6 +66,10 @@ export default function Palenca() {
             router.replace("/(register)/termos");
           }
         } catch (_e) {
+          trackAppError(new Error("Erro ao carregar settings Palenca"), {
+            flow: ANALYTICS_FLOWS.REGISTER,
+            source: REGISTER_ANALYTICS_SOURCES.REGISTER_PALENCA_INIT,
+          });
           return;
         } finally {
           setIsLoading(false);
@@ -78,6 +87,10 @@ export default function Palenca() {
       const config = response.data?.data || response.data;
       setPalencaConfig(config);
     } catch (_e) {
+      trackAppError(new Error("Erro ao inicializar Palenca"), {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.REGISTER_PALENCA_INIT,
+      });
       return;
     } finally {
       setIsLoading(false);

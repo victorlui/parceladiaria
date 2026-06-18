@@ -1,7 +1,7 @@
 import { ANALYTICS_FLOWS } from "@/analytics/events";
 import { useModalTracking } from "@/analytics/hooks/useModalTracking";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";

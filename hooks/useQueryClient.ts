@@ -1,12 +1,10 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useQuery } from "@tanstack/react-query";
 
-export function useQueryDataClient(
-  analyticsContext?: PostHogEventProperties,
-) {
+export function useQueryDataClient(analyticsContext?: PostHogEventProperties) {
   return useQuery({
     queryKey: ["client"],
     queryFn: async () => {

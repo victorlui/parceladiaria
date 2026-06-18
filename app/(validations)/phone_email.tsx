@@ -3,7 +3,7 @@ import InputComponent from "@/components/ui/Input";
 import ModalOTP from "@/components/ui/ModalOTP";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { validateEmail } from "@/utils/validation";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";

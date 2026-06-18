@@ -6,7 +6,7 @@ import {
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
 import { CPFSchema } from "@/lib/cpf_validation";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { checkCPF as checkCPFService } from "@/services/check-cpf";
 import { login } from "@/services/login";
 import { useAuthStore } from "@/store/auth";
@@ -96,6 +96,8 @@ export function useLoginHook() {
 
           setData({
             ...data?.data,
+            nome: data?.data?.nome,
+            email: data?.data?.email,
             cpf: data?.data?.cpf,
             primeira_analise: response?.data?.data?.data?.primeira_analise ?? 0,
           });

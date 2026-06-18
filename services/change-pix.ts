@@ -1,4 +1,4 @@
-import api from "./api";
+import { api } from "@/services/api";
 
 export async function changePixKey(pixKey: string, type: string) {
   const normalizedType = type === "random" ? "evp" : type;

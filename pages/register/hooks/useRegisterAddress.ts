@@ -1,4 +1,4 @@
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import React from "react";
 import { TextInput } from "react-native";

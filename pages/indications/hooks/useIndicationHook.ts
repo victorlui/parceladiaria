@@ -1,4 +1,4 @@
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { getLoans } from "@/services/loans";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";

@@ -2,7 +2,7 @@ import ChangeKey from "@/components/renew/change-key";
 import LoadingDots from "@/components/ui/LoadingDots";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { changePixKey } from "@/services/change-pix";
 import { formatCurrencyBRL } from "@/utils/formats";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";

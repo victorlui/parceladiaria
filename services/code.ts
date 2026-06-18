@@ -1,8 +1,8 @@
-import api from "./api";
+import { api } from "@/services/api";
 
 export async function sendCode(
   phone: string,
-  method: string
+  method: string,
 ): Promise<{ data: { phone: string }; message: string; success: boolean }> {
   try {
     const response = await api.post("/auth/otp/generate", {
@@ -20,7 +20,7 @@ export async function sendCode(
 //verificar código
 export async function checkOTP(
   phone: string,
-  code: string
+  code: string,
 ): Promise<
   { data: { otp: string }; message: string; success: boolean } | undefined
 > {

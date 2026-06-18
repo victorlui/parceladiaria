@@ -7,7 +7,7 @@ import {
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { AlertCircle, Landmark, Lock, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {

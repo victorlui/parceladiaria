@@ -9,7 +9,7 @@ import InputComponent from "@/components/ui/Input";
 import LogoComponent from "@/components/ui/Logo";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useVerificationStore } from "@/store/validation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";

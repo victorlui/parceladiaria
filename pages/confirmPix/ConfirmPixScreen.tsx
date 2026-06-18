@@ -1,7 +1,7 @@
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useQueryDataClient } from "@/hooks/useQueryClient";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useConfirmPixStore } from "@/store/confirm-pix";
 import { convertData } from "@/utils";

@@ -1,5 +1,5 @@
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
-import api from "./api";
 
 interface TermsAcceptanceData {
   sign_info_date: string;

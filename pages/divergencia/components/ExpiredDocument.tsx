@@ -1,8 +1,10 @@
 import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   DIVERGENCIA_ANALYTICS_SOURCES,
   DIVERGENCIA_SCREENS,
+  EVENTS,
 } from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
@@ -137,6 +139,12 @@ export default function ExpiredDocument() {
         },
       });
 
+      AnalyticsService.track(EVENTS.DOCUMENT_SENT, {
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.EXPIRED_DOCUMENT_SUBMIT,
+        update_key: updateKey,
+      });
+
       showSuccess(
         "Sucesso",
         "Arquivo enviado com sucesso para nova análise.",
@@ -146,6 +154,11 @@ export default function ExpiredDocument() {
         },
       );
     } catch (error: any) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.EXPIRED_DOCUMENT_SUBMIT,
+        update_key: updateKey,
+      });
       showError(
         "Erro",
         error?.message || "Não foi possível enviar o arquivo. Tente novamente.",

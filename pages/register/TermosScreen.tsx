@@ -1,13 +1,15 @@
 import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
+  EVENTS,
   REGISTER_ANALYTICS_SOURCES,
   REGISTER_SCREENS,
 } from "@/analytics/events";
 import CreditProposalScreen from "@/components/CreditProposal";
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf, maskPhone } from "@/utils/mask";
 import React, { useCallback, useRef, useState } from "react";
@@ -136,6 +138,11 @@ const TermosScreen: React.FC = () => {
       });
       setIsFinalized(true);
     } catch (error) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.TERMS_LOAD,
+        register_step: step,
+      });
       return error;
     } finally {
       setIsLoading(false);
@@ -201,6 +208,14 @@ const TermosScreen: React.FC = () => {
         };
         const token = useRegisterStore.getState().token || "";
         await useAuthStore.getState().login(token, user);
+
+        AnalyticsService.track(EVENTS.TERMS_ACCEPTED, {
+          flow: ANALYTICS_FLOWS.REGISTER,
+          source: REGISTER_ANALYTICS_SOURCES.TERMS_COMPLETE_UPDATE,
+          register_step: step,
+          result: "client",
+        });
+
         router.replace("/(tabs)/home");
       } else {
         const status = dataClient?.status;
@@ -231,6 +246,11 @@ const TermosScreen: React.FC = () => {
         }
       }
     } catch (error) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.TERMS_COMPLETE_UPDATE,
+        register_step: step,
+      });
       useRegisterStore.getState().clean();
       router.replace("/login");
     } finally {

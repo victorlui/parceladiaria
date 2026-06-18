@@ -1,4 +1,4 @@
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { useFocusEffect } from "expo-router";

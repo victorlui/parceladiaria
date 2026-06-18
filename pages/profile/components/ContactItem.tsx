@@ -1,7 +1,7 @@
 import ModalOTP from "@/components/ui/ModalOTP";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { formatCelular } from "@/utils/formats";
 import { Ionicons } from "@expo/vector-icons";

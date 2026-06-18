@@ -12,7 +12,7 @@ import {
 import PixKeySelect from "./PixKeySelect";
 import { Colors } from "@/constants/Colors";
 import ButtonModal from "./button-modal";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAlerts } from "../useAlert";
 import ModalOtp from "./modal-otp";
 

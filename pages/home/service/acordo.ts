@@ -1,6 +1,6 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 
 export async function getAcordo(analyticsContext?: PostHogEventProperties) {
   try {

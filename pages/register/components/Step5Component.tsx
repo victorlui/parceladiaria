@@ -2,7 +2,7 @@ import ModalTerms from "@/components/config/modal-terms";
 import ButtonComponent from "@/components/ui/Button";
 import RingLoader from "@/components/ui/RingLoader";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { formatCurrency } from "@/utils/formats";
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";

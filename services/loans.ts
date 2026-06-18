@@ -1,10 +1,8 @@
-import api from "./api";
-import { withAnalytics } from "./api";
+import { api, withAnalytics } from "@/services/api";
+import { QRCodeData } from "@/store/qrcode";
+import type { PostHogEventProperties } from "@posthog/core";
 import { router } from "expo-router";
 import { Alert } from "react-native";
-import { QRCodeData } from "@/store/qrcode";
-import { errorHandler } from "@/utils";
-import type { PostHogEventProperties } from "@posthog/core";
 
 export type Loan = {
   id: number;

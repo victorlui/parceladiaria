@@ -1,4 +1,5 @@
 import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   REGISTER_ANALYTICS_SOURCES,
@@ -7,7 +8,7 @@ import {
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
 import { useIsFocused } from "@react-navigation/native";
@@ -187,6 +188,11 @@ const OpenFinanceScreen: React.FC = () => {
       if (isLeaving.current) return;
       router.replace(nextRoute);
     } catch (error) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_NEXT_STEP,
+        register_step: step,
+      });
       hasGoneToTerms.current = false;
       console.log("goToNextStep error", error);
     }
@@ -220,6 +226,11 @@ const OpenFinanceScreen: React.FC = () => {
         setFlowState("idle");
       }
     } catch (error: any) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CONNECT,
+        register_step: step,
+      });
       console.log("connect klavi error", error?.response ?? error);
 
       setFlowState("idle");
@@ -269,6 +280,11 @@ const OpenFinanceScreen: React.FC = () => {
         setFlowState("denied");
       }
     } catch (error: any) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CHECK_STATUS,
+        register_step: step,
+      });
       console.log("checkAnalysisStatus error", error?.response ?? error);
 
       if (error?.response?.status === 401) {
@@ -299,7 +315,8 @@ const OpenFinanceScreen: React.FC = () => {
             "v1/register/settings",
             withAnalytics({
               flow: ANALYTICS_FLOWS.REGISTER,
-              source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_INITIALIZE_SETTINGS,
+              source:
+                REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_INITIALIZE_SETTINGS,
               register_step: step,
             }),
           );

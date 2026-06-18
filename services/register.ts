@@ -1,7 +1,7 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
+import { api } from "@/services/api";
 import { Etapas } from "@/utils";
-import api, { withAnalytics } from "./api";
 
 // etapa para criar a senha
 export async function registerService(
@@ -72,13 +72,8 @@ export async function updateUserService({
   success: boolean;
   etapa: Etapas;
 }> {
-  console.log("updateUserService", request);
   try {
-    const { data } = await api.put(
-      "/v1/client/update",
-      request,
-      withAnalytics(analyticsContext ?? {}),
-    );
+    const { data } = await api.put("/v1/client/update", request);
     return { ...data, success: true, etapa: request.etapa };
   } catch (error: any) {
     if (error.response) {

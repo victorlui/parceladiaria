@@ -3,7 +3,7 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { uploadRawFileToSignedUrl } from "@/hooks/useUploadDocument";
 import FaceCaptureWebView from "@/pages/face/components/FaceCaptureWebView";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { maskCpf } from "@/utils/mask";

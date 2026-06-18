@@ -1,10 +1,13 @@
+import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   DIVERGENCIA_ANALYTICS_SOURCES,
+  EVENTS,
 } from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
 import { ApiUserData } from "@/interfaces/login_inteface";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { updateUserService } from "@/services/register";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
@@ -98,6 +101,11 @@ export function useFinalizeDivergenciaFlow() {
       const dataClient = responseData || response.data?.data || response.data;
 
       if (dataClient?.type === "client") {
+        AnalyticsService.track(EVENTS.OFFER_CREATED, {
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
+        });
+
         const infoResponse = await api.get(
           "/v1/client/data/info",
           withAnalytics({
@@ -166,6 +174,11 @@ export function useFinalizeDivergenciaFlow() {
       });
     } catch (error: any) {
       if (error?.response?.status === 401) return;
+
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
+      });
 
       showError(
         "Erro",

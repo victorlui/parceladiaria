@@ -13,7 +13,7 @@ import { Header } from "./header-modal";
 import InputComponent from "../ui/Input";
 import ButtonModal from "./button-modal";
 import { useAlerts } from "../useAlert";
-import api from "@/services/api";
+import { api } from "@/services/api";
 
 interface Props {
   data: { data: { phone: string }; message: string } | null;

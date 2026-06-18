@@ -1,5 +1,5 @@
-import { trackAppError } from "@/analytics/error-handler";
 import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   EVENTS,
@@ -9,7 +9,7 @@ import ChamadaVideoScreen from "@/components/pre_aprovado/chamada_video_screen";
 import TermsFinalScreen from "@/components/pre_aprovado/terms_final_screen";
 import { useAlerts } from "@/components/useAlert";
 import { useCheckStatus } from "@/hooks/useCheckStatus";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { convertData } from "@/utils";

@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 
-import api from "@/services/api";
+import { api } from "@/services/api";
 import TermsFinalScreen from "./terms_final_screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/Colors";

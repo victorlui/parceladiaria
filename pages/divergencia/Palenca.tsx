@@ -5,7 +5,7 @@ import {
   DIVERGENCIA_SCREENS,
 } from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import React, { useEffect, useState } from "react";
 import {

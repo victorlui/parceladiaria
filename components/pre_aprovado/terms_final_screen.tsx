@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Buffer } from "buffer";
 import { File, Paths } from "expo-file-system";

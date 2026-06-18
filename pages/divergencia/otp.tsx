@@ -10,7 +10,7 @@ import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
 import { useFinalizeDivergenciaFlow } from "@/pages/divergencia/hook/useFinalizeDivergenciaFlow";
 import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { maskPhone } from "@/utils/mask";
 import { Ionicons } from "@expo/vector-icons";

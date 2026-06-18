@@ -1,10 +1,9 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
 import { ApiUserResponse } from "@/interfaces/login_inteface";
-import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
 import { useRegisterStore } from "@/store/register_new";
-import api, { withAnalytics } from "./api";
+import { api, withAnalytics } from "./api";
 
 export async function login(
   cpf: string,
@@ -12,10 +11,8 @@ export async function login(
   analyticsContext?: PostHogEventProperties,
 ): Promise<ApiUserResponse> {
   const pushToken = useNotificationsStore.getState().pushToken;
-  const { register } = useAuthStore.getState();
 
   try {
-    register(null, null);
     useRegisterStore.getState().setToken(null);
 
     const response = await api.post(

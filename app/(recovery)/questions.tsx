@@ -1,7 +1,7 @@
 import ButtonComponent from "@/components/ui/Button";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { QuestionsPayload, useQuestionsStore } from "@/store/questions";
 import { useRegisterStore } from "@/store/register_new";

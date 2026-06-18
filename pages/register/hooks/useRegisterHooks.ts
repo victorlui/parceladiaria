@@ -1,9 +1,10 @@
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   REGISTER_ANALYTICS_SOURCES,
 } from "@/analytics/events";
 import { useAlerts } from "@/components/useAlert";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { checkCPF } from "@/services/check-cpf";
 import { useRegisterStore } from "@/store/register_new";
 import { Etapas } from "@/utils";
@@ -120,6 +121,11 @@ export function useRegisterHooks() {
         return;
       }
     } catch (error: any) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP1_SEARCH_CPF,
+        register_step: step,
+      });
       if (
         error.response &&
         error.response.data &&
@@ -220,6 +226,11 @@ export function useRegisterHooks() {
       setStep(3);
       return;
     } catch (error: any) {
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP3_REGISTER,
+        register_step: step,
+      });
       if (
         error.response &&
         error.response.data &&
@@ -301,6 +312,11 @@ export function useRegisterHooks() {
       setStep(nextStep);
       return;
     } catch {
+      trackAppError(new Error("Erro ao continuar step4"), {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP4_PROFESSION,
+        register_step: step,
+      });
       showError("Atenção", "Erro ao continuar");
     } finally {
       setIsLoading(false);
@@ -324,6 +340,11 @@ export function useRegisterHooks() {
       setStep(10);
       return;
     } catch {
+      trackAppError(new Error("Erro ao continuar step CNPJ"), {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP_CNPJ,
+        register_step: step,
+      });
       showError("Atenção", "Erro ao continuar");
     } finally {
       setIsLoading(false);
@@ -347,6 +368,11 @@ export function useRegisterHooks() {
       setStep(5);
       return;
     } catch {
+      trackAppError(new Error("Erro ao continuar tipo negocio"), {
+        flow: ANALYTICS_FLOWS.REGISTER,
+        source: REGISTER_ANALYTICS_SOURCES.STEP_BUSINESS_TYPE,
+        register_step: step,
+      });
       showError("Atenção", "Erro ao continuar");
     } finally {
       setIsLoading(false);

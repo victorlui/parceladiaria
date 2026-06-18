@@ -2,7 +2,7 @@ import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
 import { uploadRawFile } from "@/hooks/useUploadDocument";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
 import { Etapas } from "@/utils";

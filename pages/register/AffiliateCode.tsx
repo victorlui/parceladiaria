@@ -2,7 +2,7 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";

@@ -8,7 +8,7 @@ import ModalTerms from "@/components/config/modal-terms";
 import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import { Device } from "@/interfaces/devices";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { changePassword } from "@/services/loans";
 import { useAuthStore } from "@/store/auth";
 import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";

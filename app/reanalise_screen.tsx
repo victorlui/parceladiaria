@@ -3,7 +3,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { Colors } from "@/constants/Colors";
 import { useCheckStatus } from "@/hooks/useCheckStatus";
 import { useDisableBackHandler } from "@/hooks/useDisabledBackHandler";
-import api from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
 import { FontAwesome5 } from "@expo/vector-icons";

@@ -1,14 +1,16 @@
 import { AnalyticsService } from "@/analytics/analytics.service";
+import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
   DIVERGENCIA_ANALYTICS_SOURCES,
   DIVERGENCIA_SCREENS,
+  EVENTS,
 } from "@/analytics/events";
 import ButtonComponent from "@/components/ui/Button";
 import ButtonChat from "@/components/ui/ButtonChat";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import api, { withAnalytics } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
 import React, { useEffect, useMemo, useState } from "react";
@@ -86,6 +88,11 @@ export default function DivergenciaScreenn() {
         analyticsFlow: ANALYTICS_FLOWS.DIVERGENCIA,
         analyticsSource: DIVERGENCIA_ANALYTICS_SOURCES.UPLOAD_DOCUMENT,
       });
+      AnalyticsService.track(EVENTS.DOCUMENT_SENT, {
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.UPLOAD_DOCUMENT,
+        divergence_item: item,
+      });
       setSelectedFiles((prev) => ({
         ...prev,
         [item]: { key: url, selected: selected! },
@@ -93,6 +100,11 @@ export default function DivergenciaScreenn() {
       setItem("");
     } catch (error: any) {
       if (error?.response?.status === 401) return;
+      trackAppError(error, {
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.UPLOAD_DOCUMENT,
+        divergence_item: item,
+      });
     } finally {
       setLoading(false);
     }

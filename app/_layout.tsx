@@ -29,7 +29,7 @@ export default function RootLayout() {
         host: process.env.EXPO_PUBLIC_URL_POSTHOG,
         disabled: false,
         enablePersistSessionIdAcrossRestart: true,
-        enableSessionReplay: true,
+        enableSessionReplay: false,
         sessionReplayConfig: {
           maskAllImages: false,
           maskAllTextInputs: false,
@@ -56,12 +56,13 @@ export default function RootLayout() {
               fullScreenGestureEnabled: true,
             }}
           >
+            <Stack.Screen name="chat" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(app)" />
             <Stack.Screen name="login" />
             <Stack.Screen name="index" />
             <Stack.Screen name="insert-password" />
-            <Stack.Screen name="chat" />
+
             <Stack.Screen name="(register)" />
             <Stack.Screen name="verification" />
             <Stack.Screen name="face_recognition" />

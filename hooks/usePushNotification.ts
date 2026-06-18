@@ -24,22 +24,39 @@ export function usePushNotification(options?: { disabled?: boolean }) {
   const isAlertShown = useRef(false);
   const disabled = options?.disabled;
 
-  // Lida com o clique na notificação e o redirecionamento
+  // ============================================
+  // 🎯 LIDA COM CLIQUE EM NOTIFICAÇÃO
+  // ============================================
   useEffect(() => {
     const responseListener =
       Notification.addNotificationResponseReceivedListener(() => {
-        const { hydrated } = useRegisterStore.getState();
-        const { isLoading } = useAuthStore.getState();
-        const isAppReady = !isLoading && hydrated;
+        console.log("[NOTIF] 📲 Usuário clicou em notificação");
+
+        // Verifica estado de hidratação de AMBAS as stores
+        const registerState = useRegisterStore.getState();
+        const authState = useAuthStore.getState();
+        const notificationsState = useNotificationsStore.getState();
+
+        const isAppReady =
+          !authState.isLoading &&
+          registerState.hydrated;
+
+        console.log("[NOTIF] Estado da app:", {
+          authLoading: authState.isLoading,
+          registerHydrated: registerState.hydrated,
+          isAppReady,
+        });
 
         if (isAppReady) {
+          console.log("[NOTIF] ✅ App pronta, navegando para /login");
           // Pequeno delay para garantir que a navegação e o Zustand não entrem em conflito
           setTimeout(() => {
             router.push("/login");
           }, 100);
         } else {
+          console.log("[NOTIF] ⏳ App ainda carregando, guardando pending route");
           // Guarda a rota para o redirecionamento pós-carregamento no index.tsx
-          useNotificationsStore.getState().setPendingRoute("/login");
+          notificationsState.setPendingRoute("/login");
         }
       });
 
@@ -48,8 +65,12 @@ export function usePushNotification(options?: { disabled?: boolean }) {
     };
   }, []);
 
+  // ============================================
+  // 📱 REGISTRA TOKEN DE PUSH
+  // ============================================
   useEffect(() => {
     if (disabled) {
+      console.log("[NOTIF] Push notifications desabilitado");
       return;
     }
 
@@ -57,12 +78,15 @@ export function usePushNotification(options?: { disabled?: boolean }) {
       // Se já estamos mostrando um alerta, não faça nada para evitar loops
       if (isAlertShown.current) return;
 
+      console.log("[NOTIF] Verificando permissões de notificação...");
+
       const { setPushToken } = useNotificationsStore.getState();
       const { status: existingStatus } =
         await Notification.getPermissionsAsync();
       let finalStatus = existingStatus;
 
       if (existingStatus !== "granted") {
+        console.log("[NOTIF] Permissão não concedida, solicitando...");
         const { status } = await Notification.requestPermissionsAsync();
         finalStatus = status;
       }
@@ -96,6 +120,7 @@ export function usePushNotification(options?: { disabled?: boolean }) {
       const isDev = __DEV__;
 
       try {
+        console.log("[NOTIF] Obtendo token Expo Push...");
         const token = (
           await Notification.getExpoPushTokenAsync(
             isDev
@@ -107,8 +132,11 @@ export function usePushNotification(options?: { disabled?: boolean }) {
                 },
           )
         ).data;
+
+        console.log("[NOTIF] ✅ Token obtido:", token.substring(0, 20) + "...");
         setPushToken(token);
       } catch (error) {
+        console.error("[NOTIF] ❌ Erro ao obter token:", error);
         return error;
       }
     };
@@ -120,6 +148,7 @@ export function usePushNotification(options?: { disabled?: boolean }) {
         appState.current.match(/inactive|background/) &&
         nextAppState === "active"
       ) {
+        console.log("[NOTIF] App voltou para primeiro plano, verificando token...");
         checkAndRegister();
       }
 

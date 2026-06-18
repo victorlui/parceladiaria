@@ -79,6 +79,7 @@ export const REGISTER_ANALYTICS_SOURCES = {
     "cadastro_open_finance_inicializar_klavi_motorista",
   OPEN_FINANCE_INITIALIZE_KLAVI_BUSINESS:
     "cadastro_open_finance_inicializar_klavi_comerciante",
+  REGISTER_PALENCA_INIT: "cadastro_palenca_inicializar",
 } as const;
 
 export const DIVERGENCIA_ANALYTICS_SOURCES = {

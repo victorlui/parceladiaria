@@ -1,6 +1,6 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
-import api, { withAnalytics } from "./api";
+import { api, withAnalytics } from "./api";
 
 export async function checkCPF(
   cpf: string,
