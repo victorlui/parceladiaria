@@ -9,6 +9,7 @@ import { useCheckStatus } from "@/hooks/useCheckStatus";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
+import { convertData } from "@/utils";
 import * as Network from "expo-network";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -47,14 +48,12 @@ const PreAprovado: React.FC = () => {
       }
 
       const payload = {
-        // sign_info_date: convertData(),
-        // sign_info_ip_address: ip,
-        // sign_info_city: city,
-        // sign_info_state: state,
+        sign_info_date: convertData(),
+        sign_info_ip_address: ip,
+        sign_info_city: city,
+        sign_info_state: state,
         sign_info_country: "BR",
       };
-
-      console.log("payload", payload);
 
       await api.post("v1/client/acept-term", payload);
 
