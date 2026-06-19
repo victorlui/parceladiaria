@@ -190,7 +190,7 @@ const RenewScreen: React.FC = () => {
                 onPress={() => router.push("/renew_list")}
               >
                 <Ionicons name="refresh" size={18} color="#FFF" />
-                <Text style={styles.renewButtonText}>Renovar Agora</Text>
+                <Text style={styles.renewButtonText}>Consultar Valores</Text>
               </TouchableOpacity>
             ) : (
               <View style={styles.disabledButton}>

@@ -35,6 +35,7 @@ export const API_ALERT_TYPES = {
   BLOCKED: "bloqueado",
   FORBIDDEN: "proibido",
   RATE_LIMIT: "limite_requisicoes",
+  VALIDATION_ERROR: "erro_validacao",
 } as const;
 
 export const LOGIN_ANALYTICS_SOURCES = {

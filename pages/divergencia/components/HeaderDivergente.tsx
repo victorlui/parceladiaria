@@ -4,7 +4,13 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 
-export default function HeaderDivergente() {
+type Props = {
+  isPrimeiraAnalise: boolean;
+  data?: any;
+};
+
+export default function HeaderDivergente(props: Props) {
+  const { isPrimeiraAnalise, data } = props;
   const checkProgress = 0.75;
   const checkRingSize = 64;
   const checkRingStrokeWidth = 6;
@@ -12,6 +18,24 @@ export default function HeaderDivergente() {
   const checkRingCircumference = 2 * Math.PI * checkRingRadius;
   const checkRingDashoffset =
     checkRingCircumference * (1 - Math.max(0, Math.min(1, checkProgress)));
+
+  if (!isPrimeiraAnalise) {
+    return (
+      <>
+        <Text style={styles.title}>Documentos Divergentes</Text>
+        <Text style={styles.subtitle}>
+          Alguns documentos precisam ser reenviados para concluir a validação.
+          Verifique os itens abaixo e envie novamente.
+        </Text>
+
+        <View>
+          <Text style={styles.observacoesTitle}>Observações</Text>
+          <Text style={styles.observacoesText}>{data?.observacoes}</Text>
+        </View>
+      </>
+    );
+  }
+
   return (
     <View style={styles.headerCard}>
       <View style={styles.headerPill}>
@@ -70,6 +94,33 @@ export default function HeaderDivergente() {
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#11181C",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  observacoesContainer: {
+    marginVertical: 14,
+  },
+  observacoesTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#11181C",
+  },
+  observacoesText: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 20,
+    marginVertical: 12,
+  },
+
   headerCard: {
     backgroundColor: Colors.white,
     borderRadius: 16,

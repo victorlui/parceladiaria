@@ -1,6 +1,9 @@
 import { Selected } from "../components/SendDocument";
 
-type SelectedFileMap = Record<string, { key: string; selected?: Selected }>;
+export type SelectedFileMap = Record<
+  string,
+  string | { key: string; selected?: Selected } | undefined
+>;
 
 export function safeParseArray(str: any) {
   if (!str) return [];
@@ -20,10 +23,19 @@ export const getInitialSelectedForItem = (
   selectedFiles: SelectedFileMap,
 ): Selected | null => {
   const entry = selectedFiles[documentKey];
-  if (entry?.selected) return entry.selected;
-  if (!entry?.key) return null;
+  console.log("selectedFiles", entry);
+  console.log("documentKey", documentKey);
 
-  const uri = entry.key;
+  let uri: string | undefined;
+  if (typeof entry === "string" && entry.trim()) {
+    uri = entry.trim();
+  } else if (entry && typeof entry === "object") {
+    if (entry.selected) return entry.selected;
+    if (entry.key) uri = entry.key;
+  }
+
+  if (!uri) return null;
+
   const cleanUri = uri.split("?")[0].toLowerCase();
   const isPdf = cleanUri.endsWith(".pdf");
   const isVideo =

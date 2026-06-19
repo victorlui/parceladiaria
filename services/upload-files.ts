@@ -1,47 +1,13 @@
 import { api } from "@/services/api";
 
-export const solicitarLinkS3 = async (
-  filename: any,
-  contentType: any,
-  token: any,
-) => {
+export const solicitarLinkS3 = async (filename: any, contentType: any) => {
   try {
-    const response = await api.post(
-      "/v1/generate-presigned-url",
-      {
-        filename: filename,
-        content_type: contentType,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const response = await api.post("/v1/generate-presigned-url", {
+      filename: filename,
+      content_type: contentType,
+    });
 
     return response.data;
-  } catch (error: any) {
-    throw error;
-  }
-};
-
-export const uploadArquivoParaS3 = async (
-  uploadUrl: any,
-  arquivo: any,
-  contentType: any,
-) => {
-  try {
-    const response = await fetch(uploadUrl, {
-      method: "PUT",
-      body: arquivo,
-      headers: {
-        "Content-Type": contentType,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Upload falhou com status: ${response.status}`);
-    }
-    return true;
   } catch (error: any) {
     throw error;
   }

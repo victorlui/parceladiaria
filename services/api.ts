@@ -332,6 +332,27 @@ function showRateLimitAlert(message?: string) {
   ]);
 }
 
+function showValidationErrorAlert(validationErrors?: Record<string, string[]>) {
+  const formattedErrors = validationErrors
+    ? Object.entries(validationErrors)
+        .map(([field, errors]) => `• ${field}: ${errors.join(", ")}`)
+        .join("\n")
+    : "Verifique os dados enviados e tente novamente.";
+
+  trackApiAlertShown(
+    API_ALERT_TYPES.VALIDATION_ERROR,
+    "Dados incompletos",
+    formattedErrors,
+  );
+
+  Alert.alert(
+    "Dados incompletos",
+    "Não foi possível concluir a operação. Faltam informações obrigatórias:\n\n" +
+      formattedErrors,
+    [{ text: "OK", onPress: () => {} }],
+  );
+}
+
 function getBlockedReasonFromErro(erro?: string): string | undefined {
   if (!erro) return undefined;
 
@@ -437,6 +458,8 @@ api.interceptors.response.use(
       `[API] ❌ RESPONSE ERROR: ${error.response?.status} ${originalRequest?.url}`,
     );
 
+    console.log("error", error.response);
+
     const status = error.response?.status;
     const message = error.response?.data?.message;
     const blockMessage =
@@ -485,8 +508,19 @@ api.interceptors.response.use(
     if (status === 403) {
       const blockedReason = getBlockedReasonFromErro(blockMessage);
 
+      const validationErrors = error.response?.data?.data;
+
+      const hasValidationErrors =
+        message === "Validation Error." &&
+        validationErrors &&
+        typeof validationErrors === "object" &&
+        !Array.isArray(validationErrors) &&
+        Object.keys(validationErrors).length > 0;
+
       if (blockedReason) {
         showBlockedAlert(blockedReason);
+      } else if (hasValidationErrors) {
+        showValidationErrorAlert(validationErrors as Record<string, string[]>);
       } else if (blockMessage || message !== "Validation Error.") {
         showForbiddenAlert(blockMessage ?? message);
       } else if (!blockMessage && message === "Validation Error.") {

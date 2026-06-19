@@ -1,19 +1,14 @@
-import { AnalyticsService } from "@/analytics/analytics.service";
-import { trackAppError } from "@/analytics/error-handler";
 import {
   ANALYTICS_FLOWS,
-  EVENTS,
   PRE_APPROVED_ANALYTICS_SOURCES,
 } from "@/analytics/events";
 import ChamadaVideoScreen from "@/components/pre_aprovado/chamada_video_screen";
 import TermsFinalScreen from "@/components/pre_aprovado/terms_final_screen";
 import { useAlerts } from "@/components/useAlert";
 import { useCheckStatus } from "@/hooks/useCheckStatus";
-import { api, withAnalytics } from "@/services/api";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useRegisterStore } from "@/store/register_new";
-import { convertData } from "@/utils";
-import { tratarEstado } from "@/utils/validation";
 import * as Network from "expo-network";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -41,18 +36,9 @@ const PreAprovado: React.FC = () => {
     try {
       const ip = await Network.getIpAddressAsync();
       const city = registerData?.cidade?.trim();
-      const rawState = registerData?.estado?.trim();
-      const state = rawState ? tratarEstado(rawState) : "";
+      const state = registerData?.estado;
 
-      if (!ip || !city || !rawState || state === "Estado Inválido") {
-        trackAppError(new Error("Dados invalidos para aceite dos termos"), {
-          ...analyticsContext,
-          has_ip: Boolean(ip),
-          has_city: Boolean(city),
-          has_state: Boolean(rawState),
-          state_is_valid: state !== "Estado Inválido",
-        });
-
+      if (!ip || !city || !state) {
         showError(
           "Atenção",
           "Não foi possível aceitar os termos porque faltam cidade, estado ou IP. Faça login novamente para atualizar seus dados.",
@@ -61,20 +47,17 @@ const PreAprovado: React.FC = () => {
       }
 
       const payload = {
-        sign_info_date: convertData(),
-        sign_info_ip_address: ip,
-        sign_info_city: city,
-        sign_info_state: state,
+        // sign_info_date: convertData(),
+        // sign_info_ip_address: ip,
+        // sign_info_city: city,
+        // sign_info_state: state,
         sign_info_country: "BR",
       };
 
-      await api.post(
-        "v1/client/acept-term",
-        payload,
-        withAnalytics(analyticsContext),
-      );
+      console.log("payload", payload);
 
-      AnalyticsService.track(EVENTS.TERMS_ACCEPTED, analyticsContext);
+      await api.post("v1/client/acept-term", payload);
+
       showSuccess(
         "Concluido!",
         "Termos aceitos com sucesso! Você será redirecionado para a página de login para finalizar o processo.",
@@ -96,22 +79,7 @@ const PreAprovado: React.FC = () => {
               },
             },
           ]);
-        } else {
-          Alert.alert("Erro", error.response.data.message, [
-            {
-              text: "OK",
-              onPress: async () => {
-                useRegisterStore.getState().clean();
-                await useAuthStore.getState().logout();
-                router.replace("/login");
-              },
-            },
-          ]);
         }
-      } else {
-        Alert.alert("Erro", "Ocorreu um erro. Tente novamente.", [
-          { text: "OK" },
-        ]);
       }
     } finally {
       setLoadingAccept(false);

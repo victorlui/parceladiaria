@@ -51,6 +51,7 @@ const AffiliateCode: React.FC<Props> = ({ onNext, isLoading }) => {
       <InputComponent
         placeholder="000000"
         autoCapitalize="characters"
+        maxLength={20}
         icon={
           <Ionicons name="megaphone" size={20} color={Colors.gray.primary} />
         }

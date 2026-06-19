@@ -6,7 +6,6 @@ import {
 } from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
 import { api, withAnalytics } from "@/services/api";
-import { useRegisterStore } from "@/store/register_new";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,8 +26,12 @@ interface PalencaConfig {
   is_sandbox: boolean;
 }
 
-export default function PalencaDivergente() {
-  const { data, setStep } = useRegisterStore();
+interface Props {
+  onComplete: () => void;
+}
+
+export default function PalencaDivergente(props: Props) {
+  const { onComplete } = props;
   const { finalizeDivergenciaFlow, loadingSubmit } =
     useFinalizeDivergenciaFlow();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +56,6 @@ export default function PalencaDivergente() {
           source: DIVERGENCIA_ANALYTICS_SOURCES.PALENCA_INIT,
         }),
       );
-      console.log("response", response);
       const config = response.data?.data || response.data;
       setPalencaConfig(config);
     } catch (_e) {
@@ -122,7 +124,7 @@ export default function PalencaDivergente() {
         style={{ flex: 1 }}
         onShouldStartLoadWithRequest={(req) => {
           if (req.url.includes("palenca-done.php")) {
-            finalizeDivergenciaFlow();
+            onComplete();
             return false;
           }
           return true;

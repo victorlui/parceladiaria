@@ -1,6 +1,6 @@
 import type { PostHogEventProperties } from "@posthog/core";
 
-import { api } from "@/services/api";
+import { api, withAnalytics } from "@/services/api";
 
 export async function renewStatus(analyticsContext?: PostHogEventProperties) {
   try {
