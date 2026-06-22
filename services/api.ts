@@ -314,7 +314,12 @@ function showBlockedAlert(message: string) {
 function showForbiddenAlert(message: string) {
   trackApiAlertShown(API_ALERT_TYPES.FORBIDDEN, "Erro", message);
 
-  Alert.alert("Erro", message, [{ text: "OK", onPress: () => {} }]);
+  Alert.alert("Erro", message, [
+    {
+      text: "OK",
+      onPress: logoutUser,
+    },
+  ]);
 }
 
 function showRateLimitAlert(message?: string) {
@@ -462,7 +467,7 @@ api.interceptors.response.use(
 
     const status = error.response?.status;
     const message = error.response?.data?.message;
-    const blockMessage =
+    const blockMessage: string | undefined =
       typeof error.response?.data?.erro === "string"
         ? error.response?.data?.erro
         : undefined;
@@ -507,6 +512,8 @@ api.interceptors.response.use(
     // ========================================
     if (status === 403) {
       const blockedReason = getBlockedReasonFromErro(blockMessage);
+      const isSessionExpiredAgreementMessage =
+        message === "Apenas clientes podem ver acordos.";
 
       const validationErrors = error.response?.data?.data;
 
@@ -517,10 +524,14 @@ api.interceptors.response.use(
         !Array.isArray(validationErrors) &&
         Object.keys(validationErrors).length > 0;
 
+      console.log("blockedReason", error.response?.data.message);
+
       if (blockedReason) {
         showBlockedAlert(blockedReason);
       } else if (hasValidationErrors) {
         showValidationErrorAlert(validationErrors as Record<string, string[]>);
+      } else if (isSessionExpiredAgreementMessage) {
+        showForbiddenAlert("Sessão expirada. Faça login novamente.");
       } else if (blockMessage || message !== "Validation Error.") {
         showForbiddenAlert(blockMessage ?? message);
       } else if (!blockMessage && message === "Validation Error.") {

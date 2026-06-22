@@ -130,7 +130,7 @@ export function useNavigationFlow() {
         return "/(tabs)/home";
       }
 
-      return "/(tabs)/home";
+      return "/login";
     },
     [setStep, setEtapa],
   );
