@@ -78,7 +78,6 @@ export function fileTypeFromMime(mime: string): "pdf" | "image" | "video" {
  * Gera mensagem amigável para erros de validação do upload.
  */
 export function getFriendlyUploadError(error: unknown): string {
-  console.log("erro upload", error);
   if (!error) return "Não foi possível enviar o arquivo. Tente novamente.";
   const e = error as { name?: string; code?: string; message?: string };
   if (e.name === "UploadCancelledError") {

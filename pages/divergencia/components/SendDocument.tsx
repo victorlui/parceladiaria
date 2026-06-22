@@ -4,7 +4,7 @@ import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useRegisterQuery } from "@/pages/register/query/useRegisterQuerys";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -52,6 +52,17 @@ const SendDocument: React.FC<Props> = ({
   const [uploadProgress, setUploadProgress] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const previousItemRef = React.useRef(item);
+  const isMountedRef = useRef(true);
+  const uploadSignalRef = useRef<{ cancelled: boolean } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (uploadSignalRef.current) {
+        uploadSignalRef.current.cancelled = true;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (previousItemRef.current === item) return;
@@ -129,9 +140,14 @@ const SendDocument: React.FC<Props> = ({
     }
     setLoading(true);
     setUploadProgress(null);
+    uploadSignalRef.current = { cancelled: false };
     try {
-      const url = await uploadDocumentService(selected, (fraction) => {
-        setUploadProgress({ fraction });
+      const url = await uploadDocumentService(selected, {
+        signal: uploadSignalRef.current,
+        onProgress: (fraction) => {
+          if (!isMountedRef.current) return;
+          setUploadProgress({ fraction });
+        },
       });
 
       const itemUpload = {
@@ -145,6 +161,8 @@ const SendDocument: React.FC<Props> = ({
 
       back(itemUpload);
     } finally {
+      uploadSignalRef.current = null;
+      if (!isMountedRef.current) return;
       setLoading(false);
       setUploadProgress(null);
     }

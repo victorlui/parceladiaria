@@ -37,7 +37,6 @@ const HomeScreen: React.FC = () => {
         setAcordoVisible(Boolean(data?.success));
       }
     } catch (error: any) {
-      console.log("error", error.response);
       setAcordoVisible(false);
       setAcordo(null);
     }
@@ -76,7 +75,7 @@ const HomeScreen: React.FC = () => {
   const handleUpdateDocs = () => {
     if (user && token) {
       setModalVisible(null);
-      router.push("/divergencia_old_docs_screen");
+      router.push("/divergencia_screen");
     }
   };
 

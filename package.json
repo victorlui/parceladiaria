@@ -38,6 +38,7 @@
     "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.23",
     "expo-image": "~3.0.11",
+    "expo-image-manipulator": "~14.0.2",
     "expo-image-picker": "~17.0.9",
     "expo-in-app-updates": "^0.9.0",
     "expo-linear-gradient": "~15.0.8",

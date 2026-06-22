@@ -47,10 +47,6 @@ const Chat: React.FC = () => {
   const pushToken = useNotificationsStore.getState().pushToken || "";
 
   useEffect(() => {
-    console.log("[CHAT] Widget ID:", widgetId);
-    console.log("[CHAT] Metadata:", metadata);
-    console.log("[CHAT] isAuthReady:", isAuthReady);
-    console.log("[CHAT] isRegisterReady:", isRegisterReady);
     setIsReady(true);
   }, []);
 

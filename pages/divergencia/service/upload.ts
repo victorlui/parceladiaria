@@ -1,4 +1,7 @@
-import { uploadFileToS3 } from "@/hooks/useUploadDocument";
+import {
+  type UploadCancelSignal,
+  uploadFileToS3,
+} from "@/hooks/useUploadDocument";
 
 type SupportedFile = {
   uri: string;
@@ -8,12 +11,15 @@ type SupportedFile = {
 
 export const uploadDocumentService = async (
   file: SupportedFile,
-  onProgress?: (fraction: number) => void,
+  options?: {
+    onProgress?: (fraction: number) => void;
+    signal?: UploadCancelSignal;
+  },
 ): Promise<string> => {
   try {
     const url = await uploadFileToS3({
       file,
-      options: { onProgress },
+      options,
     });
     return url;
   } catch (error) {

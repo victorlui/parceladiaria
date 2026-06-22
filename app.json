@@ -27,6 +27,8 @@
         "UIUserInterfaceStyle": "Light",
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "$(PRODUCT_NAME) precisa acessar sua camera",
+        "NSPhotoLibraryUsageDescription": "$(PRODUCT_NAME) precisa acessar sua galeria para selecionar imagens e documentos.",
+        "NSPhotoLibraryAddUsageDescription": "$(PRODUCT_NAME) pode salvar arquivos temporarios de imagem durante o envio.",
         "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) precisa acessar o microfone.",
         "CFBundleDevelopmentRegion": "pt_BR",
         "AppStoreID": "6755193206",

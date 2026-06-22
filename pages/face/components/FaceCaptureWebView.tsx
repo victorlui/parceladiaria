@@ -92,10 +92,18 @@ const FaceCaptureWebView: React.FC<Props> = ({
             domStorageEnabled
             allowsInlineMediaPlayback
             mediaPlaybackRequiresUserAction={false}
+            automaticallyAdjustContentInsets={false}
+            contentInsetAdjustmentBehavior="never"
+            useSharedProcessPool={true}
+            cacheEnabled={false}
             mixedContentMode="always"
             originWhitelist={["*"]}
             androidLayerType="hardware"
             mediaCapturePermissionGrantType="grantIfSameHostElsePrompt"
+            allowFileAccess={true}
+            allowUniversalAccessFromFileURLs={true}
+            thirdPartyCookiesEnabled={true}
+            saveFormDataDisabled={true}
             onMessage={handleMessage}
             style={styles.webview}
           />

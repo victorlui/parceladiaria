@@ -194,7 +194,6 @@ const OpenFinanceScreen: React.FC = () => {
         register_step: step,
       });
       hasGoneToTerms.current = false;
-      console.log("goToNextStep error", error);
     }
   }, [registerData, setData, setEtapa]);
 
@@ -231,7 +230,6 @@ const OpenFinanceScreen: React.FC = () => {
         source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CONNECT,
         register_step: step,
       });
-      console.log("connect klavi error", error?.response ?? error);
 
       setFlowState("idle");
 
@@ -285,7 +283,6 @@ const OpenFinanceScreen: React.FC = () => {
         source: REGISTER_ANALYTICS_SOURCES.OPEN_FINANCE_CHECK_STATUS,
         register_step: step,
       });
-      console.log("checkAnalysisStatus error", error?.response ?? error);
 
       if (error?.response?.status === 401) {
         handleLogout();
@@ -335,7 +332,6 @@ const OpenFinanceScreen: React.FC = () => {
 
           if (isDriver) {
             const connectEnabled = data?.data?.openfinance?.motorista?.connect;
-            console.log("shouldAutoAdvance", shouldAutoAdvance);
 
             if (!connectEnabled) {
               if (shouldAutoAdvance) {
@@ -425,8 +421,6 @@ const OpenFinanceScreen: React.FC = () => {
             setFlowState("idle");
           }
         } catch (error: any) {
-          console.log("initialize error", error?.response ?? error);
-
           if (!cancelled && !isLeaving.current) {
             setFlowState("idle");
           }

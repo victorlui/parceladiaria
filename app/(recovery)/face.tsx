@@ -62,6 +62,15 @@ const FaceScreen: React.FC = () => {
   const [urlUpload, setUrlUpload] = useState("");
   const [isLoadingUploadUrl, setIsLoadingUploadUrl] = useState(false);
   const [isSubmittingFace, setIsSubmittingFace] = useState(false);
+  const uploadSignalRef = React.useRef<{ cancelled: boolean } | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (uploadSignalRef.current) {
+        uploadSignalRef.current.cancelled = true;
+      }
+    };
+  }, []);
 
   const getErrorMessage = useCallback((error: unknown) => {
     if (
@@ -163,10 +172,14 @@ const FaceScreen: React.FC = () => {
 
       setIsFace(false);
       setIsSubmittingFace(true);
+      uploadSignalRef.current = { cancelled: false };
       try {
         const finalUrl = await uploadRawFileToSignedUrl(
           photoData.file,
           urlUpload,
+          {
+            signal: uploadSignalRef.current,
+          },
         );
         const { data } = await api.post<{
           success: boolean;
@@ -236,6 +249,7 @@ const FaceScreen: React.FC = () => {
 
         showWarning("Erro", getErrorMessage(error));
       } finally {
+        uploadSignalRef.current = null;
         setIsSubmittingFace(false);
       }
     },

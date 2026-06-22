@@ -23,8 +23,6 @@ export const getInitialSelectedForItem = (
   selectedFiles: SelectedFileMap,
 ): Selected | null => {
   const entry = selectedFiles[documentKey];
-  console.log("selectedFiles", entry);
-  console.log("documentKey", documentKey);
 
   let uri: string | undefined;
   if (typeof entry === "string" && entry.trim()) {

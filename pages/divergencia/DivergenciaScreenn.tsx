@@ -3,7 +3,7 @@ import { useAlerts } from "@/components/useAlert";
 import { api } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
 import { StatusCadastro } from "@/utils";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FaceCaptureWebView from "../face/components/FaceCaptureWebView";
@@ -35,6 +35,17 @@ export default function DivergenciaScreenn() {
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<any>(null);
   const [isOtpSend, setIsOtpSend] = useState<boolean>(false);
+  const isMountedRef = useRef(true);
+  const uploadSignalRef = useRef<{ cancelled: boolean } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (uploadSignalRef.current) {
+        uploadSignalRef.current.cancelled = true;
+      }
+    };
+  }, []);
 
   const divergencias = useMemo(
     () =>
@@ -66,16 +77,23 @@ export default function DivergenciaScreenn() {
   const uploadFace = async (file: any) => {
     setLoading(true);
     setUploadProgress(null);
+    uploadSignalRef.current = { cancelled: false };
     try {
       // 1) Upload do arquivo pro S3 (com progresso real).
-      const url = await uploadDocumentService(file, (fraction) => {
-        setUploadProgress({ fraction });
+      const url = await uploadDocumentService(file, {
+        signal: uploadSignalRef.current,
+        onProgress: (fraction) => {
+          if (!isMountedRef.current) return;
+          setUploadProgress({ fraction });
+        },
       });
 
       // Se o upload abortou (ex.: arquivo > 10MB) o service já alertou.
       if (!url) return;
 
-      setUploadProgress({ fraction: 1 });
+      if (isMountedRef.current) {
+        setUploadProgress({ fraction: 1 });
+      }
 
       await mutateAsync({
         request: {
@@ -83,13 +101,18 @@ export default function DivergenciaScreenn() {
         },
       });
 
-      setSelectedFiles((prev) => ({ ...prev, [item]: url }));
-      setItem("");
+      if (isMountedRef.current) {
+        setSelectedFiles((prev) => ({ ...prev, [item]: url }));
+        setItem("");
+      }
     } catch (error: any) {
-      console.log("error upload face", error?.response ?? error);
-      // Erros do upload: alert já vem do próprio service.
-      // Erros do mutateAsync: alert já vem do `onError` do useRegisterQuery.
+      if (isMountedRef.current) {
+        setUploadProgress(null);
+        setItem("");
+      }
     } finally {
+      uploadSignalRef.current = null;
+      if (!isMountedRef.current) return;
       setLoading(false);
       setUploadProgress(null);
     }

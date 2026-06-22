@@ -40,6 +40,15 @@ export default function ExpiredDocument() {
   } | null>(null);
   const [isFaceOpen, setIsFaceOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const uploadSignalRef = React.useRef<{ cancelled: boolean } | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (uploadSignalRef.current) {
+        uploadSignalRef.current.cancelled = true;
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     AnalyticsService.screen(DIVERGENCIA_SCREENS.EXPIRED_DOCUMENT, {
@@ -129,8 +138,11 @@ export default function ExpiredDocument() {
     }
 
     setIsSubmitting(true);
+    uploadSignalRef.current = { cancelled: false };
     try {
-      const url = await uploadDocumentService(selectedFile);
+      const url = await uploadDocumentService(selectedFile, {
+        signal: uploadSignalRef.current,
+      });
       await updateUserService({
         request: { [updateKey]: url, etapa: Etapas.FINALIZADO },
         analyticsContext: {
@@ -164,6 +176,7 @@ export default function ExpiredDocument() {
         error?.message || "Não foi possível enviar o arquivo. Tente novamente.",
       );
     } finally {
+      uploadSignalRef.current = null;
       setIsSubmitting(false);
     }
   };

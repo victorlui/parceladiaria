@@ -3,16 +3,12 @@ import {
   MAX_FILE_SIZE_MB,
   MIME_BY_EXTENSION,
   SUPPORTED_EXTENSIONS,
-  type AllowedMimeType,
 } from "@/constants/upload";
+import { safePickImage, type SafeImageSource } from "@/hooks/useImagePicker";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import { Alert, Platform } from "react-native";
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
 
 export type SelectedFileType = "pdf" | "image" | "video";
 
@@ -24,33 +20,24 @@ export type SelectedFile = {
 };
 
 export type PickerOptions = {
-  /** Origem do arquivo (câmera ou galeria) */
-  from?: "camera" | "library";
-  /** Nome customizado para o arquivo */
+  from?: SafeImageSource;
   customName?: string;
-  /** Largura máxima desejada (apenas imagens) */
   maxWidth?: number;
-  /** Altura máxima desejada (apenas imagens) */
   maxHeight?: number;
 };
 
 type SizeCheck = { valid: boolean; size: number | null };
 
-/* -------------------------------------------------------------------------- */
-/*                                  CONSTS                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Duração máxima padrão para gravação de vídeo (em segundos) */
 const MAX_VIDEO_DURATION_SEC = 60;
-
-/* -------------------------------------------------------------------------- */
-/*                                  HELPERS                                   */
-/* -------------------------------------------------------------------------- */
+const SAFE_PICKER_CACHE_DIR = `${FileSystem.cacheDirectory}safe-picker/`;
 
 function log(stage: string, payload: Record<string, unknown> = {}) {
-  if (__DEV__) {
-    console.log(`[picker] ${stage}`, payload);
-  }
+  console.log("[document-picker]", stage, {
+    ...payload,
+    platform: Platform.OS,
+    platformVersion: String(Platform.Version),
+    timestamp: new Date().toISOString(),
+  });
 }
 
 function sanitizeFileName(name: string, fallbackExt: string): string {
@@ -74,38 +61,48 @@ function inferMimeFromUri(uri: string): string | null {
   return MIME_BY_EXTENSION[ext] ?? null;
 }
 
-function normalizeMime(input?: string | null): AllowedMimeType | null {
-  if (!input) return null;
-  const lower = input.trim().toLowerCase();
-  return (lower as AllowedMimeType) ?? null;
+async function ensureDirectoryExists(uri: string): Promise<void> {
+  const info = await FileSystem.getInfoAsync(uri);
+  if (!info.exists) {
+    await FileSystem.makeDirectoryAsync(uri, { intermediates: true });
+  }
 }
 
 async function getFileSize(uri: string): Promise<number | null> {
   try {
-    const info = await FileSystem.getInfoAsync(uri);
+    const info = (await FileSystem.getInfoAsync(uri)) as {
+      exists: boolean;
+      size?: number | null;
+    };
     if (!info.exists) return null;
     return typeof info.size === "number" ? info.size : null;
   } catch (err) {
-    log("getFileSize_failed", { uri, error: String(err) });
+    log("get_file_size_failed", { uri, error: String(err) });
     return null;
   }
 }
 
-async function copyToCacheIfNeeded(
-  uri: string,
-  fileName: string,
-): Promise<string> {
-  const cacheDir =
-    (FileSystem as any).cacheDirectory ?? (FileSystem as any).documentDirectory;
-  if (!cacheDir || uri.startsWith(cacheDir)) return uri;
-  try {
-    const dest = `${cacheDir}picker_${Date.now()}_${fileName}`;
-    await (FileSystem as any).copyAsync({ from: uri, to: dest });
-    return dest;
-  } catch (err) {
-    log("copyToCache_failed", { uri, error: String(err) });
-    return uri;
+async function copyToCacheOrThrow(uri: string, fileName: string): Promise<string> {
+  await ensureDirectoryExists(SAFE_PICKER_CACHE_DIR);
+  const destination = `${SAFE_PICKER_CACHE_DIR}${Date.now()}_${sanitizeFileName(fileName, "bin")}`;
+  await FileSystem.copyAsync({ from: uri, to: destination });
+
+  const copiedInfo = (await FileSystem.getInfoAsync(destination)) as {
+    exists: boolean;
+    size?: number | null;
+  };
+
+  if (!copiedInfo.exists) {
+    throw new Error("Nao foi possivel estabilizar o arquivo em cache.");
   }
+
+  log("cache_copy", {
+    originalUri: uri,
+    safeUri: destination,
+    size: typeof copiedInfo.size === "number" ? copiedInfo.size : null,
+  });
+
+  return destination;
 }
 
 function formatBytes(bytes: number): string {
@@ -113,10 +110,6 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                  HOOK                                      */
-/* -------------------------------------------------------------------------- */
 
 export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
   const maxVideoSizeMB = Math.max(maxSizeMB * 5, 50);
@@ -127,30 +120,38 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
   ): Promise<SizeCheck> => {
     const size = await getFileSize(uri);
     if (size === null) {
-      // Sem informação de tamanho: aceitamos e validamos depois no upload
       return { valid: true, size: null };
     }
     const limitBytes = maxMb * 1024 * 1024;
     return { valid: size <= limitBytes, size };
   };
 
-  const requestPermissions = async (): Promise<boolean> => {
+  const requestVideoPermission = async (
+    from: SafeImageSource,
+  ): Promise<boolean> => {
     try {
-      const { status: cameraStatus } =
-        await ImagePicker.requestCameraPermissionsAsync();
-      const { status: mediaStatus } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (cameraStatus !== "granted" || mediaStatus !== "granted") {
+      if (from === "camera") {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status === "granted") return true;
         Alert.alert(
-          "Permissões necessárias",
-          "Para usar esta funcionalidade, é necessário permitir o acesso à câmera e galeria.",
+          "Permissao necessaria",
+          "Permita o acesso a camera para capturar o video.",
         );
         return false;
       }
-      return true;
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status === "granted") return true;
+      Alert.alert(
+        "Permissao necessaria",
+        "Permita o acesso a galeria para selecionar o video.",
+      );
+      return false;
     } catch (error) {
-      log("requestPermissions_failed", { error: String(error) });
+      log("request_video_permission_failed", {
+        from,
+        error: String(error),
+      });
       return false;
     }
   };
@@ -164,32 +165,39 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         copyToCacheDirectory: true,
       });
 
-      if (result.canceled || result.assets.length === 0) return null;
+      if (result.canceled || !result.assets?.length) {
+        log("pdf_cancelled");
+        return null;
+      }
 
       const file = result.assets[0];
+      if (!file?.uri) {
+        throw new Error("O PDF selecionado nao possui URI valida.");
+      }
+
       const extFromName = file.name?.toLowerCase().split(".").pop();
       const extension =
         extFromName && SUPPORTED_EXTENSIONS.has(extFromName)
           ? extFromName
           : "pdf";
-      const mimeType =
-        normalizeMime(file.mimeType) ??
-        (MIME_BY_EXTENSION[extension] as AllowedMimeType) ??
-        "application/pdf";
-
-      const stableUri = await copyToCacheIfNeeded(file.uri, file.name);
+      const mimeType = file.mimeType?.toLowerCase() || "application/pdf";
+      const stableUri = await copyToCacheOrThrow(
+        file.uri,
+        file.name || `document_${Date.now()}.${extension}`,
+      );
       const sizeCheck = await ensureSizeLimit(stableUri, maxSizeMB);
 
       if (!sizeCheck.valid) {
         Alert.alert(
           "Arquivo muito grande",
-          `O arquivo PDF deve ter no máximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`,
+          `O arquivo PDF deve ter no maximo ${maxSizeMB}MB. Por favor, selecione um arquivo menor.`,
         );
         return null;
       }
 
       log("pdf_selected", {
-        uri: stableUri,
+        originalUri: file.uri,
+        safeUri: stableUri,
         name: file.name,
         mimeType,
         size: sizeCheck.size,
@@ -202,106 +210,63 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         type: "pdf",
       };
     } catch (error) {
-      log("selectPDF_failed", { error: String(error) });
-      Alert.alert("Erro", "Não foi possível selecionar o arquivo PDF.");
+      log("select_pdf_failed", { error: String(error) });
+      Alert.alert("Erro", "Nao foi possivel selecionar o arquivo PDF.");
       return null;
     }
-  };
-
-  const pickImage = async (
-    options: PickerOptions,
-  ): Promise<ImagePicker.ImagePickerResult> => {
-    const from = options.from ?? "camera";
-    const baseConfig: ImagePicker.ImagePickerOptions = {
-      quality: 0.7,
-      allowsEditing: true,
-      mediaTypes: "images",
-      exif: false,
-    };
-
-    if (from === "camera") {
-      return await ImagePicker.launchCameraAsync({
-        ...baseConfig,
-        cameraType: ImagePicker.CameraType.back,
-      });
-    }
-    return await ImagePicker.launchImageLibraryAsync(baseConfig);
   };
 
   const takePhoto = async (
-    fromOrOptions: "camera" | "library" | PickerOptions = "camera",
+    fromOrOptions: SafeImageSource | PickerOptions = "camera",
     customName?: string,
   ): Promise<SelectedFile | null> => {
     const options: PickerOptions =
       typeof fromOrOptions === "string"
-        ? { from: fromOrOptions }
-        : fromOrOptions;
+        ? { from: fromOrOptions, customName }
+        : { ...fromOrOptions, customName: fromOrOptions.customName ?? customName };
 
     try {
-      const hasPermission = await requestPermissions();
-      if (!hasPermission) return null;
+      const image = await safePickImage({
+        source: options.from ?? "camera",
+        customName: options.customName,
+        maxFileSizeMB: maxSizeMB,
+        maxWidth: options.maxWidth,
+        maxHeight: options.maxHeight,
+      });
 
-      const result = await pickImage(options);
-      return await processImageResult(result, options, customName);
+      if (!image) {
+        return null;
+      }
+
+      return {
+        uri: image.uri,
+        name: image.name,
+        mimeType: image.mimeType,
+        type: "image",
+      };
     } catch (error) {
-      log("takePhoto_failed", { error: String(error) });
-      Alert.alert("Erro", "Não foi possível capturar a foto.");
+      log("take_photo_failed", { error: String(error) });
+      Alert.alert("Erro", "Nao foi possivel selecionar a imagem.");
       return null;
     }
-  };
-
-  const processImageResult = async (
-    result: ImagePicker.ImagePickerResult,
-    options: PickerOptions,
-    customName?: string,
-  ): Promise<SelectedFile | null> => {
-    if (result.canceled || result.assets.length === 0) return null;
-
-    const asset = result.assets[0];
-    const inferredMime = inferMimeFromUri(asset.uri) ?? "image/jpeg";
-
-    const sizeCheck = await ensureSizeLimit(asset.uri, maxSizeMB);
-    if (!sizeCheck.valid) {
-      Alert.alert(
-        "Imagem muito grande",
-        `A imagem deve ter no máximo ${maxSizeMB}MB. Selecione uma imagem menor.`,
-      );
-      return null;
-    }
-
-    log("photo_selected", {
-      uri: asset.uri,
-      inferredMime,
-      size: sizeCheck.size,
-    });
-
-    return {
-      uri: asset.uri,
-      name: customName
-        ? sanitizeFileName(customName, "jpg")
-        : `photo_${Date.now()}.jpg`,
-      mimeType: inferredMime,
-      type: "image",
-    };
   };
 
   const takeVideo = async (
-    fromOrOptions: "camera" | "library" | PickerOptions = "camera",
+    fromOrOptions: SafeImageSource | PickerOptions = "camera",
     customName?: string,
   ): Promise<SelectedFile | null> => {
     const options: PickerOptions =
       typeof fromOrOptions === "string"
-        ? { from: fromOrOptions }
-        : fromOrOptions;
+        ? { from: fromOrOptions, customName }
+        : { ...fromOrOptions, customName: fromOrOptions.customName ?? customName };
     const from = options.from ?? "camera";
 
     try {
-      const hasPermission = await requestPermissions();
+      const hasPermission = await requestVideoPermission(from);
       if (!hasPermission) return null;
 
-      // Configurações otimizadas para reduzir tamanho do vídeo
       const videoOptions: ImagePicker.ImagePickerOptions = {
-        mediaTypes: "videos",
+        mediaTypes: "videos" as any,
         videoMaxDuration: MAX_VIDEO_DURATION_SEC,
         allowsEditing: false,
         videoQuality: ImagePicker.UIImagePickerControllerQualityType.Low,
@@ -312,38 +277,51 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
           ? await ImagePicker.launchCameraAsync(videoOptions)
           : await ImagePicker.launchImageLibraryAsync(videoOptions);
 
-      if (result.canceled || result.assets.length === 0) return null;
+      if (result.canceled || !result.assets?.length) {
+        log("video_cancelled", { from });
+        return null;
+      }
 
       const asset = result.assets[0];
-      const inferredMime = inferMimeFromUri(asset.uri) ?? "video/mp4";
+      if (!asset?.uri) {
+        throw new Error("O video selecionado nao possui URI valida.");
+      }
 
-      const sizeCheck = await ensureSizeLimit(asset.uri, maxVideoSizeMB);
+      const inferredMime = inferMimeFromUri(asset.uri) ?? "video/mp4";
+      const fileName =
+        options.customName ||
+        asset.fileName ||
+        `video_${Date.now()}.${EXTENSION_BY_MIME[inferredMime] ?? "mp4"}`;
+      const stableUri = await copyToCacheOrThrow(asset.uri, fileName);
+
+      const sizeCheck = await ensureSizeLimit(stableUri, maxVideoSizeMB);
       if (!sizeCheck.valid) {
         Alert.alert(
-          "Vídeo muito grande",
-          `O vídeo deve ter no máximo ${formatBytes(maxVideoSizeMB * 1024 * 1024)}. Por favor, grave um vídeo menor ou reduza a qualidade.`,
+          "Video muito grande",
+          `O video deve ter no maximo ${formatBytes(maxVideoSizeMB * 1024 * 1024)}. Por favor, grave um video menor ou reduza a qualidade.`,
         );
         return null;
       }
 
       log("video_selected", {
-        uri: asset.uri,
-        inferredMime,
+        originalUri: asset.uri,
+        safeUri: stableUri,
+        mimeType: inferredMime,
         size: sizeCheck.size,
-        platform: Platform.OS,
       });
 
       return {
-        uri: asset.uri,
-        name: customName
-          ? sanitizeFileName(customName, "mp4")
-          : `video_${Date.now()}.mp4`,
+        uri: stableUri,
+        name: sanitizeFileName(
+          fileName,
+          EXTENSION_BY_MIME[inferredMime] ?? "mp4",
+        ),
         mimeType: inferredMime,
         type: "video",
       };
     } catch (error) {
-      log("takeVideo_failed", { error: String(error) });
-      Alert.alert("Erro", "Não foi possível capturar o vídeo.");
+      log("take_video_failed", { error: String(error), from });
+      Alert.alert("Erro", "Nao foi possivel capturar o video.");
       return null;
     }
   };
@@ -351,12 +329,10 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
   return { selectPDF, takePhoto, takeVideo };
 }
 
-// Helper: type guard para detectar SelectedFile
 export function isAllowedExtension(ext: string): boolean {
   return SUPPORTED_EXTENSIONS.has(ext.toLowerCase());
 }
 
-// Helper: dado mime retorna o extension esperado
 export function getExtensionForMime(mime: string): string | null {
   return EXTENSION_BY_MIME[mime.toLowerCase()] ?? null;
 }

@@ -90,8 +90,6 @@ export const ChangePixModal: React.FC<PixModalProps> = ({
 
     setLoading(true);
     try {
-      console.log("keyValue", keyValue.trim());
-      console.log("selectedType", selectedType);
       const { data: response } = await api.post("/v1/client/change/pix/otp", {
         pix: keyValue.trim(),
         type: selectedType,
@@ -101,7 +99,6 @@ export const ChangePixModal: React.FC<PixModalProps> = ({
       setTouched(false);
       onClose();
     } catch (error: any) {
-      console.log("erro ao mudar o pix", error.response);
       showWarning(
         "Atenção",
         error.response.data.message || "Erro ao enviar OTP",

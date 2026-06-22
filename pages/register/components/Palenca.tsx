@@ -50,8 +50,6 @@ export default function Palenca() {
           const hasCompletedPalenca =
             dataClient.data.data.palenca_status !== null;
 
-          console.log("data palenca", dataClient);
-
           if (isDriver && isPalencaEnabled && !hasCompletedPalenca) {
             setIsEligible(true);
           } else {
@@ -83,7 +81,7 @@ export default function Palenca() {
     try {
       setIsLoading(true);
       const response = await api.post("/v1/palenca/init");
-      console.log("response", response);
+
       const config = response.data?.data || response.data;
       setPalencaConfig(config);
     } catch (_e) {
@@ -163,8 +161,6 @@ export default function Palenca() {
     : "connect.palenca.com";
   const url = `https://${host}/?widget_id=${palencaConfig.widget_id}&external_id=${palencaConfig.external_id}`;
   // https://sandbox.palenca.com/?widget_id=3b00f292-291b-47ee-9ade-d7e79ef29ff1&external_id=PD_396492
-
-  console.log("url", url);
 
   return (
     <SafeAreaView style={styles.container}>

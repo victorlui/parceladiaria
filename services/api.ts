@@ -57,23 +57,17 @@ export async function ensureAuthHydrated(): Promise<void> {
 
   // Se já hidratou, retorna imediatamente
   if (authStore.hasHydrated && !authStore.isLoading) {
-    console.log("[API] Auth já hidratado, continuando...");
     return;
   }
 
   // Se já está aguardando, usa a mesma promise
   if (hydrationPromise) {
-    console.log("[API] Aguardando hidratação em progresso...");
     return hydrationPromise;
   }
-
-  // Cria promise de hidratação
-  console.log("[API] Iniciando hidratação para requisição...");
 
   hydrationPromise = new Promise((resolve) => {
     const unsubscribe = useAuthStore.subscribe((state) => {
       if (state.hasHydrated && !state.isLoading) {
-        console.log("[API] ✅ Hidratação concluída!");
         unsubscribe();
         hydrationPromise = null;
         resolve();
@@ -82,7 +76,6 @@ export async function ensureAuthHydrated(): Promise<void> {
 
     // Timeout de segurança (5 segundos)
     setTimeout(() => {
-      console.log("[API] ⏰ Timeout de hidratação!");
       unsubscribe();
       hydrationPromise = null;
       resolve();
@@ -99,10 +92,6 @@ async function processRequestQueue(): Promise<void> {
   }
 
   isProcessingQueue = true;
-
-  console.log(
-    `[API] Processando ${requestQueue.length} requisições na fila...`,
-  );
 
   while (requestQueue.length > 0) {
     const request = requestQueue.shift()!;
@@ -230,22 +219,17 @@ function isAuthHydrated(): boolean {
 }
 
 function logoutUser() {
-  console.log("[API] Iniciando logout por inatividade/token expirado...");
-
   const authStore = useAuthStore.getState();
   const registerStore = useRegisterStore.getState();
 
   if (registerStore.token) {
-    console.log("[API] Limpando store de registro...");
     registerStore.clean();
   }
 
   if (authStore.token) {
-    console.log("[API] Limpando store de autenticação...");
     authStore.logout();
   }
 
-  console.log("[API] Redirecionando para login...");
   router.replace("/login");
 }
 
@@ -401,10 +385,6 @@ api.interceptors.request.use(
   async (config) => {
     const requestConfig = config as RetryRequestConfig;
 
-    console.log(
-      `[API] 📤 REQUEST: ${config.method?.toUpperCase()} ${config.url}`,
-    );
-
     // ========================================
     // BLOQUEAR REQUISIÇÕES ANTES DA HIDRATAÇÃO
     // ========================================
@@ -413,7 +393,6 @@ api.interceptors.request.use(
       const hasToken = !!getAuthToken();
 
       if (!authHydrated || !hasToken) {
-        console.log("[API] 📤 Aguardando hidratação antes de processar...");
         await ensureAuthHydrated();
       }
     }
@@ -462,8 +441,6 @@ api.interceptors.response.use(
     console.log(
       `[API] ❌ RESPONSE ERROR: ${error.response?.status} ${originalRequest?.url}`,
     );
-
-    console.log("error", error.response);
 
     const status = error.response?.status;
     const message = error.response?.data?.message;

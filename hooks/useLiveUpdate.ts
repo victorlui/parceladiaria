@@ -51,9 +51,7 @@ export function useLiveUpdate() {
                 await Updates.reloadAsync();
               } catch (error) {
                 AnalyticsService.error(
-                  error instanceof Error
-                    ? error
-                    : new Error(String(error)),
+                  error instanceof Error ? error : new Error(String(error)),
                   { source: "useLiveUpdate", action: "reload" },
                 );
               } finally {
@@ -105,12 +103,7 @@ export function useLiveUpdate() {
           await Updates.fetchUpdateAsync();
         }
       } catch (error) {
-        console.log("Erro no LiveUpdate:", error);
-
-        AnalyticsService.error(
-          error instanceof Error ? error : new Error(String(error)),
-          { source: "useLiveUpdate", action: "checkUpdate" },
-        );
+        return;
       }
     }
 

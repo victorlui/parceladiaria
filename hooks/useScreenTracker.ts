@@ -10,7 +10,6 @@ export function useScreenTracker() {
     posthog.capture("$screen", {
       screen_name: pathname,
     });
-    console.log("Tela registrada:", pathname);
   }, [pathname, posthog]);
 
   return null;

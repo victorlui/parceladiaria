@@ -273,8 +273,6 @@ const AcordoModal = ({
         request,
       );
 
-      console.log("data", data);
-
       if (!data?.success) {
         setSubmitError(data?.message || "Nao foi possivel registrar o aceite.");
         return;
@@ -315,7 +313,6 @@ const AcordoModal = ({
       Alert.alert("Aviso", data.message || "Aceite registrado com sucesso.");
     } catch (error: any) {
       const status = error?.response?.status;
-      console.log("error", error);
       const message =
         error?.response?.data?.message ||
         (status === 403

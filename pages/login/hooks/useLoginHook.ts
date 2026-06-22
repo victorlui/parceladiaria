@@ -160,7 +160,6 @@ export function useLoginHook() {
         // Fallback para caso não caia em nenhum type conhecido
         showError("Ops!", "Tipo de usuário desconhecido ou não configurado.");
       } catch (error: any) {
-        console.log("error", error, error.response);
         showError(
           "Ops!",
           "Ocorreu um erro ao carregar os dados do usuário. Tente novamente.",

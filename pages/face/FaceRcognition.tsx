@@ -1,7 +1,7 @@
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { useUpdateUserMutation } from "@/hooks/useRegisterMutation";
-import { uploadRawFile } from "@/hooks/useUploadDocument";
+import { uploadFileToS3 } from "@/hooks/useUploadDocument";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { useSettingsStore } from "@/store/settings";
@@ -24,6 +24,15 @@ const FaceRecognitionScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isSendingPhoto, setIsSendingPhoto] = useState(false);
   const isSendingPhotoRef = useRef(false);
+  const uploadSignalRef = useRef<{ cancelled: boolean } | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (uploadSignalRef.current) {
+        uploadSignalRef.current.cancelled = true;
+      }
+    };
+  }, []);
 
   const sendPhoto = async (photoData: any) => {
     if (isSendingPhotoRef.current) {
@@ -50,8 +59,14 @@ const FaceRecognitionScreen: React.FC = () => {
       }
 
       setOpen(false);
+      uploadSignalRef.current = { cancelled: false };
 
-      const finalUrl = await uploadRawFile(photoData.file);
+      const finalUrl = await uploadFileToS3({
+        file: photoData.file,
+        options: {
+          signal: uploadSignalRef.current,
+        },
+      });
 
       const profissao = userRegister?.profissao || user?.profissao;
 
@@ -94,6 +109,7 @@ const FaceRecognitionScreen: React.FC = () => {
       if (error?.response?.status === 401) return;
       Alert.alert("Erro", "Não foi possível enviar a foto. Tente novamente.");
     } finally {
+      uploadSignalRef.current = null;
       isSendingPhotoRef.current = false;
       setIsSendingPhoto(false);
       setLoading(false);
