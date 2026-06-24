@@ -1,5 +1,9 @@
 import { trackAppError } from "@/analytics/error-handler";
-import { MAX_FILE_SIZE_MB, MIME_BY_EXTENSION } from "@/constants/upload";
+import {
+  MAX_FILE_SIZE_MB,
+  MAX_VIDEO_SIZE_MB,
+  MIME_BY_EXTENSION,
+} from "@/constants/upload";
 import { solicitarLinkS3 } from "@/services/upload-files";
 import * as Device from "expo-device";
 import * as FileSystem from "expo-file-system/legacy";
@@ -43,6 +47,7 @@ type NormalizedUploadFile = {
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 2;
 const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_MB * 1024 * 1024;
 const STABLE_UPLOAD_CACHE_DIR = `${FileSystem.cacheDirectory}stable-uploads/`;
 const DATA_URI_RE = /^data:([^;,]+);base64,(.*)$/;
 
@@ -139,6 +144,10 @@ function friendlyMessage(error: any): string {
     return "O tipo do arquivo nao e suportado para envio.";
   }
   return "Nao foi possivel enviar o arquivo. Verifique sua conexao e tente novamente.";
+}
+
+function getMaxUploadSizeBytes(mimeType: string): number {
+  return mimeType.startsWith("video/") ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
 }
 
 function extFromMime(mime: string): string {
@@ -355,7 +364,7 @@ async function prepareUploadFile(
     throw new Error("Arquivo nao encontrado no dispositivo.");
   }
 
-  if (info.size && info.size > MAX_FILE_SIZE) {
+  if (info.size && info.size > getMaxUploadSizeBytes(prepared.mimeType)) {
     throw new Error("Arquivo muito grande");
   }
 

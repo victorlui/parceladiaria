@@ -19,7 +19,7 @@ export default function RootLayout() {
   const isLoading = authLoading || !registerHydrated;
 
   useLiveUpdate();
-  useForceInAppUpdate();
+  useForceInAppUpdate({ disabled: isLoading });
   usePushNotification({ disabled: isLoading });
 
   return (

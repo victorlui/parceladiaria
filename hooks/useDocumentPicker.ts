@@ -1,6 +1,7 @@
 import {
   EXTENSION_BY_MIME,
   MAX_FILE_SIZE_MB,
+  MAX_VIDEO_SIZE_MB,
   MIME_BY_EXTENSION,
   SUPPORTED_EXTENSIONS,
 } from "@/constants/upload";
@@ -29,6 +30,7 @@ export type PickerOptions = {
 type SizeCheck = { valid: boolean; size: number | null };
 
 const MAX_VIDEO_DURATION_SEC = 60;
+const MAX_VIDEO_DURATION_TOLERANCE_MS = 999;
 const SAFE_PICKER_CACHE_DIR = `${FileSystem.cacheDirectory}safe-picker/`;
 
 function log(stage: string, payload: Record<string, unknown> = {}) {
@@ -82,7 +84,10 @@ async function getFileSize(uri: string): Promise<number | null> {
   }
 }
 
-async function copyToCacheOrThrow(uri: string, fileName: string): Promise<string> {
+async function copyToCacheOrThrow(
+  uri: string,
+  fileName: string,
+): Promise<string> {
   await ensureDirectoryExists(SAFE_PICKER_CACHE_DIR);
   const destination = `${SAFE_PICKER_CACHE_DIR}${Date.now()}_${sanitizeFileName(fileName, "bin")}`;
   await FileSystem.copyAsync({ from: uri, to: destination });
@@ -111,8 +116,30 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+function getVideoDurationSec(
+  asset: ImagePicker.ImagePickerAsset,
+): number | null {
+  if (typeof asset.duration !== "number" || Number.isNaN(asset.duration)) {
+    return null;
+  }
+
+  return asset.duration / 1000;
+}
+
+function isVideoDurationAllowed(asset: ImagePicker.ImagePickerAsset): boolean {
+  if (typeof asset.duration !== "number" || Number.isNaN(asset.duration)) {
+    return true;
+  }
+
+  // Some providers round UI display to 1:00 while metadata comes slightly above 60000ms.
+  return (
+    asset.duration <=
+    MAX_VIDEO_DURATION_SEC * 1000 + MAX_VIDEO_DURATION_TOLERANCE_MS
+  );
+}
+
 export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
-  const maxVideoSizeMB = Math.max(maxSizeMB * 5, 50);
+  const maxVideoSizeMB = Math.max(maxSizeMB, MAX_VIDEO_SIZE_MB);
 
   const ensureSizeLimit = async (
     uri: string,
@@ -140,7 +167,8 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         return false;
       }
 
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status === "granted") return true;
       Alert.alert(
         "Permissao necessaria",
@@ -223,7 +251,10 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
     const options: PickerOptions =
       typeof fromOrOptions === "string"
         ? { from: fromOrOptions, customName }
-        : { ...fromOrOptions, customName: fromOrOptions.customName ?? customName };
+        : {
+            ...fromOrOptions,
+            customName: fromOrOptions.customName ?? customName,
+          };
 
     try {
       const image = await safePickImage({
@@ -258,7 +289,10 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
     const options: PickerOptions =
       typeof fromOrOptions === "string"
         ? { from: fromOrOptions, customName }
-        : { ...fromOrOptions, customName: fromOrOptions.customName ?? customName };
+        : {
+            ...fromOrOptions,
+            customName: fromOrOptions.customName ?? customName,
+          };
     const from = options.from ?? "camera";
 
     try {
@@ -287,6 +321,15 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         throw new Error("O video selecionado nao possui URI valida.");
       }
 
+      const durationSec = getVideoDurationSec(asset);
+      if (!isVideoDurationAllowed(asset)) {
+        Alert.alert(
+          "Video muito longo",
+          `O video deve ter no maximo ${MAX_VIDEO_DURATION_SEC} segundos.`,
+        );
+        return null;
+      }
+
       const inferredMime = inferMimeFromUri(asset.uri) ?? "video/mp4";
       const fileName =
         options.customName ||
@@ -307,6 +350,7 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         originalUri: asset.uri,
         safeUri: stableUri,
         mimeType: inferredMime,
+        durationSec,
         size: sizeCheck.size,
       });
 

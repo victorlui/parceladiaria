@@ -14,7 +14,7 @@ export type AllowedMimeType =
   | "application/pdf";
 
 export const MAX_FILE_SIZE_MB = 10;
-export const MAX_VIDEO_SIZE_MB = 200;
+export const MAX_VIDEO_SIZE_MB = 500;
 export const MAX_FILENAME_LENGTH = 80;
 
 export const SUPPORTED_EXTENSIONS = new Set([
