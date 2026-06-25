@@ -303,7 +303,7 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         mediaTypes: "videos" as any,
         videoMaxDuration: MAX_VIDEO_DURATION_SEC,
         allowsEditing: false,
-        videoQuality: ImagePicker.UIImagePickerControllerQualityType.Low,
+        videoQuality: ImagePicker.UIImagePickerControllerQualityType.High,
       };
 
       const result =

@@ -4,6 +4,7 @@ import { Colors } from "@/constants/Colors";
 import { useDocumentPicker } from "@/hooks/useDocumentPicker";
 import { useRegisterQuery } from "@/pages/register/query/useRegisterQuerys";
 import { Ionicons } from "@expo/vector-icons";
+import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -35,6 +36,22 @@ interface Props {
   close?: () => void;
   uploading?: boolean;
 }
+
+const VideoPreview = ({ uri }: { uri: string }) => {
+  const player = useVideoPlayer(uri, (videoPlayer) => {
+    videoPlayer.loop = false;
+  });
+
+  return (
+    <VideoView
+      style={styles.fullPreview}
+      player={player}
+      nativeControls
+      contentFit="contain"
+      allowsFullscreen
+    />
+  );
+};
 
 const SendDocument: React.FC<Props> = ({
   item,
@@ -221,10 +238,7 @@ const SendDocument: React.FC<Props> = ({
                   resizeMode="cover"
                 />
               ) : selected.type === "video" ? (
-                <View style={styles.pdfPlaceholder}>
-                  <Ionicons name="videocam" size={80} color="#7C3AED" />
-                  <Text style={styles.pdfName}>{selected.name}</Text>
-                </View>
+                <VideoPreview uri={selected.uri} />
               ) : (
                 <View style={styles.pdfPlaceholder}>
                   <Ionicons name="document-text" size={80} color="#3B82F6" />
