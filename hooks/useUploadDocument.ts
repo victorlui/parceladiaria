@@ -8,6 +8,7 @@ import { solicitarLinkS3 } from "@/services/upload-files";
 import * as Device from "expo-device";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Network from "expo-network";
+import { Video } from "react-native-compressor";
 import { Alert, Platform } from "react-native";
 
 export type UploadCancelSignal = {
@@ -50,6 +51,9 @@ const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_MB * 1024 * 1024;
 const STABLE_UPLOAD_CACHE_DIR = `${FileSystem.cacheDirectory}stable-uploads/`;
 const DATA_URI_RE = /^data:([^;,]+);base64,(.*)$/;
+const VIDEO_COMPRESSION_PROGRESS_WEIGHT = 0.35;
+const VIDEO_COMPRESSION_MAX_SIZE = 1280;
+const VIDEO_COMPRESSION_BITRATE = 1_800_000;
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -148,6 +152,10 @@ function friendlyMessage(error: any): string {
 
 function getMaxUploadSizeBytes(mimeType: string): number {
   return mimeType.startsWith("video/") ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+}
+
+function isVideoMimeType(mimeType: string): boolean {
+  return mimeType.startsWith("video/");
 }
 
 function extFromMime(mime: string): string {
@@ -345,11 +353,133 @@ async function stabilizeLocalUri(
   };
 }
 
+async function compressVideoIfNeeded(
+  prepared: NormalizedUploadFile,
+  options?: UploadOptions,
+): Promise<NormalizedUploadFile> {
+  if (!isVideoMimeType(prepared.mimeType)) {
+    return prepared;
+  }
+
+  const originalSize = prepared.size ?? (await getInfo(prepared.uri)).size;
+  if (originalSize !== null && originalSize <= MAX_FILE_SIZE) {
+    return prepared;
+  }
+
+  if (options?.signal?.cancelled) {
+    throw new Error("Upload cancelado pelo usuario.");
+  }
+
+  let cancellationId: string | null = null;
+  let cancellationWatcher: ReturnType<typeof setInterval> | null = null;
+
+  try {
+    options?.onProgress?.(0.02);
+
+    cancellationWatcher = setInterval(() => {
+      if (!options?.signal?.cancelled || !cancellationId) {
+        return;
+      }
+
+      Video.cancelCompression(cancellationId);
+    }, 200);
+
+    const compressedUri = await Video.compress(
+      prepared.uri,
+      {
+        compressionMethod: "manual",
+        maxSize: VIDEO_COMPRESSION_MAX_SIZE,
+        bitrate: VIDEO_COMPRESSION_BITRATE,
+        getCancellationId: (id) => {
+          cancellationId = id;
+        },
+      },
+      (progress) => {
+        options?.onProgress?.(progress * VIDEO_COMPRESSION_PROGRESS_WEIGHT);
+      },
+    );
+
+    if (options?.signal?.cancelled) {
+      throw new Error("Upload cancelado pelo usuario.");
+    }
+
+    if (!compressedUri || compressedUri === prepared.uri) {
+      return prepared;
+    }
+
+    const compressedInfo = await getInfo(compressedUri);
+    if (!compressedInfo.exists) {
+      return prepared;
+    }
+
+    if (
+      typeof originalSize === "number" &&
+      typeof compressedInfo.size === "number" &&
+      compressedInfo.size >= originalSize
+    ) {
+      await FileSystem.deleteAsync(compressedUri, { idempotent: true });
+      return prepared;
+    }
+
+    const compressedMimeType = inferMimeType(compressedUri);
+    const finalMimeType =
+      compressedMimeType === "application/octet-stream"
+        ? "video/mp4"
+        : compressedMimeType;
+    const finalExt = extFromMime(finalMimeType);
+    const baseName = prepared.name.replace(/\.[^.]+$/, "");
+    const compressedName = sanitizeFileName(
+      `${baseName}_compressed`,
+      finalExt,
+    );
+
+    logUpload("video_compressed", {
+      originalUri: prepared.originalUri,
+      sourceUri: prepared.uri,
+      compressedUri,
+      sourceSize: originalSize,
+      compressedSize: compressedInfo.size,
+      mimeType: finalMimeType,
+    });
+
+    return {
+      uri: compressedUri,
+      originalUri: prepared.originalUri,
+      name: compressedName,
+      mimeType: finalMimeType,
+      size: compressedInfo.size,
+      cleanup: async () => {
+        await FileSystem.deleteAsync(compressedUri, { idempotent: true });
+        await prepared.cleanup();
+      },
+    };
+  } catch (error) {
+    const message = String((error as Error)?.message ?? error).toLowerCase();
+    if (options?.signal?.cancelled || message.includes("cancel")) {
+      throw error;
+    }
+
+    logUploadError("video_compress", error, {
+      originalUri: prepared.originalUri,
+      sourceUri: prepared.uri,
+      size: originalSize,
+    });
+
+    return prepared;
+  } finally {
+    if (cancellationWatcher) {
+      clearInterval(cancellationWatcher);
+    }
+  }
+}
+
 async function prepareUploadFile(
   file: UploadFileLike,
+  options?: UploadOptions,
 ): Promise<NormalizedUploadFile> {
   const normalized = normalizeInput(file);
-  const prepared = await stabilizeLocalUri(normalized);
+  const stabilized = await stabilizeLocalUri(normalized);
+  const prepared = await compressVideoIfNeeded(stabilized, options);
 
   if (!prepared.mimeType || prepared.mimeType === "application/octet-stream") {
     throw new Error("Nao foi possivel determinar o MIME type do arquivo.");
@@ -546,7 +676,7 @@ async function performS3Upload({
   file,
   options,
 }: UploadFileParams): Promise<string> {
-  const prepared = await prepareUploadFile(file);
+  const prepared = await prepareUploadFile(file, options);
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxRetries = options?.maxRetries ?? DEFAULT_MAX_RETRIES;
 
@@ -673,7 +803,7 @@ export async function uploadRawFileToSignedUrl(
   uploadUrl: string,
   options?: UploadOptions,
 ) {
-  const prepared = await prepareUploadFile(file);
+  const prepared = await prepareUploadFile(file, options);
 
   try {
     await ensureOnline();

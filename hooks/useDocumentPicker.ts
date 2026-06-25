@@ -10,6 +10,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import { Alert, Platform } from "react-native";
+import { Video } from "react-native-compressor";
 
 export type SelectedFileType = "pdf" | "image" | "video";
 
@@ -32,6 +33,8 @@ type SizeCheck = { valid: boolean; size: number | null };
 const MAX_VIDEO_DURATION_SEC = 60;
 const MAX_VIDEO_DURATION_TOLERANCE_MS = 999;
 const SAFE_PICKER_CACHE_DIR = `${FileSystem.cacheDirectory}safe-picker/`;
+const PICKER_VIDEO_COMPRESSION_MAX_SIZE = 960;
+const PICKER_VIDEO_COMPRESSION_BITRATE = 1_200_000;
 
 function log(stage: string, payload: Record<string, unknown> = {}) {
   console.log("[document-picker]", stage, {
@@ -108,6 +111,49 @@ async function copyToCacheOrThrow(
   });
 
   return destination;
+}
+
+async function compressVideoInCache(
+  uri: string,
+): Promise<{ uri: string; size: number | null }> {
+  const sourceSize = await getFileSize(uri);
+  if (sourceSize !== null && sourceSize <= MAX_FILE_SIZE_MB * 1024 * 1024) {
+    return { uri, size: sourceSize };
+  }
+
+  const compressedUri = await Video.compress(uri, {
+    compressionMethod: "manual",
+    maxSize: PICKER_VIDEO_COMPRESSION_MAX_SIZE,
+    bitrate: PICKER_VIDEO_COMPRESSION_BITRATE,
+  });
+
+  const compressedSize = await getFileSize(compressedUri);
+
+  log("video_compressed_before_upload", {
+    sourceUri: uri,
+    compressedUri,
+    sourceSize,
+    compressedSize,
+    maxSize: PICKER_VIDEO_COMPRESSION_MAX_SIZE,
+    bitrate: PICKER_VIDEO_COMPRESSION_BITRATE,
+  });
+
+  if (!compressedUri || compressedUri === uri) {
+    return { uri, size: sourceSize };
+  }
+
+  if (
+    typeof sourceSize === "number" &&
+    typeof compressedSize === "number" &&
+    compressedSize >= sourceSize
+  ) {
+    await FileSystem.deleteAsync(compressedUri, { idempotent: true });
+    return { uri, size: sourceSize };
+  }
+
+  await FileSystem.deleteAsync(uri, { idempotent: true });
+
+  return { uri: compressedUri, size: compressedSize };
 }
 
 function formatBytes(bytes: number): string {
@@ -303,7 +349,7 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         mediaTypes: "videos" as any,
         videoMaxDuration: MAX_VIDEO_DURATION_SEC,
         allowsEditing: false,
-        videoQuality: ImagePicker.UIImagePickerControllerQualityType.High,
+        videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
       };
 
       const result =
@@ -336,8 +382,10 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
         asset.fileName ||
         `video_${Date.now()}.${EXTENSION_BY_MIME[inferredMime] ?? "mp4"}`;
       const stableUri = await copyToCacheOrThrow(asset.uri, fileName);
-
-      const sizeCheck = await ensureSizeLimit(stableUri, maxVideoSizeMB);
+      const compressedVideo = await compressVideoInCache(stableUri);
+      const finalVideoUri = compressedVideo.uri;
+      const finalMimeType = inferMimeFromUri(finalVideoUri) ?? "video/mp4";
+      const sizeCheck = await ensureSizeLimit(finalVideoUri, maxVideoSizeMB);
       if (!sizeCheck.valid) {
         Alert.alert(
           "Video muito grande",
@@ -348,19 +396,19 @@ export function useDocumentPicker(maxSizeMB: number = MAX_FILE_SIZE_MB) {
 
       log("video_selected", {
         originalUri: asset.uri,
-        safeUri: stableUri,
-        mimeType: inferredMime,
+        safeUri: finalVideoUri,
+        mimeType: finalMimeType,
         durationSec,
         size: sizeCheck.size,
       });
 
       return {
-        uri: stableUri,
+        uri: finalVideoUri,
         name: sanitizeFileName(
           fileName,
-          EXTENSION_BY_MIME[inferredMime] ?? "mp4",
+          EXTENSION_BY_MIME[finalMimeType] ?? "mp4",
         ),
-        mimeType: inferredMime,
+        mimeType: finalMimeType,
         type: "video",
       };
     } catch (error) {

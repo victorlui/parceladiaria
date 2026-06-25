@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
@@ -41,15 +42,29 @@ const VideoPreview = ({ uri }: { uri: string }) => {
   const player = useVideoPlayer(uri, (videoPlayer) => {
     videoPlayer.loop = false;
   });
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
+
+  useEffect(() => {
+    setIsPreviewReady(false);
+  }, [uri]);
 
   return (
-    <VideoView
-      style={styles.fullPreview}
-      player={player}
-      nativeControls
-      contentFit="contain"
-      allowsFullscreen
-    />
+    <View style={styles.videoPreviewWrapper}>
+      <VideoView
+        style={styles.fullPreview}
+        player={player}
+        nativeControls
+        contentFit="contain"
+        allowsFullscreen
+        onFirstFrameRender={() => setIsPreviewReady(true)}
+      />
+      {!isPreviewReady ? (
+        <View style={styles.videoLoadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.green.button} />
+          <Text style={styles.videoLoadingText}>Carregando video...</Text>
+        </View>
+      ) : null}
+    </View>
   );
 };
 
@@ -68,6 +83,7 @@ const SendDocument: React.FC<Props> = ({
   );
   const [uploadProgress, setUploadProgress] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isPreparingVideo, setIsPreparingVideo] = useState(false);
   const previousItemRef = React.useRef(item);
   const isMountedRef = useRef(true);
   const uploadSignalRef = useRef<{ cancelled: boolean } | null>(null);
@@ -91,13 +107,27 @@ const SendDocument: React.FC<Props> = ({
   const handlePick = async (
     type: "camera" | "library" | "pdf" | "video_library" | "video_camera",
   ) => {
-    let file;
-    if (type === "pdf") file = await selectPDF();
-    else if (type === "video_library") file = await takeVideo("library");
-    else if (type === "video_camera") file = await takeVideo("camera");
-    else file = await takePhoto(type);
+    const shouldPrepareVideo =
+      type === "video_library" || type === "video_camera";
 
-    if (file) setSelected(file as unknown as Selected);
+    if (shouldPrepareVideo) {
+      setIsPreparingVideo(true);
+      setSelected(null);
+    }
+
+    let file;
+    try {
+      if (type === "pdf") file = await selectPDF();
+      else if (type === "video_library") file = await takeVideo("library");
+      else if (type === "video_camera") file = await takeVideo("camera");
+      else file = await takePhoto(type);
+
+      if (file) setSelected(file as unknown as Selected);
+    } finally {
+      if (shouldPrepareVideo && isMountedRef.current) {
+        setIsPreparingVideo(false);
+      }
+    }
   };
 
   const displayName = documentDisplayNames[item] || item;
@@ -214,21 +244,33 @@ const SendDocument: React.FC<Props> = ({
         {/* Área de Visualização/Seleção Centralizada */}
         <View style={styles.dropZone}>
           {!selected ? (
-            <View style={styles.placeholder}>
-              <View style={styles.uploadIconCircle}>
-                <Ionicons
-                  name="cloud-upload"
-                  size={40}
-                  color={Colors.green.button}
-                />
+            isPreparingVideo ? (
+              <View style={styles.placeholder}>
+                <View style={styles.uploadIconCircle}>
+                  <ActivityIndicator size="large" color={Colors.green.button} />
+                </View>
+                <Text style={styles.mainInstruction}>Preparando video</Text>
+                <Text style={styles.subInstruction}>
+                  Aguarde enquanto o arquivo e otimizado
+                </Text>
               </View>
-              <Text style={styles.mainInstruction}>
-                Selecione seu documento
-              </Text>
-              <Text style={styles.subInstruction}>
-                Toque em uma das opções abaixo
-              </Text>
-            </View>
+            ) : (
+              <View style={styles.placeholder}>
+                <View style={styles.uploadIconCircle}>
+                  <Ionicons
+                    name="cloud-upload"
+                    size={40}
+                    color={Colors.green.button}
+                  />
+                </View>
+                <Text style={styles.mainInstruction}>
+                  Selecione seu documento
+                </Text>
+                <Text style={styles.subInstruction}>
+                  Toque em uma das opções abaixo
+                </Text>
+              </View>
+            )
           ) : (
             <View style={styles.previewContainer}>
               {selected.type === "image" ? (
@@ -245,14 +287,27 @@ const SendDocument: React.FC<Props> = ({
                   <Text style={styles.pdfName}>{selected.name}</Text>
                 </View>
               )}
-              <TouchableOpacity
-                style={styles.removeBadge}
-                onPress={() => setSelected(null)}
-              >
-                <Ionicons name="close" size={20} color="#FFF" />
-              </TouchableOpacity>
+              {!isPreparingVideo ? (
+                <TouchableOpacity
+                  style={styles.removeBadge}
+                  onPress={() => setSelected(null)}
+                >
+                  <Ionicons name="close" size={20} color="#FFF" />
+                </TouchableOpacity>
+              ) : null}
             </View>
           )}
+          {isPreparingVideo && selected ? (
+            <View style={styles.preparingOverlay}>
+              <View style={styles.uploadIconCircle}>
+                <ActivityIndicator size="large" color={Colors.green.button} />
+              </View>
+              <Text style={styles.mainInstruction}>Preparando video</Text>
+              <Text style={styles.subInstruction}>
+                Aguarde enquanto o arquivo e otimizado
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Botões de Ação Dinâmicos */}
@@ -264,6 +319,7 @@ const SendDocument: React.FC<Props> = ({
               label={action.label}
               onPress={action.onPress}
               compact={actionButtons.length === 3}
+              disabled={isPreparingVideo}
             />
           ))}
         </View>
@@ -295,9 +351,10 @@ const SendDocument: React.FC<Props> = ({
           activeOpacity={0.8}
           style={[
             styles.submitBtn,
-            (!selected || uploading) && styles.submitBtnDisabled,
+            (!selected || uploading || isPreparingVideo) &&
+              styles.submitBtnDisabled,
           ]}
-          disabled={!selected || uploading}
+          disabled={!selected || uploading || isPreparingVideo}
           onPress={() => uploadDocumennt(selected)}
         >
           <Text style={styles.submitBtnText}>
@@ -311,14 +368,16 @@ const SendDocument: React.FC<Props> = ({
 };
 
 // Componente Interno para os botões de seleção
-const ActionButton = ({ icon, label, onPress, compact }: any) => (
+const ActionButton = ({ icon, label, onPress, compact, disabled }: any) => (
   <TouchableOpacity
     style={[
       styles.actionBtn,
       compact ? styles.actionBtnCompact : styles.actionBtnWide,
+      disabled && styles.actionBtnDisabled,
     ]}
     onPress={onPress}
     activeOpacity={0.7}
+    disabled={disabled}
   >
     <View style={styles.actionIconArea}>
       <Ionicons name={icon} size={24} color={Colors.green.button} />
@@ -373,6 +432,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  preparingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(248,250,252,0.96)",
+  },
   placeholder: {
     alignItems: "center",
   },
@@ -399,9 +464,25 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  videoPreviewWrapper: {
+    width: "100%",
+    height: "100%",
+  },
   fullPreview: {
     width: "100%",
     height: "100%",
+  },
+  videoLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(248,250,252,0.94)",
+    gap: 12,
+  },
+  videoLoadingText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
   },
   pdfPlaceholder: {
     flex: 1,
@@ -445,6 +526,9 @@ const styles = StyleSheet.create({
   },
   actionBtnWide: {
     width: "48%",
+  },
+  actionBtnDisabled: {
+    opacity: 0.55,
   },
   actionIconArea: {
     width: 60,
