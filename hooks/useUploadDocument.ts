@@ -8,8 +8,8 @@ import { solicitarLinkS3 } from "@/services/upload-files";
 import * as Device from "expo-device";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Network from "expo-network";
-import { Video } from "react-native-compressor";
 import { Alert, Platform } from "react-native";
+import { Video } from "react-native-compressor";
 
 export type UploadCancelSignal = {
   cancelled: boolean;
@@ -428,10 +428,7 @@ async function compressVideoIfNeeded(
         : compressedMimeType;
     const finalExt = extFromMime(finalMimeType);
     const baseName = prepared.name.replace(/\.[^.]+$/, "");
-    const compressedName = sanitizeFileName(
-      `${baseName}_compressed`,
-      finalExt,
-    );
+    const compressedName = sanitizeFileName(`${baseName}_compressed`, finalExt);
 
     logUpload("video_compressed", {
       originalUri: prepared.originalUri,
@@ -497,14 +494,6 @@ async function prepareUploadFile(
   if (info.size && info.size > getMaxUploadSizeBytes(prepared.mimeType)) {
     throw new Error("Arquivo muito grande");
   }
-
-  logUpload("file_ready_for_upload", {
-    originalUri: prepared.originalUri,
-    safeUri: prepared.uri,
-    fileName: prepared.name,
-    mimeType: prepared.mimeType,
-    size: info.size,
-  });
 
   return {
     ...prepared,
@@ -697,7 +686,6 @@ async function performS3Upload({
       throw new Error("Upload cancelado pelo usuario.");
     }
 
-    const startedAt = Date.now();
     const uploadResult = await withRetry(
       () =>
         uploadWithProgress(
@@ -717,17 +705,6 @@ async function performS3Upload({
     }
 
     options?.onProgress?.(1);
-
-    logUpload("upload_completed", {
-      originalUri: prepared.originalUri,
-      safeUri: prepared.uri,
-      fileName: prepared.name,
-      mimeType: prepared.mimeType,
-      size: prepared.size,
-      elapsedMs: Date.now() - startedAt,
-      httpStatus: uploadResult.status,
-      finalUrl: final_url,
-    });
 
     return final_url;
   } finally {

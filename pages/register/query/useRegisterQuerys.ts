@@ -5,9 +5,17 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 
+type RegisterMutationRequest = {
+  request: any;
+  analyticsFlow?: any;
+  analyticsSource?: any;
+  registerStep?: any;
+  suppressErrorAlert?: boolean;
+};
+
 export function useRegisterQuery() {
   return useMutation({
-    mutationFn: (request: any) => {
+    mutationFn: (request: RegisterMutationRequest) => {
       return updateUserService({
         request: request.request,
         analyticsContext: {
@@ -21,7 +29,7 @@ export function useRegisterQuery() {
     onSuccess: async (data: any) => {
       return data;
     },
-    onError: (error: any) => {
+    onError: (error: any, variables: RegisterMutationRequest) => {
       if (error.status === 401) {
         Alert.alert(
           "Sessão expirada",
@@ -36,6 +44,8 @@ export function useRegisterQuery() {
             },
           ],
         );
+      } else if (variables?.suppressErrorAlert) {
+        return error;
       } else {
         Alert.alert("Atenção", error.message || "Erro ao atualizar usuário");
       }

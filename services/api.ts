@@ -501,8 +501,6 @@ api.interceptors.response.use(
         !Array.isArray(validationErrors) &&
         Object.keys(validationErrors).length > 0;
 
-      console.log("blockedReason", error.response?.data.message);
-
       if (blockedReason) {
         showBlockedAlert(blockedReason);
       } else if (hasValidationErrors) {
@@ -516,6 +514,13 @@ api.interceptors.response.use(
       } else {
         showForbiddenAlert("Requisição não autorizada.");
       }
+    }
+
+    // ========================================
+    // TRATAMENTO DE 422 - DEIXA O FLUXO LOCAL DECIDIR
+    // ========================================
+    if (status === 422) {
+      return Promise.reject(error);
     }
 
     // ========================================
