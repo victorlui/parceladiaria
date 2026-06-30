@@ -131,13 +131,20 @@ export function errorHandler(error: any) {
 }
 
 export function convertData() {
-  return new Date()
-    .toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-    .replace(
-      /(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)\s(AM|PM)/,
-      (_, month, day, year, hours, minutes, seconds, period) => {
-        const h = period === "PM" ? parseInt(hours) + 12 : parseInt(hours);
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${h.toString().padStart(2, "0")}:${minutes}:${seconds}-03:00`;
-      },
-    );
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const parts = formatter.formatToParts(new Date());
+  const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${getPart("year")}-${getPart("month")}-${getPart("day")}T${getPart("hour")}:${getPart("minute")}:${getPart("second")}-03:00`;
 }
