@@ -170,7 +170,7 @@ const ConfirmRenewal: React.FC = () => {
         </View>
 
         {/* Informativo sutil */}
-        <View style={styles.infoBox}>
+        {/* <View style={styles.infoBox}>
           <Ionicons
             name="information-circle-outline"
             size={20}
@@ -180,7 +180,7 @@ const ConfirmRenewal: React.FC = () => {
             O valor será creditado na sua conta em até 30 minutos após a
             aprovação.
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* Footer Fixo */}

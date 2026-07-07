@@ -1,3 +1,4 @@
+import { useAlerts } from "@/components/useAlert";
 import { api } from "@/services/api";
 import { getLoans } from "@/services/loans";
 import { useFocusEffect } from "expo-router";
@@ -5,6 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 import { IndicationResponse, Indications } from "../types/indications";
 
 export function useIndicationHook() {
+  const { showSuccess, showError } = useAlerts();
   const [indications, setIndications] = useState<IndicationResponse | null>(
     null,
   );
@@ -12,97 +14,63 @@ export function useIndicationHook() {
   const [accepted, setAccepted] = useState<boolean>(false);
   const [loadingTermo, setLoadingTermo] = useState<boolean>(false);
   const [loadingAccept, setLoadingAccept] = useState<boolean>(false);
-  const [foiIndicado, setFoiIndicado] = useState<boolean | null>(null);
-  const [totalLoans, setTotalLoans] = useState<number>(0);
+  const [loadingIndications, setLoadingIndications] = useState<boolean>(false);
   const [loadingLoans, setLoadingLoans] = useState<boolean>(false);
-  const [hasCode, setHasCode] = useState<boolean>(false);
+  const [loadingApply, setLoadingApply] = useState<boolean>(false);
+  const [totalLoans, setTotalLoans] = useState<number>(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      getIndications();
-      getTotalLoans();
-    }, []),
-  );
-
-  const newIndications = useMemo(() => indications?.data, [indications]);
-
-  async function getIndications() {
-    try {
-      const response = await api.get("/v1/affiliate");
-
-      const data = response.data?.data;
-      const hasFoiIndicado =
-        !!data && Object.prototype.hasOwnProperty.call(data, "foi_indicado");
-
-      if (data.codigo_disponivel) {
-        setIndications(null);
-        setTermos(null);
-        setHasCode(data.codigo_disponivel);
-        return;
-      }
-
-      if (hasFoiIndicado) {
-        setFoiIndicado(Boolean(data?.foi_indicado));
-        setIndications(null);
-        setTermos(null);
-        return;
-      }
-
-      setFoiIndicado(null);
-      setIndications((prev) => {
-        const prevPixKey = prev?.data?.pix_key;
-        const next = response.data as IndicationResponse;
-        const nextData = next?.data;
-
-        if (!nextData) return next;
-        if (!prevPixKey) return next;
-        if (nextData.pix_key === prevPixKey) return next;
-
-        return {
-          ...next,
-          data: {
-            ...nextData,
-            pix_key: prevPixKey,
-          },
-        };
-      });
-
-      if (data?.termos_aceitos === false) {
-        await getTermos();
-        return;
-      }
-
-      setTermos(null);
-    } catch {
-      return;
-    } finally {
-      setLoadingTermo(false);
-    }
-  }
-
-  async function getTotalLoans() {
-    setLoadingLoans(true);
-    try {
-      const loans = await getLoans();
-      setTotalLoans(Array.isArray(loans) ? loans.length : 0);
-    } catch (error) {
-      setTotalLoans(0);
-    } finally {
-      setLoadingLoans(false);
-    }
-  }
-
-  async function getTermos() {
+  const getTermos = useCallback(async () => {
     setLoadingTermo(true);
     try {
       const response = await api.get("/termos/Termos_afiliado");
-      setTermos(response.data.termo.content);
+      const content = response.data.termo.content;
+      setTermos(content);
+      return content;
     } catch (error) {
       return error;
     } finally {
       setLoadingTermo(false);
     }
-  }
+  }, []);
+
+  const getIndications = useCallback(async () => {
+    setLoadingIndications(true);
+    try {
+      const { data } = await api.get("/v1/affiliate");
+      setIndications(data);
+      const termosAceitos =
+        data?.data?.v3?.termos_aceitos ?? data?.data?.termos_aceitos ?? false;
+
+      if (data?.data?.v3?.programa_ativo && !termosAceitos) {
+        await getTermos();
+      }
+    } catch {
+      return;
+    } finally {
+      setLoadingIndications(false);
+    }
+  }, [getTermos]);
+
+  const getTotalLoans = useCallback(async () => {
+    setLoadingLoans(true);
+    try {
+      const loans = await getLoans();
+      setTotalLoans(Array.isArray(loans) ? loans.length : 0);
+    } catch {
+      setTotalLoans(0);
+    } finally {
+      setLoadingLoans(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void getIndications();
+      void getTotalLoans();
+    }, [getIndications, getTotalLoans]),
+  );
+
+  const newIndications = useMemo(() => indications?.data, [indications]);
 
   const toggleAccepted = useCallback(() => {
     setAccepted((prev) => !prev);
@@ -113,23 +81,17 @@ export function useIndicationHook() {
     setAccepted(false);
   }, []);
 
-  async function acceptTermos() {
-    if (!accepted) {
-      return;
-    }
-
+  const acceptTermos = useCallback(async () => {
     setLoadingAccept(true);
     try {
       await api.post("/v1/affiliate/accept-terms");
-      setAccepted(false);
-      setTermos(null);
       await getIndications();
     } catch (error) {
       return error;
     } finally {
       setLoadingAccept(false);
     }
-  }
+  }, [getIndications]);
 
   const changePixKey = useCallback((key: string) => {
     setIndications((prev) => {
@@ -172,6 +134,36 @@ export function useIndicationHook() {
     setTotalLoans(total);
   }, []);
 
+  async function applyCode(code: string) {
+    setLoadingApply(true);
+    try {
+      await api.post("/v1/affiliate/apply-code", {
+        codigo: code,
+      });
+      setLoadingApply(false);
+      showSuccess("Sucesso", "Código aplicado com sucesso");
+      setIndications((prev) =>
+        prev
+          ? {
+              ...prev,
+              data: {
+                ...prev.data,
+                codigo_disponivel: true,
+                foi_indicado: true,
+              },
+            }
+          : prev,
+      );
+    } catch (error: any) {
+      showError(
+        "Atenção",
+        error.response?.data?.message ?? "Erro ao aplicar código",
+      );
+    } finally {
+      setLoadingApply(false);
+    }
+  }
+
   return {
     indications,
     termos,
@@ -179,10 +171,10 @@ export function useIndicationHook() {
     loadingTermo,
     loadingAccept,
     loadingLoans,
+    loadingIndications,
+    loadingApply,
     newIndications,
-    foiIndicado,
     totalLoans,
-    hasCode,
     toggleAccepted,
     acceptTermos,
     changePixKey,
@@ -190,5 +182,6 @@ export function useIndicationHook() {
     updateTotalLoans,
     getTermos,
     clearTermos,
+    applyCode,
   };
 }

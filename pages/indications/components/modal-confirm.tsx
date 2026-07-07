@@ -7,7 +7,15 @@ import { changePixKey } from "@/services/change-pix";
 import { formatCurrencyBRL } from "@/utils/formats";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { IndicationResponse } from "../types/indications";
 
 interface Props {
@@ -21,8 +29,15 @@ interface Props {
 const ModalConfirm: React.FC<Props> = (props) => {
   const { visible, onClose, indications, onChangePixKey, onSuccess } = props;
   const { showError, AlertDisplay } = useAlerts();
+  const { width } = useWindowDimensions();
+  const styles = getStyles(width);
   const [step, setStep] = useState<"confirm" | "change-key">("confirm");
   const [loading, setLoading] = useState(false);
+
+  const handleClose = () => {
+    setStep("confirm");
+    onClose();
+  };
 
   const handleChangeKey = async (newKey: string, type: string) => {
     setLoading(true);
@@ -69,49 +84,32 @@ const ModalConfirm: React.FC<Props> = (props) => {
       }}
     >
       <AlertDisplay />
-      <Pressable
-        className="flex-1 bg-black/50 items-center justify-center"
-        onPress={() => {
-          setStep("confirm");
-          onClose();
-        }}
-      >
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable
           onPress={() => {}}
-          className="bg-white rounded-24 p-6 w-[90%] "
-          style={{
-            borderRadius: 16,
-            width: "90%",
-            gap: 20,
-            ...(step === "change-key" ? { height: 400 } : null),
-          }}
+          style={[
+            styles.modalCard,
+            step === "change-key" && styles.modalCardExpanded,
+          ]}
         >
-          <View className="flex items-end bg-slate-500">
-            <Ionicons
-              name="close"
-              size={20}
-              color={Colors.gray.primary}
-              onPress={() => {
-                setStep("confirm");
-                onClose();
-              }}
-            />
+          <View style={styles.closeRow}>
+            <TouchableOpacity activeOpacity={0.7} onPress={handleClose}>
+              <Ionicons name="close" size={20} color={Colors.gray.primary} />
+            </TouchableOpacity>
           </View>
 
           {step === "confirm" && (
             <>
-              <Text className="text-center text-lg font-bold text-gray-900">
-                Confirmar Saque
-              </Text>
-              <Text className="text-center text-2xl font-bold text-gray-900 my-5">
+              <Text style={styles.title}>Confirmar saque</Text>
+              <Text style={styles.amount}>
                 R$ {formatCurrencyBRL(indications?.data?.saldo)}
               </Text>
 
-              <View className="border border-gray-300 rounded-xl p-4">
-                <View className="flex-row items-start">
-                  <View className="flex-1 pr-3">
-                    <Text className="text-sm">CHAVE PIX DE DESTINO </Text>
-                    <Text className="font-semibold text-xl" numberOfLines={1}>
+              <View style={styles.pixCard}>
+                <View style={styles.pixRow}>
+                  <View style={styles.pixContent}>
+                    <Text style={styles.pixLabel}>Chave PIX de destino</Text>
+                    <Text style={styles.pixValue} numberOfLines={1}>
                       {indications?.data?.pix_key}
                     </Text>
                   </View>
@@ -123,14 +121,12 @@ const ModalConfirm: React.FC<Props> = (props) => {
                 </View>
               </View>
 
-              <View className="my-5 gap-3">
+              <View style={styles.actions}>
                 <Pressable
-                  style={{
-                    backgroundColor: Colors.green.primary,
-                    padding: 15,
-                    opacity: loading ? 0.5 : 1,
-                  }}
-                  className="rounded-full   flex-row items-center gap-4 justify-center"
+                  style={[
+                    styles.primaryButton,
+                    loading && styles.buttonDisabledOpacity,
+                  ]}
                   disabled={loading}
                   onPress={confirm}
                 >
@@ -138,9 +134,7 @@ const ModalConfirm: React.FC<Props> = (props) => {
                     <LoadingDots text="Confirmando..." />
                   ) : (
                     <>
-                      <Text className="text-center text-lg font-bold text-white">
-                        Confirmar
-                      </Text>
+                      <Text style={styles.primaryButtonText}>Confirmar</Text>
                       <Ionicons
                         name="arrow-forward-outline"
                         size={20}
@@ -150,24 +144,22 @@ const ModalConfirm: React.FC<Props> = (props) => {
                   )}
                 </Pressable>
                 <Pressable
-                  style={{ padding: 15, opacity: loading ? 0.5 : 1 }}
+                  style={[
+                    styles.secondaryButton,
+                    loading && styles.buttonDisabledOpacity,
+                  ]}
                   onPress={() => setStep("change-key")}
                   disabled={loading}
-                  className="rounded-full border border-gray-300   flex-row items-center gap-4 justify-center"
                 >
-                  <Text className="text-center text-lg font-bold ">
-                    Alterar Chave
-                  </Text>
+                  <Text style={styles.secondaryButtonText}>Alterar chave</Text>
                 </Pressable>
               </View>
             </>
           )}
 
           {step === "change-key" && (
-            <View style={{ flex: 1, gap: 10 }}>
-              <Text className="text-center text-lg font-bold ">
-                Alterar Chave
-              </Text>
+            <View style={styles.changeKeyContainer}>
+              <Text style={styles.title}>Alterar chave</Text>
               <ChangeKey
                 onSave={handleChangeKey}
                 onStepChange={setStep}
@@ -179,6 +171,123 @@ const ModalConfirm: React.FC<Props> = (props) => {
       </Pressable>
     </Modal>
   );
+};
+
+const getStyles = (width: number) => {
+  const isSmallDevice = width < 360;
+  const isMediumDevice = width >= 360 && width < 430;
+
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    modalCard: {
+      width: "100%",
+      maxWidth: 420,
+      borderRadius: isSmallDevice ? 20 : 24,
+      backgroundColor: Colors.white,
+      paddingHorizontal: isSmallDevice ? 18 : isMediumDevice ? 22 : 24,
+      paddingVertical: isSmallDevice ? 18 : 20,
+      gap: 20,
+    },
+    modalCardExpanded: {
+      minHeight: 400,
+    },
+    closeRow: {
+      alignItems: "flex-end",
+    },
+    title: {
+      textAlign: "center",
+      color: "#233047",
+      fontSize: isSmallDevice ? 18 : isMediumDevice ? 20 : 22,
+      lineHeight: isSmallDevice ? 26 : isMediumDevice ? 28 : 30,
+      fontWeight: "700",
+    },
+    amount: {
+      textAlign: "center",
+      color: "#0F172A",
+      fontSize: isSmallDevice ? 26 : isMediumDevice ? 30 : 32,
+      lineHeight: isSmallDevice ? 34 : isMediumDevice ? 38 : 40,
+      fontWeight: "700",
+      marginVertical: 4,
+    },
+    pixCard: {
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      borderRadius: 16,
+      paddingHorizontal: isSmallDevice ? 14 : 16,
+      paddingVertical: isSmallDevice ? 14 : 16,
+    },
+    pixRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+    },
+    pixContent: {
+      flex: 1,
+      gap: 6,
+    },
+    pixLabel: {
+      color: "#64748B",
+      fontSize: isSmallDevice ? 11 : 12,
+      lineHeight: isSmallDevice ? 18 : 20,
+      fontWeight: "600",
+      textTransform: "uppercase",
+    },
+    pixValue: {
+      color: "#0F172A",
+      fontSize: isSmallDevice ? 17 : isMediumDevice ? 18 : 20,
+      lineHeight: isSmallDevice ? 24 : isMediumDevice ? 26 : 28,
+      fontWeight: "700",
+    },
+    actions: {
+      gap: 12,
+      marginTop: 4,
+    },
+    primaryButton: {
+      minHeight: 52,
+      borderRadius: 999,
+      backgroundColor: Colors.green.primary,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 10,
+      paddingHorizontal: 18,
+    },
+    primaryButtonText: {
+      color: Colors.white,
+      fontSize: isSmallDevice ? 16 : 17,
+      lineHeight: isSmallDevice ? 24 : 26,
+      fontWeight: "700",
+    },
+    secondaryButton: {
+      minHeight: 52,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 18,
+    },
+    secondaryButtonText: {
+      color: "#233047",
+      fontSize: isSmallDevice ? 16 : 17,
+      lineHeight: isSmallDevice ? 24 : 26,
+      fontWeight: "700",
+    },
+    buttonDisabledOpacity: {
+      opacity: 0.5,
+    },
+    changeKeyContainer: {
+      flex: 1,
+      gap: 12,
+    },
+  });
 };
 
 export default ModalConfirm;

@@ -1,7 +1,6 @@
 import { getMenuItems } from "@/constants/menuItems";
 import { useIndicationHook } from "@/pages/indications/hooks/useIndicationHook";
 import { useAuthStore } from "@/store/auth";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -9,22 +8,11 @@ import { MenuItem } from "./menu-item";
 
 const MenuIcon: React.FC = () => {
   const { user } = useAuthStore();
-  const { foiIndicado, indications } = useIndicationHook();
+  const { indications } = useIndicationHook();
   const baseItems = getMenuItems({ user, router });
 
   const items = React.useMemo(() => {
     let nextItems = baseItems;
-
-    if (foiIndicado !== null) {
-      nextItems = nextItems.map((item) => {
-        if (item.key !== "indications") return item;
-        return {
-          ...item,
-          title: "Benefícios",
-          icon: <Ionicons name="gift-outline" size={28} color="white" />,
-        };
-      });
-    }
 
     if (indications) {
       nextItems = nextItems.map((item) => {
@@ -38,7 +26,7 @@ const MenuIcon: React.FC = () => {
     }
 
     return nextItems;
-  }, [baseItems, foiIndicado, indications]);
+  }, [baseItems, indications]);
 
   return (
     <View style={styles.container}>

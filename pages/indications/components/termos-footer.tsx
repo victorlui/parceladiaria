@@ -1,8 +1,14 @@
-import React from "react";
 import ButtonComponent from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 type Props = {
   accepted: boolean;
@@ -19,6 +25,9 @@ export const TermosFooter = React.memo(function TermosFooter({
   acceptTermos,
   isReading = false,
 }: Props) {
+  const { width } = useWindowDimensions();
+  const styles = getStyles(width);
+
   return (
     <View style={styles.footer}>
       {!isReading && (
@@ -40,46 +49,49 @@ export const TermosFooter = React.memo(function TermosFooter({
       <ButtonComponent
         disabled={!isReading && (!accepted || loadingAccept)}
         iconLeft={null}
-        title="Continuar"
+        title="Aceitar e Continuar"
         onPress={acceptTermos}
         loading={loadingAccept}
       />
     </View>
   );
 });
-const styles = StyleSheet.create({
-  footer: {
-    flex: 0.2,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    gap: 20,
-  },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.borderColor,
-    backgroundColor: Colors.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: "#0F172A",
-  },
-  checkboxPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  checkboxText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: "#0F172A",
-  },
-});
+
+const getStyles = (width: number) => {
+  const isSmallDevice = width < 360;
+  const isMediumDevice = width >= 360 && width < 430;
+
+  return StyleSheet.create({
+    footer: {
+      paddingHorizontal: 16,
+      paddingTop: isSmallDevice ? 14 : 16,
+      paddingBottom: isSmallDevice ? 16 : 18,
+      borderTopWidth: 1,
+      borderTopColor: "#E5E7EB",
+      gap: isSmallDevice ? 16 : 18,
+      backgroundColor: Colors.white,
+    },
+    checkboxRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    checkbox: {
+      width: isSmallDevice ? 22 : 24,
+      height: isSmallDevice ? 22 : 24,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: Colors.borderColor,
+      backgroundColor: Colors.white,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    checkboxText: {
+      flex: 1,
+      fontSize: isSmallDevice ? 13 : isMediumDevice ? 14 : 15,
+      lineHeight: isSmallDevice ? 20 : isMediumDevice ? 22 : 24,
+      fontWeight: "400",
+      color: "#233047",
+    },
+  });
+};

@@ -40,10 +40,10 @@
         "dark": "./assets/icons/ios-icon/ios-icon-iOS-Dark.png",
         "tinted": "./assets/icons/ios-icon/ios-icon-iOS-TintedDark.png"
       },
-      "buildNumber": "66"
+      "buildNumber": "67"
     },
     "android": {
-      "versionCode": 68,
+      "versionCode": 69,
       "adaptiveIcon": {
         "backgroundColor": "#053E38"
       },
@@ -65,7 +65,10 @@
               "scheme": "whatsapp"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "br.com.parceladiaria",

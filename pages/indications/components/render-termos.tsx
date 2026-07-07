@@ -8,6 +8,8 @@ interface Props {
 
 const RenderTermos: React.FC<Props> = ({ termos }) => {
   const { width } = useWindowDimensions();
+  const isSmallDevice = width < 360;
+  const isMediumDevice = width >= 360 && width < 430;
 
   const cleanHtml = useMemo(() => {
     if (!termos) return "";
@@ -53,22 +55,25 @@ const RenderTermos: React.FC<Props> = ({ termos }) => {
   const tagsStyles = {
     h2: {
       fontWeight: "bold",
-      fontSize: 14,
-      marginTop: 12,
-      marginBottom: 6,
-      color: "#0F172A",
+      fontSize: isSmallDevice ? 15 : isMediumDevice ? 16 : 17,
+      lineHeight: isSmallDevice ? 22 : isMediumDevice ? 24 : 26,
+      marginTop: isSmallDevice ? 16 : 18,
+      marginBottom: 8,
+      color: "#233047",
     },
     p: {
-      fontSize: 13,
-      marginBottom: 8,
-      lineHeight: 18,
+      fontSize: isSmallDevice ? 13 : isMediumDevice ? 14 : 15,
+      marginBottom: isSmallDevice ? 10 : 12,
+      lineHeight: isSmallDevice ? 22 : isMediumDevice ? 24 : 26,
+      color: "#334155",
     },
     strong: {
       fontWeight: "bold",
+      color: "#0F172A",
     },
     ul: {
       paddingLeft: 0,
-      marginVertical: 8,
+      marginVertical: isSmallDevice ? 10 : 12,
     },
   };
 
@@ -83,16 +88,9 @@ const RenderTermos: React.FC<Props> = ({ termos }) => {
 };
 
 const styles = StyleSheet.create({
-  webviewContainer: {
-    flex: 2,
-    height: 300,
-  },
-
-  // 🔥 tabela
   table: {
     borderWidth: 0,
-
-    marginVertical: 10,
+    marginVertical: 12,
   },
   tr: {
     flexDirection: "row",
@@ -104,18 +102,18 @@ const styles = StyleSheet.create({
   th: {
     flex: 1,
     padding: 8,
-
     flexDirection: "row",
   },
   li: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   bullet: {
     marginRight: 8,
-    fontSize: 28,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#233047",
   },
 });
 

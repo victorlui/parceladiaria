@@ -1,12 +1,21 @@
 import ButtonModal from "@/components/renew/button-modal";
 import PixKeySelect from "@/components/renew/PixKeySelect";
+import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
+import { api } from "@/services/api";
+import { validateEmail, validatePhone } from "@/utils/validation";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Modal, Text, TextInput, View } from "react-native";
-import { validateEmail, validatePhone } from "@/utils/validation";
-import { useAlerts } from "@/components/useAlert";
-import { api } from "@/services/api";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 type Props = {
   visible: boolean;
@@ -19,6 +28,8 @@ const ModalChangepix: React.FC<Props> = ({
   onChangePixKey,
 }) => {
   const { showError, showSuccess, AlertDisplay } = useAlerts();
+  const { width } = useWindowDimensions();
+  const styles = getStyles(width);
   const [type, setType] = useState<any>("cpf");
   const [keyNew, setKeyNew] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,26 +82,18 @@ const ModalChangepix: React.FC<Props> = ({
       presentationStyle="overFullScreen"
     >
       <AlertDisplay />
-      <View className="flex-1 bg-black/50 items-center justify-center">
-        <View
-          className="bg-white rounded-24 p-6 w-[90%] "
-          style={{ borderRadius: 16, width: "90%" }}
-        >
-          <View className="flex items-end bg-slate-500">
-            <Ionicons
-              name="close"
-              size={20}
-              color={Colors.gray.primary}
-              onPress={() => onClose()}
-            />
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.modalCard} onPress={() => {}}>
+          <View style={styles.closeRow}>
+            <TouchableOpacity activeOpacity={0.7} onPress={onClose}>
+              <Ionicons name="close" size={20} color={Colors.gray.primary} />
+            </TouchableOpacity>
           </View>
-          <Text className="text-center text-xl font-bold text-gray-900">
-            Alterar chave
-          </Text>
-          <View className="my-5">
-            <Text className="text-gray-700 font-semibold mb-2">
-              Tipo de Chave
-            </Text>
+
+          <Text style={styles.title}>Alterar chave</Text>
+
+          <View style={styles.formContent}>
+            <Text style={styles.label}>Tipo de chave</Text>
             <PixKeySelect
               value={type}
               onChange={(value) => {
@@ -98,23 +101,18 @@ const ModalChangepix: React.FC<Props> = ({
                 setKeyNew("");
               }}
             />
-            <Text className="text-gray-700 font-semibold mt-2 mb-2">
-              Nova Chave
-            </Text>
+
+            <Text style={styles.label}>Nova chave</Text>
+
             <TextInput
               placeholder="Digite a nova chave"
-              style={{
-                borderWidth: 1,
-                borderColor: Colors.borderColor,
-                borderRadius: 8,
-                padding: 12,
-                marginBottom: 20,
-              }}
-              placeholderTextColor="black"
+              style={styles.input}
+              placeholderTextColor="#64748B"
               onChangeText={(text) => onChangeKey(text)}
               value={keyNew}
               autoCapitalize="none"
             />
+
             <ButtonModal
               textButton1="Cancelar"
               textButton2="Salvar e Continuar"
@@ -125,10 +123,64 @@ const ModalChangepix: React.FC<Props> = ({
               loading={loading}
             />
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
+};
+
+const getStyles = (width: number) => {
+  const isSmallDevice = width < 360;
+  const isMediumDevice = width >= 360 && width < 430;
+
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    modalCard: {
+      width: "100%",
+      maxWidth: 420,
+      borderRadius: isSmallDevice ? 20 : 24,
+      backgroundColor: Colors.white,
+      paddingHorizontal: isSmallDevice ? 18 : isMediumDevice ? 22 : 24,
+      paddingVertical: isSmallDevice ? 18 : 20,
+      gap: 8,
+    },
+    closeRow: {
+      alignItems: "flex-end",
+    },
+    title: {
+      textAlign: "center",
+      color: "#233047",
+      fontSize: isSmallDevice ? 18 : isMediumDevice ? 20 : 22,
+      lineHeight: isSmallDevice ? 26 : isMediumDevice ? 28 : 30,
+      fontWeight: "700",
+    },
+    formContent: {
+      marginTop: 12,
+      gap: 12,
+    },
+    label: {
+      color: "#334155",
+      fontSize: isSmallDevice ? 13 : 14,
+      lineHeight: isSmallDevice ? 20 : 22,
+      fontWeight: "600",
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: Colors.borderColor,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: isSmallDevice ? 13 : 14,
+      color: "#0F172A",
+      marginBottom: 8,
+    },
+  });
 };
 
 export default ModalChangepix;
