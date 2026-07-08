@@ -16,6 +16,7 @@ type Props = {
   toggleAccepted: () => void;
   acceptTermos: () => void;
   isReading?: boolean;
+  checkboxLabel?: string;
 };
 
 export const TermosFooter = React.memo(function TermosFooter({
@@ -24,6 +25,7 @@ export const TermosFooter = React.memo(function TermosFooter({
   toggleAccepted,
   acceptTermos,
   isReading = false,
+  checkboxLabel = "Li e aceito os Termos e Condições",
 }: Props) {
   const { width } = useWindowDimensions();
   const styles = getStyles(width);
@@ -31,8 +33,14 @@ export const TermosFooter = React.memo(function TermosFooter({
   return (
     <View style={styles.footer}>
       {!isReading && (
-        <View style={styles.checkboxRow}>
-          <Pressable style={styles.checkbox} onPress={toggleAccepted}>
+        <Pressable
+          style={styles.checkboxRow}
+          onPress={toggleAccepted}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: accepted }}
+          hitSlop={8}
+        >
+          <View style={styles.checkbox}>
             {accepted && (
               <FontAwesome
                 name="check"
@@ -40,11 +48,9 @@ export const TermosFooter = React.memo(function TermosFooter({
                 color={Colors.green.primary}
               />
             )}
-          </Pressable>
-          <Text style={styles.checkboxText}>
-            Li e aceito os Termos e Condições
-          </Text>
-        </View>
+          </View>
+          <Text style={styles.checkboxText}>{checkboxLabel}</Text>
+        </Pressable>
       )}
       <ButtonComponent
         disabled={!isReading && (!accepted || loadingAccept)}

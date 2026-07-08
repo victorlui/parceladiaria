@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Indications } from "../types/indications";
-import ApplyCode from "./apply-code";
 import ComoFuncionaCard from "./como-funciona-card";
 import ListaIndicacoes from "./lista-indicacoes";
 import ModalTermos from "./modal-termos";
@@ -29,44 +28,51 @@ interface Props {
   indications: Indications;
   termos: string | null;
   loadingTermo: boolean;
-  loadingApply: boolean;
+  loadingAccept: boolean;
   getTermos: () => Promise<unknown>;
-  applyCode: (code: string) => Promise<void>;
+  acceptTermos: () => Promise<unknown>;
 }
 
 export default function Dashboard({
   indications,
   termos,
   loadingTermo,
-  loadingApply,
+  loadingAccept,
   getTermos,
-  applyCode,
+  acceptTermos,
 }: Props) {
   const { width } = useWindowDimensions();
   const { setData } = useConfirmPixStore();
-  const { showWarning, AlertDisplay } = useAlerts();
+  const { AlertDisplay } = useAlerts();
   const styles = getStyles(width);
   const [termsModalVisible, setTermsModalVisible] = React.useState(false);
-  const [affiliateCode, setAffiliateCode] = React.useState("");
+  const [showAcceptButton, setShowAcceptButton] = React.useState(false);
 
   const availableBalance = indications?.saldo ?? 0;
   const minimumWithdrawal = indications?.valor_minimo_saque ?? 0;
+  const termosAceitos =
+    indications?.v3?.termos_aceitos ?? indications?.termos_aceitos ?? false;
+  const shouldShowTermsAcceptanceOnly =
+    Boolean(indications?.v3?.programa_ativo) &&
+    !termosAceitos &&
+    indications?.v3?.pode_indicar === false;
 
   const shouldDisableWithdrawButton =
     availableBalance <= 0 || availableBalance < minimumWithdrawal;
 
-  const handleOpenTermsModal = async () => {
+  const handleOpenTermsModal = async (withAcceptButton = false) => {
+    setShowAcceptButton(withAcceptButton);
     setTermsModalVisible(true);
     await getTermos();
   };
 
-  const handleApplyCode = async () => {
-    if (!affiliateCode.trim()) {
-      showWarning("Atenção", "Digite um código de indicação para continuar.");
-      return;
-    }
+  const handleAcceptTerms = async () => {
+    const response = await acceptTermos();
 
-    await applyCode(affiliateCode.trim());
+    if (response === undefined) {
+      setTermsModalVisible(false);
+      setShowAcceptButton(false);
+    }
   };
 
   return (
@@ -90,61 +96,84 @@ export default function Dashboard({
         </TouchableOpacity>
 
         <View style={styles.infoCard}>
-          <View>
-            <View style={styles.infoHeader}>
-              <Ionicons
-                name="wallet"
-                size={width < 360 ? 18 : 20}
-                color={Colors.black}
-              />
-              <Text style={styles.textinfo}>Saldo disponível</Text>
+          <View style={styles.infoCardTopRow}>
+            <View>
+              <View style={styles.infoHeader}>
+                <Ionicons
+                  name="wallet"
+                  size={width < 360 ? 18 : 20}
+                  color={Colors.black}
+                />
+                <Text style={styles.textinfo}>Saldo disponível</Text>
+              </View>
+              <Text style={styles.currency}>
+                R$ {formatCurrencyBRL(indications.saldo)}
+              </Text>
             </View>
-            <Text style={styles.currency}>
-              R$ {formatCurrencyBRL(indications.saldo)}
+            <View>
+              <Pressable
+                onPress={() => {
+                  setData({
+                    isLoan: false,
+                    value: String(availableBalance),
+                  });
+                  router.push("/(app)/confirm-pix");
+                }}
+                style={[
+                  styles.button,
+                  shouldDisableWithdrawButton && styles.buttonDisabled,
+                ]}
+                disabled={shouldDisableWithdrawButton}
+              >
+                <Text style={styles.buttonText}>Solicitar Saque</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {!indications.v3?.pode_indicar && (
+            <Text style={styles.infoMessage}>
+              Seu saldo continua disponível para saque mesmo antes de aceitar os
+              novos termos.
             </Text>
-          </View>
-          <View>
-            <Pressable
-              onPress={() => {
-                setData({
-                  isLoan: false,
-                  value: String(availableBalance),
-                });
-                router.push("/(app)/confirm-pix");
-              }}
-              style={[
-                styles.button,
-                shouldDisableWithdrawButton && styles.buttonDisabled,
-              ]}
-              disabled={shouldDisableWithdrawButton}
-            >
-              <Text style={styles.buttonText}>Solicitar Saque</Text>
-            </Pressable>
-          </View>
+          )}
         </View>
 
-        {indications?.codigo_disponivel && !indications?.foi_indicado && (
-          <ApplyCode
-            code={affiliateCode}
-            setCode={setAffiliateCode}
-            loading={loadingApply}
-            onSubmit={handleApplyCode}
-          />
-        )}
+        {shouldShowTermsAcceptanceOnly ? (
+          <View style={styles.infoCardColumn}>
+            <View style={styles.codeHeader}>
+              <Text style={styles.textinfo}>Aceite os termos do programa</Text>
+              <Text style={styles.codeLink}>
+                Para liberar sua participação no Programa de Indicações, revise
+                e aceite os termos.
+              </Text>
+            </View>
 
-        {indications?.v3?.programa_ativo && (
+            <ButtonComponent
+              title="Ler e aceitar termos"
+              onPress={() => {
+                void handleOpenTermsModal(true);
+              }}
+              iconLeft="document-text"
+              iconRight={null}
+            />
+          </View>
+        ) : null}
+
+        {!shouldShowTermsAcceptanceOnly && indications?.v3?.programa_ativo && (
           <Vagas indicationsV3={indications.v3 || null} />
         )}
 
-        <ComoFuncionaCard
-          hasV3={Boolean(indications?.v3)}
-          showRelerTermosButton={true}
-          onPressRelerTermos={() => {
-            void handleOpenTermsModal();
-          }}
-        />
+        {!shouldShowTermsAcceptanceOnly && (
+          <ComoFuncionaCard
+            hasV3={Boolean(indications?.v3)}
+            showRelerTermosButton={true}
+            onPressRelerTermos={() => {
+              void handleOpenTermsModal();
+            }}
+          />
+        )}
 
-        {indications?.v3?.pode_indicar !== false && (
+        {!shouldShowTermsAcceptanceOnly && indications?.v3?.pode_indicar && (
           <View style={styles.infoCardColumn}>
             <View style={styles.codeHeader}>
               <Text style={styles.textinfo}>
@@ -183,14 +212,25 @@ export default function Dashboard({
           </View>
         )}
 
-        <ListaIndicacoes indications={indications?.indicacoes || []} />
+        {!shouldShowTermsAcceptanceOnly && (
+          <ListaIndicacoes indications={indications?.indicacoes || []} />
+        )}
       </ScrollView>
 
       <ModalTermos
         visible={termsModalVisible}
-        onClose={() => setTermsModalVisible(false)}
+        onClose={() => {
+          setTermsModalVisible(false);
+          setShowAcceptButton(false);
+        }}
         termos={termos}
         loading={loadingTermo}
+        showAcceptButton={showAcceptButton}
+        loadingAccept={loadingAccept}
+        onAccept={() => {
+          void handleAcceptTerms();
+        }}
+        subtitle={showAcceptButton}
       />
     </SafeAreaView>
   );
@@ -224,9 +264,6 @@ const getStyles = (width: number) => {
       color: "#233047",
     },
     infoCard: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
       gap: 12,
       paddingVertical: isSmallDevice ? 18 : isMediumDevice ? 22 : 24,
       paddingHorizontal: isSmallDevice ? 18 : isMediumDevice ? 22 : 26,
@@ -239,6 +276,12 @@ const getStyles = (width: number) => {
       shadowOpacity: 0.08,
       shadowRadius: 10,
       elevation: 3,
+    },
+    infoCardTopRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
     },
     infoCardColumn: {
       paddingVertical: isSmallDevice ? 18 : isMediumDevice ? 22 : 24,
@@ -289,6 +332,11 @@ const getStyles = (width: number) => {
       lineHeight: isSmallDevice ? 18 : 20,
       fontWeight: "700",
       color: Colors.white,
+    },
+    infoMessage: {
+      fontSize: isSmallDevice ? 12 : 13,
+      lineHeight: isSmallDevice ? 18 : 20,
+      color: "#475569",
     },
     codeHeader: {
       gap: 6,

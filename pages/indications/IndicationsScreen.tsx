@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PulsingImageLoader from "../register/components/PulsingImageLoader";
 import Dashboard from "./components/dashboard";
+import NaoAfiliado from "./components/nao-afiliado";
 import ProgramaPausado from "./components/programa-pausado";
 import RequisitosIndications from "./components/requisitos-indicacao";
 import { TermosBody } from "./components/termos";
@@ -29,8 +30,12 @@ const IndicationsScreen: React.FC = () => {
     indications?.data?.termos_aceitos ??
     false;
 
+  const canShowFullTermsScreen = indications?.data?.v3?.pode_indicar !== false;
+
   const shouldShowTermsScreen =
-    Boolean(indications?.data?.v3?.programa_ativo) && !termosAceitos;
+    Boolean(indications?.data?.v3?.programa_ativo) &&
+    !termosAceitos &&
+    canShowFullTermsScreen;
 
   if (
     loadingIndications ||
@@ -46,6 +51,21 @@ const IndicationsScreen: React.FC = () => {
               ? "Caregando termos"
               : ""
         }
+      />
+    );
+  }
+
+  if (indications?.data?.v3?.apto === false) {
+    return (
+      <NaoAfiliado
+        loadingApply={loadingApply}
+        applyCode={applyCode}
+        indications={indications?.data || null}
+        termos={termos}
+        loadingTermo={loadingTermo}
+        loadingAccept={loadingAccept}
+        getTermos={getTermos}
+        acceptTermos={acceptTermos}
       />
     );
   }
@@ -83,9 +103,9 @@ const IndicationsScreen: React.FC = () => {
       indications={indications?.data || {}}
       termos={termos}
       loadingTermo={loadingTermo}
-      loadingApply={loadingApply}
+      loadingAccept={loadingAccept}
       getTermos={getTermos}
-      applyCode={applyCode}
+      acceptTermos={acceptTermos}
     />
   );
 };

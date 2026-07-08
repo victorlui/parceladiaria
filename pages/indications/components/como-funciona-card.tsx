@@ -16,10 +16,10 @@ type ComoFuncionaCardProps = {
 };
 
 const stepsV3 = [
-  "💳 Pague a 1ª parcela do seu contrato e ganhe 5 vagas",
+  "💳 Pague a 1ª parcela do seu contrato e ganhe 5 convites",
   "📩 Compartilhe seu link com amigos",
   "💰 Amigo aprovado = R$ 50,00 no seu PIX",
-  "🔄 Renove seu contrato e abra +5 vagas",
+  "🔄 Renove e abra +5 convites",
 ];
 
 const stepsLegacy = [

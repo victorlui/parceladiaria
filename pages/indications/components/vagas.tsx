@@ -29,8 +29,8 @@ export default function Vagas({ indicationsV3 }: Props) {
 
   const vagasDisponiveisLabel =
     vagasDisponiveis === 1
-      ? "1 vaga livre"
-      : `${vagasDisponiveis} vagas livres`;
+      ? "1 convite(s) disponíveis"
+      : `${vagasDisponiveis} convites disponíveis`;
 
   return (
     <View style={styles.card}>
@@ -41,7 +41,7 @@ export default function Vagas({ indicationsV3 }: Props) {
             size={width < 360 ? 18 : 20}
             color={Colors.primaryColor}
           />
-          <Text style={styles.title}>Suas vagas</Text>
+          <Text style={styles.title}>Meus Convites</Text>
         </View>
       </View>
 

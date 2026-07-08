@@ -2,7 +2,6 @@ import React from "react";
 import {
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -18,8 +17,6 @@ export const TermosBody = React.memo(function TermosBody({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Termos e Condições de uso</Text>
-
       <View style={styles.content}>
         <ScrollView
           style={styles.scrollView}
