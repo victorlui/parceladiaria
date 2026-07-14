@@ -62,6 +62,7 @@ export function useLoginHook() {
         source: analyticsSource,
       }),
     onSuccess: async (data: any, variables) => {
+      console.log("data login", data);
       try {
         if ((data as any)?.needs_otp === true) {
           useVerificationStore.getState().handleData({

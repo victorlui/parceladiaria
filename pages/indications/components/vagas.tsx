@@ -75,6 +75,28 @@ export default function Vagas({ indicationsV3 }: Props) {
           </TouchableOpacity>
         </View>
       ) : null}
+
+      {indicationsV3?.apto === true &&
+        indicationsV3?.programa_ativo === true &&
+        indicationsV3?.vagas_total === 0 && (
+          <View style={styles.unlockCard}>
+            <View style={styles.unlockIconContainer}>
+              <Ionicons
+                name="card"
+                size={width < 360 ? 18 : 20}
+                color={Colors.green.secondary}
+              />
+            </View>
+            <Text style={styles.unlockMessage}>
+              <Text style={styles.unlockHighlight}>Pague a 1ª parcela</Text> do
+              seu contrato para{" "}
+              <Text style={styles.unlockHighlight}>
+                liberar seus 5 convites
+              </Text>{" "}
+              de indicação.
+            </Text>
+          </View>
+        )}
     </View>
   );
 }
@@ -181,6 +203,36 @@ const getStyles = (width: number) => {
       fontSize: isSmallDevice ? 17 : isMediumDevice ? 18 : 20,
       lineHeight: isSmallDevice ? 24 : isMediumDevice ? 26 : 28,
       fontWeight: "700",
+    },
+    unlockCard: {
+      marginTop: isSmallDevice ? 18 : 22,
+      borderRadius: isSmallDevice ? 18 : 20,
+      backgroundColor: Colors.green.button,
+      paddingHorizontal: isSmallDevice ? 16 : 18,
+      paddingVertical: isSmallDevice ? 16 : 18,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+    },
+    unlockIconContainer: {
+      width: isSmallDevice ? 28 : 32,
+      height: isSmallDevice ? 28 : 32,
+      borderRadius: 999,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.12)",
+      marginTop: 2,
+    },
+    unlockMessage: {
+      flex: 1,
+      color: Colors.white,
+      fontSize: isSmallDevice ? 15 : isMediumDevice ? 16 : 18,
+      lineHeight: isSmallDevice ? 24 : isMediumDevice ? 26 : 28,
+      fontWeight: "500",
+    },
+    unlockHighlight: {
+      color: Colors.green.secondary,
+      fontWeight: "800",
     },
   });
 };

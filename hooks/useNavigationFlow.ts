@@ -85,6 +85,7 @@ export function useNavigationFlow() {
           if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
             return "/divergencia_screen";
           }
+
           const routeByStatus: Partial<Record<StatusCadastro, string>> = {
             [StatusCadastro.DIVERGENTE]: "/divergencia_screen",
             [StatusCadastro.PRE_APROVADO]: "/pre_aprovado_screen",

@@ -72,6 +72,8 @@ export default function RootLayout() {
             <Stack.Screen name="reanalise_screen" />
             <Stack.Screen name="pre_aprovado_screen" />
             <Stack.Screen name="analise_screen" />
+            <Stack.Screen name="aguarde_liberacao" />
+
             {/* validations */}
             <Stack.Screen name="(validations)" />
           </Stack>

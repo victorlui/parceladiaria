@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   buttonOutline: {
     backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: Colors.green.button,
+    borderColor: Colors.borderColor,
   },
   content: {
     flexDirection: "row",
