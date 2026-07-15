@@ -49,7 +49,6 @@ const InsertPasswordScreen: React.FC = () => {
 
   const onSubmit = async () => {
     Keyboard.dismiss();
-    console.log("password", password);
     if (!password) {
       showWarning("Atenção", "Preencha todos os campos");
       return;

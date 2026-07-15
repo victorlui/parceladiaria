@@ -81,7 +81,7 @@ export function useNavigationFlow() {
           return "/(register)/termos";
         }
 
-        if (etapa === Etapas.FINALIZADO) {
+        if (etapa === Etapas.FINALIZADO || etapa === Etapas.FINALIZADO_APP) {
           if (status === StatusCadastro.PROPOSTA_EXPIRADO) {
             return "/divergencia_screen";
           }

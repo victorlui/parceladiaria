@@ -317,7 +317,7 @@ function showRateLimitAlert(message?: string) {
   );
 
   Alert.alert("Limite de requisições", alertMessage, [
-    { text: "OK", onPress: () => {} },
+    { text: "OK", onPress: logoutUser },
   ]);
 }
 
@@ -435,11 +435,11 @@ api.interceptors.response.use(
     return response;
   },
 
-  async (error: AxiosError<any>) => {
+  async (error: any) => {
     const originalRequest = error.config as RetryRequestConfig;
 
     console.log(
-      `[API] ❌ RESPONSE ERROR: ${error.response?.status} ${originalRequest?.url}`,
+      `[API] ❌ RESPONSE ERROR: ${JSON.stringify(error.response.status)} ${originalRequest?.url}`,
     );
 
     const status = error.response?.status;
@@ -464,6 +464,12 @@ api.interceptors.response.use(
           base_url: originalRequest?.baseURL,
           ...originalRequest?.analyticsContext,
         }),
+      );
+    }
+
+    if (status === 423) {
+      showRateLimitAlert(
+        "Muitas requisições na mesma rota. Tente novamente em 24 horas.",
       );
     }
 

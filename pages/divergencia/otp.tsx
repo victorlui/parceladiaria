@@ -8,7 +8,11 @@ import ButtonComponent from "@/components/ui/Button";
 import InputComponent from "@/components/ui/Input";
 import { useAlerts } from "@/components/useAlert";
 import { Colors } from "@/constants/Colors";
-import { useFinalizeDivergenciaFlow } from "@/pages/divergencia/hook/useFinalizeDivergenciaFlow";
+import VideoGanhosStatus from "@/pages/divergencia/components/VideoGanhosStatus";
+import {
+  FinalizeDivergenciaFlowResult,
+  useFinalizeDivergenciaFlow,
+} from "@/pages/divergencia/hook/useFinalizeDivergenciaFlow";
 import PulsingImageLoader from "@/pages/register/components/PulsingImageLoader";
 import { api, withAnalytics } from "@/services/api";
 import { useRegisterStore } from "@/store/register_new";
@@ -34,8 +38,12 @@ interface Props {
   initialPhone?: string;
   phoneDigits?: string;
   phoneMasked?: string;
+  hasVideoGanhosFlow?: boolean;
   back?: () => void;
   onPhoneSaved?: (phone: string) => void;
+  onRetryVideoFlow?: (
+    action: "enviar_video_complementar" | "reenviar_video",
+  ) => void;
 }
 
 const getPhoneOtpErrorMessage = (error: any) => {
@@ -91,12 +99,14 @@ export default function OtpDivergencia({
   initialPhone = "",
   phoneDigits = "",
   phoneMasked = "",
+  hasVideoGanhosFlow = false,
   back,
   onPhoneSaved,
+  onRetryVideoFlow,
 }: Props) {
   const { data, setData } = useRegisterStore();
   const { AlertDisplay, showWarning, showSuccess } = useAlerts();
-  const { finalizeDivergenciaFlow, loadingSubmit } =
+  const { finalizeDivergenciaFlow, completeFinalizeOutcome, loadingSubmit } =
     useFinalizeDivergenciaFlow();
   const registeredPhoneDigits = String(data?.whatsapp ?? "")
     .replace(/\D/g, "")
@@ -111,6 +121,8 @@ export default function OtpDivergencia({
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(initialPhoneChangeFlow ? 30 : 45);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingVideoFlowResult, setPendingVideoFlowResult] =
+    useState<FinalizeDivergenciaFlowResult | null>(null);
   const [targetPhoneDigits, setTargetPhoneDigits] = useState(
     initialTargetPhoneDigits,
   );
@@ -176,6 +188,11 @@ export default function OtpDivergencia({
   };
 
   const handleBack = () => {
+    if (pendingVideoFlowResult) {
+      setPendingVideoFlowResult(null);
+      return;
+    }
+
     if (screenMode === "edit_phone") {
       setScreenMode("verify_otp");
       return;
@@ -256,17 +273,9 @@ export default function OtpDivergencia({
     setIsLoading(true);
     try {
       if (hasPhoneChangeFlow) {
-        const response = await api.put(
-          "/v1/analise/phone/confirm",
-          {
-            otp: otpDigits,
-          },
-          withAnalytics({
-            flow: ANALYTICS_FLOWS.DIVERGENCIA,
-            source: DIVERGENCIA_ANALYTICS_SOURCES.PHONE_CHANGE_CONFIRM_OTP,
-            mode: analyticsMode,
-          }),
-        );
+        const response = await api.put("/v1/analise/phone/confirm", {
+          otp: otpDigits,
+        });
 
         setData({
           ...(useRegisterStore.getState().data || {}),
@@ -299,8 +308,15 @@ export default function OtpDivergencia({
         }),
       );
       setOtp("");
-      await finalizeDivergenciaFlow();
+      const outcome = await finalizeDivergenciaFlow(
+        hasVideoGanhosFlow ? { deferCompletion: true } : undefined,
+      );
+
+      if (hasVideoGanhosFlow && outcome) {
+        setPendingVideoFlowResult(outcome);
+      }
     } catch (error: any) {
+      console.log("error", error.response);
       showWarning(
         "Erro",
         hasPhoneChangeFlow
@@ -374,6 +390,29 @@ export default function OtpDivergencia({
         <PulsingImageLoader
           source={require("@/assets/images/logo-verde.png")}
           text="Finalizando cadastro..."
+        />
+      </>
+    );
+  }
+
+  if (pendingVideoFlowResult) {
+    return (
+      <>
+        <AlertDisplay />
+        <VideoGanhosStatus
+          onContinue={async () => {
+            await completeFinalizeOutcome(pendingVideoFlowResult, {
+              silent: true,
+            });
+          }}
+          onFeatureDisabled={async () => {
+            await completeFinalizeOutcome(pendingVideoFlowResult);
+          }}
+          onRetryVideo={(action) => {
+            setOtp("");
+            setPendingVideoFlowResult(null);
+            onRetryVideoFlow?.(action);
+          }}
         />
       </>
     );

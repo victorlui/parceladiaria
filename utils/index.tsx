@@ -66,6 +66,7 @@ export enum Etapas {
   LIMITE = "Limite",
   CNPJ = "Registrando CNPJ",
   FINALIZADO = "Finalizado",
+  FINALIZADO_APP = "finalizado",
   AFILIADO_CODE = "AFILIADO_CODE",
   APP_ANALISE = "analise",
   REGISTRANDO_PROFISSAO = "Informando Profissão",
@@ -108,6 +109,7 @@ const routeMap: Record<Etapas, string> = {
   [Etapas.PALENCA]: "/(register)/palenca",
 
   [Etapas.FINALIZADO]: "/login",
+  [Etapas.FINALIZADO_APP]: "/login",
 };
 
 export function getRouteByEtapa(etapa: Etapas): string | undefined {

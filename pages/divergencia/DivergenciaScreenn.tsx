@@ -67,6 +67,10 @@ export default function DivergenciaScreenn() {
     () => normalizeDivergencias(data?.divergencias || "[]"),
     [data?.divergencias],
   );
+  const hasVideoGanhosFlow = useMemo(
+    () => divergencias.includes("ganhos_app"),
+    [divergencias],
+  );
 
   const hasPendingDocuments = useMemo(() => {
     return divergencias.some(
@@ -240,6 +244,7 @@ export default function DivergenciaScreenn() {
     setLoadingSubmit(true);
     try {
       await api.post("/v1/analise/otp");
+
       setIsOtpSend(true);
     } catch (error) {
       return;
@@ -253,7 +258,21 @@ export default function DivergenciaScreenn() {
   }
 
   if (isOtpSend) {
-    return <OtpDivergencia back={() => setIsOtpSend(false)} />;
+    return (
+      <OtpDivergencia
+        back={() => setIsOtpSend(false)}
+        hasVideoGanhosFlow={hasVideoGanhosFlow}
+        onRetryVideoFlow={() => {
+          setSelectedFiles((prev) => {
+            const nextSelectedFiles = { ...prev };
+            delete nextSelectedFiles.ganhos_app;
+            return nextSelectedFiles;
+          });
+          setIsOtpSend(false);
+          setItem("ganhos_app");
+        }}
+      />
+    );
   }
 
   if (loading) {

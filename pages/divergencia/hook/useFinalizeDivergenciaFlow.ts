@@ -18,6 +18,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type RouteByStatus = Record<string, string>;
 type AlertContentByStatus = Record<string, { title: string; message: string }>;
 
+type FinalizeStatusOutcome = {
+  kind: "status";
+  status: string | null;
+  targetRoute: string | null;
+  alertTitle: string;
+  alertMessage: string;
+};
+
+type FinalizeClientOutcome = {
+  kind: "client";
+  dataClient: any;
+};
+
+export type FinalizeDivergenciaFlowResult =
+  | FinalizeStatusOutcome
+  | FinalizeClientOutcome;
+
+type FinalizeOptions = {
+  deferCompletion?: boolean;
+};
+
+type CompleteOptions = {
+  silent?: boolean;
+};
+
 const routeByStatus: RouteByStatus = {
   divergente: "/divergencia_screen",
   recusado: "/recusado_screen",
@@ -61,6 +86,16 @@ const alertContent: AlertContentByStatus = {
   },
 };
 
+function navigateToTargetRoute(targetRoute: string | null) {
+  if (targetRoute && targetRoute !== "/divergencia_screen") {
+    router.replace(targetRoute as any);
+    return;
+  }
+
+  useRegisterStore.getState().clean();
+  router.replace("/login");
+}
+
 export function useFinalizeDivergenciaFlow() {
   const { showError, showSuccess } = useAlerts();
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -75,124 +110,160 @@ export function useFinalizeDivergenciaFlow() {
     };
   }, []);
 
-  const finalizeDivergenciaFlow = useCallback(async () => {
-    if (isSubmittingRef.current) return;
+  const loginClientAndRedirect = useCallback(async (dataClient: any) => {
+    AnalyticsService.track(EVENTS.OFFER_CREATED, {
+      flow: ANALYTICS_FLOWS.DIVERGENCIA,
+      source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
+    });
 
-    isSubmittingRef.current = true;
-    setLoadingSubmit(true);
+    const infoResponse = await api.get(
+      "/v1/client/data/info",
+      withAnalytics({
+        flow: ANALYTICS_FLOWS.DIVERGENCIA,
+        source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT_INFO,
+      }),
+    );
+    const userData = infoResponse.data?.data || {};
+    const user: ApiUserData = {
+      nome: userData.name,
+      email: userData.email,
+      cpf: userData.cpf,
+      cidade: userData.city,
+      bairro: userData.neighborhood,
+      status: userData.status,
+      estado: userData.uf,
+      endereco: userData.address,
+      msg_painel: userData.msg_painel,
+      msg_status: userData.msg_status,
+      lastLoan: dataClient?.lastLoan,
+      zip_code: userData.zip_code,
+      phone: userData.phone,
+      pix: userData.chave_pix ?? "",
+      status_doc: userData.status_doc,
+      isLoggedIn: true,
+      observacoes: userData.observacoes,
+      email_verificado: userData.email_verificado,
+      phone_verificado: userData.phone_verificado,
+    };
+    const token = useRegisterStore.getState().token || "";
 
-    try {
-      await updateUserService({
-        request: { etapa: Etapas.FINALIZADO },
-        analyticsContext: {
-          flow: ANALYTICS_FLOWS.DIVERGENCIA,
-          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
-        },
-      });
+    await useAuthStore.getState().login(token, user);
+    router.replace("/(tabs)/home");
+  }, []);
 
-      const response = await api.get(
-        "/v1/client",
-        withAnalytics({
-          flow: ANALYTICS_FLOWS.DIVERGENCIA,
-          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
-        }),
-      );
-      const responseData = response.data?.data?.data;
-      const dataClient = responseData || response.data?.data || response.data;
-
-      if (dataClient?.type === "client") {
-        AnalyticsService.track(EVENTS.OFFER_CREATED, {
-          flow: ANALYTICS_FLOWS.DIVERGENCIA,
-          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
-        });
-
-        const infoResponse = await api.get(
-          "/v1/client/data/info",
-          withAnalytics({
-            flow: ANALYTICS_FLOWS.DIVERGENCIA,
-            source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT_INFO,
-          }),
-        );
-        const userData = infoResponse.data?.data || {};
-        const user: ApiUserData = {
-          nome: userData.name,
-          email: userData.email,
-          cpf: userData.cpf,
-          cidade: userData.city,
-          bairro: userData.neighborhood,
-          status: userData.status,
-          estado: userData.uf,
-          endereco: userData.address,
-          msg_painel: userData.msg_painel,
-          msg_status: userData.msg_status,
-          lastLoan: dataClient?.lastLoan,
-          zip_code: userData.zip_code,
-          phone: userData.phone,
-          pix: userData.chave_pix ?? "",
-          status_doc: userData.status_doc,
-          isLoggedIn: true,
-          observacoes: userData.observacoes,
-          email_verificado: userData.email_verificado,
-          phone_verificado: userData.phone_verificado,
-        };
-        const token = useRegisterStore.getState().token || "";
-
-        await useAuthStore.getState().login(token, user);
-        router.replace("/(tabs)/home");
+  const completeFinalizeOutcome = useCallback(
+    async (
+      outcome: FinalizeDivergenciaFlowResult,
+      options?: CompleteOptions,
+    ) => {
+      if (outcome.kind === "client") {
+        await loginClientAndRedirect(outcome.dataClient);
         return;
       }
 
-      const status = dataClient?.status;
-      const registerStore = useRegisterStore.getState();
+      if (options?.silent) {
+        navigateToTargetRoute(outcome.targetRoute);
+        return;
+      }
 
-      registerStore.setData({
-        ...registerStore.data,
-        ...dataClient,
-        primeira_analise: responseData?.primeira_analise ?? 0,
+      showSuccess(outcome.alertTitle, outcome.alertMessage, () => {
+        navigateToTargetRoute(outcome.targetRoute);
       });
-      registerStore.setToken(registerStore.token || "");
+    },
+    [loginClientAndRedirect, showSuccess],
+  );
 
-      const targetRoute =
-        status && routeByStatus[status] ? routeByStatus[status] : null;
-      const alertTitle =
-        status && alertContent[status]
-          ? alertContent[status].title
-          : "Aguarde um momento";
-      const alertMessage =
-        status && alertContent[status]
-          ? alertContent[status].message
-          : "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.";
+  const finalizeDivergenciaFlow = useCallback(
+    async (
+      options?: FinalizeOptions,
+    ): Promise<FinalizeDivergenciaFlowResult | undefined> => {
+      if (isSubmittingRef.current) return;
 
-      showSuccess(alertTitle, alertMessage, () => {
-        if (targetRoute && targetRoute !== "/divergencia_screen") {
-          router.replace(targetRoute as any);
-          return;
+      isSubmittingRef.current = true;
+      setLoadingSubmit(true);
+
+      try {
+        await updateUserService({
+          request: { etapa: Etapas.FINALIZADO },
+          analyticsContext: {
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
+          },
+        });
+
+        const response = await api.get(
+          "/v1/client",
+          withAnalytics({
+            flow: ANALYTICS_FLOWS.DIVERGENCIA,
+            source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_CLIENT,
+          }),
+        );
+        const responseData = response.data?.data?.data;
+        const dataClient = responseData || response.data?.data || response.data;
+
+        let outcome: FinalizeDivergenciaFlowResult;
+
+        if (dataClient?.type === "client") {
+          outcome = {
+            kind: "client",
+            dataClient,
+          };
+        } else {
+          const status = dataClient?.status ?? null;
+          const registerStore = useRegisterStore.getState();
+
+          registerStore.setData({
+            ...registerStore.data,
+            ...dataClient,
+            primeira_analise: responseData?.primeira_analise ?? 0,
+          });
+          registerStore.setToken(registerStore.token || "");
+
+          outcome = {
+            kind: "status",
+            status,
+            targetRoute:
+              status && routeByStatus[status] ? routeByStatus[status] : null,
+            alertTitle:
+              status && alertContent[status]
+                ? alertContent[status].title
+                : "Aguarde um momento",
+            alertMessage:
+              status && alertContent[status]
+                ? alertContent[status].message
+                : "Documentos enviados com sucesso. Seu cadastro ainda está em análise. Por favor, aguarde.",
+          };
         }
 
-        useRegisterStore.getState().clean();
-        router.replace("/login");
-      });
-    } catch (error: any) {
-      if (error?.response?.status === 401) return;
+        if (!options?.deferCompletion) {
+          await completeFinalizeOutcome(outcome);
+        }
 
-      trackAppError(error, {
-        flow: ANALYTICS_FLOWS.DIVERGENCIA,
-        source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
-      });
+        return outcome;
+      } catch (error: any) {
+        if (error?.response?.status === 401) return;
 
-      showError(
-        "Erro",
-        error?.message ||
-          "Não foi possível enviar os documentos. Tente novamente.",
-      );
-    } finally {
-      isSubmittingRef.current = false;
-      if (isMountedRef.current) setLoadingSubmit(false);
-    }
-  }, [showError, showSuccess]);
+        trackAppError(error, {
+          flow: ANALYTICS_FLOWS.DIVERGENCIA,
+          source: DIVERGENCIA_ANALYTICS_SOURCES.FINALIZE_UPDATE,
+        });
+
+        showError(
+          "Erro",
+          error?.message ||
+            "Não foi possível enviar os documentos. Tente novamente.",
+        );
+      } finally {
+        isSubmittingRef.current = false;
+        if (isMountedRef.current) setLoadingSubmit(false);
+      }
+    },
+    [completeFinalizeOutcome, showError],
+  );
 
   return {
     finalizeDivergenciaFlow,
+    completeFinalizeOutcome,
     loadingSubmit,
   };
 }
