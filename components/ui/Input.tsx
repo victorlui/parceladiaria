@@ -1,17 +1,18 @@
+import { Colors } from "@/constants/Colors";
+import { CNPJ_MASKED_LENGTH, formatCNPJ, sanitizeCNPJ } from "@/utils/cnpj";
 import React, { forwardRef, useCallback, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TextInputProps,
-  StyleProp,
-  ViewStyle,
-  TextStyle,
   Platform,
   Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+  ViewStyle,
 } from "react-native";
-import { Colors } from "@/constants/Colors";
 import { MaskedTextInput } from "react-native-mask-text";
 
 type InputProps = {
@@ -56,12 +57,13 @@ const InputComponent = forwardRef<TextInput, InputProps>(
     const [focused, setFocused] = useState(false);
     const isInvalid = !!error;
     const [inputNode, setInputNode] = useState<TextInput | null>(null);
+    const isCNPJInput = maskType === "cnpj";
 
     const mask =
       maskType === "cpf"
         ? "999.999.999-99"
-        : maskType === "cnpj"
-          ? "99.999.999/9999-99"
+        : isCNPJInput
+          ? undefined
           : maskType === "cellphone"
             ? "(99) 99999-9999"
             : maskType === "cep"
@@ -72,7 +74,19 @@ const InputComponent = forwardRef<TextInput, InputProps>(
                   ? "999999"
                   : undefined;
 
-    const computedMaxLength = maskType === "otp" ? 6 : (mask ? mask.length : maxLength);
+    const computedMaxLength =
+      maskType === "otp"
+        ? 6
+        : isCNPJInput
+          ? CNPJ_MASKED_LENGTH
+          : mask
+            ? mask.length
+            : maxLength;
+    const resolvedKeyboardType = isCNPJInput
+      ? "default"
+      : (keyboardType ?? (mask ? "number-pad" : undefined));
+    const resolvedAutoCapitalize = isCNPJInput ? "characters" : autoCapitalize;
+    const displayValue = isCNPJInput ? formatCNPJ(value ?? "") : value;
     const handleSetRef = useCallback(
       (node: any) => {
         setInputNode(node);
@@ -107,13 +121,38 @@ const InputComponent = forwardRef<TextInput, InputProps>(
             <MaskedTextInput
               ref={handleSetRef as any}
               value={value}
-              onChangeText={(formatted, rawText) => onChangeText?.(rawText)}
+              onChangeText={(_, rawText) => onChangeText?.(rawText)}
               mask={mask}
               placeholder={placeholder}
               placeholderTextColor={Colors.gray.primary}
               secureTextEntry={secureTextEntry}
-              keyboardType={keyboardType ?? "number-pad"}
-              autoCapitalize={autoCapitalize}
+              keyboardType={resolvedKeyboardType}
+              autoCapitalize={resolvedAutoCapitalize}
+              editable={editable}
+              maxLength={computedMaxLength}
+              returnKeyType={returnKeyType}
+              onSubmitEditing={onSubmitEditing}
+              onFocus={(e) => {
+                setFocused(true);
+                onFocus?.(e);
+              }}
+              onBlur={(e) => {
+                setFocused(false);
+                onBlur?.(e);
+              }}
+              style={[styles.input, inputStyle]}
+              {...rest}
+            />
+          ) : isCNPJInput ? (
+            <TextInput
+              ref={handleSetRef}
+              value={displayValue}
+              onChangeText={(text) => onChangeText?.(sanitizeCNPJ(text))}
+              placeholder={placeholder}
+              placeholderTextColor={Colors.gray.primary}
+              secureTextEntry={secureTextEntry}
+              keyboardType={resolvedKeyboardType}
+              autoCapitalize={resolvedAutoCapitalize}
               editable={editable}
               maxLength={computedMaxLength}
               returnKeyType={returnKeyType}
@@ -137,8 +176,8 @@ const InputComponent = forwardRef<TextInput, InputProps>(
               placeholder={placeholder}
               placeholderTextColor={Colors.gray.primary}
               secureTextEntry={secureTextEntry}
-              keyboardType={keyboardType}
-              autoCapitalize={autoCapitalize}
+              keyboardType={resolvedKeyboardType}
+              autoCapitalize={resolvedAutoCapitalize}
               editable={editable}
               maxLength={computedMaxLength}
               returnKeyType={returnKeyType}

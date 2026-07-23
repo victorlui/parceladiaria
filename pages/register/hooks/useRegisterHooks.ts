@@ -324,7 +324,7 @@ export function useRegisterHooks() {
   };
 
   // comerciante gravando cnpj
-  const handleNextStepCNPJ = async (cnpj: any) => {
+  const handleNextStepCNPJ = async (cnpj: string) => {
     Keyboard.dismiss();
     setIsLoading(true);
     try {

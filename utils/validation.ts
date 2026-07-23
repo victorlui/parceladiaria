@@ -1,3 +1,12 @@
+import {
+  CNPJ_MASKED_REGEX,
+  CNPJ_RAW_REGEX,
+  formatCNPJ,
+  isNumericCNPJ,
+  normalizeCNPJForValidation,
+  sanitizeCNPJ,
+} from "@/utils/cnpj";
+
 export function validateCPF(input: string): boolean {
   const raw = (input ?? "").trim();
   const cpf = raw.replace(/\D/g, "");
@@ -128,18 +137,41 @@ export function validateBirthDate18Plus(input: string): boolean {
 
 export function validateCNPJ(cnpj: string): string {
   const raw = (cnpj ?? "").trim();
-  const digits = raw.replace(/\D/g, "");
+  const normalizedInput = normalizeCNPJForValidation(raw);
+  const sanitized = sanitizeCNPJ(raw);
+  const isMaskedInput = /[./-]/.test(normalizedInput);
 
   if (!raw) return "CNPJ é obrigatório";
-  if (digits.length !== 14) return "CNPJ deve conter 14 dígitos";
+  if (sanitized.length !== 14) return "CNPJ deve conter 14 caracteres";
+
+  const allowedPattern = isMaskedInput ? /^[A-Z0-9./-]+$/ : /^[A-Z0-9]+$/;
+  if (/\s/.test(normalizedInput) || !allowedPattern.test(normalizedInput)) {
+    return "CNPJ inválido";
+  }
+
+  if (!CNPJ_RAW_REGEX.test(sanitized)) return "CNPJ inválido";
+
+  const formattedCNPJ = formatCNPJ(normalizedInput);
+
+  if (isMaskedInput && normalizedInput !== formattedCNPJ) {
+    return "CNPJ inválido";
+  }
+
+  if (isMaskedInput && !CNPJ_MASKED_REGEX.test(formattedCNPJ)) {
+    return "CNPJ inválido";
+  }
+
+  if (!isNumericCNPJ(sanitized)) {
+    return "";
+  }
 
   // Elimina CNPJs com todos os dígitos iguais (ex: 11.111.111/1111-11)
-  if (/^(\d)\1{13}$/.test(digits)) return "CNPJ inválido";
+  if (/^(\d)\1{13}$/.test(sanitized)) return "CNPJ inválido";
 
   const calculateDigit = (slice: string, weights: number[]): number => {
     const sum = slice
       .split("")
-      .reduce((acc, digit, idx) => acc + parseInt(digit) * weights[idx], 0);
+      .reduce((acc, digit, idx) => acc + parseInt(digit, 10) * weights[idx], 0);
     const remainder = sum % 11;
     return remainder < 2 ? 0 : 11 - remainder;
   };
@@ -148,10 +180,13 @@ export function validateCNPJ(cnpj: string): string {
   const weight1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   const weight2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
 
-  const digit1 = calculateDigit(digits.substring(0, 12), weight1);
-  const digit2 = calculateDigit(digits.substring(0, 13), weight2);
+  const digit1 = calculateDigit(sanitized.substring(0, 12), weight1);
+  const digit2 = calculateDigit(sanitized.substring(0, 13), weight2);
 
-  if (digit1 !== parseInt(digits[12]) || digit2 !== parseInt(digits[13])) {
+  if (
+    digit1 !== parseInt(sanitized[12], 10) ||
+    digit2 !== parseInt(sanitized[13], 10)
+  ) {
     return "CNPJ inválido";
   }
 

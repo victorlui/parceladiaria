@@ -4,6 +4,7 @@ export interface ApiUserData {
   chamada_video?: number | null;
   chave?: string | null;
   cidade?: string | null;
+  cnpj?: string | null;
   complemento?: string | null;
   comprovante_comercio?: string | null;
   comprovante_endereco?: string | null;
