@@ -1,10 +1,23 @@
 import { create } from "zustand";
 
-interface RenewProps {
+export interface RenewGate {
+  ativo: boolean;
+  bloqueado: boolean;
+  gate_id: string | null;
+  loan_count: number;
+  vencidas: number;
+  limiar: number | null;
+  x_a_pagar: number;
+  sandbox: boolean;
+  gates_versao: number;
+}
+
+export interface RenewProps {
   can_renew: boolean;
   date: string;
   message: string;
   remaining_paid: number;
+  gate?: RenewGate | null;
 }
 
 interface RenewState {
