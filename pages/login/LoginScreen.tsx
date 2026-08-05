@@ -32,7 +32,7 @@ const LoginScreen: React.FC = () => {
   const { checkCPFMutation } = useLoginHook();
   const { setData } = useRegisterStore();
   const cpfRef = useRef<TextInput>(null);
-  const [cpf, setCpf] = useState("");
+  const [cpf, setCpf] = useState("19934614693");
 
   const onSubmit = () => {
     Keyboard.dismiss();

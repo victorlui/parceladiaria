@@ -110,20 +110,8 @@ export function useLoginHook() {
 
         if (type === "client") {
           useAuthStore.getState().setToken(data?.token);
-          const response = await api.get(
-            `/v1/client/data/info`,
-            withAnalytics({
-              flow:
-                variables.analyticsFlow === ANALYTICS_FLOWS.VERIFICATION
-                  ? ANALYTICS_FLOWS.VERIFICATION
-                  : ANALYTICS_FLOWS.LOGIN,
-              source:
-                variables.analyticsSource ===
-                VERIFICATION_ANALYTICS_SOURCES.COMPLETE_LOGIN
-                  ? VERIFICATION_ANALYTICS_SOURCES.LOAD_CLIENT_INFO
-                  : LOGIN_ANALYTICS_SOURCES.LOAD_CLIENT_INFO,
-            }),
-          );
+          const response = await api.get(`/v1/client/data/info`);
+          console.log("response cliente", response.data);
           const userData = response?.data?.data || {};
           const user: ApiUserData = {
             ...data?.data,
@@ -147,6 +135,12 @@ export function useLoginHook() {
               userData.email_verificado ?? data?.data?.email_verificado,
             phone_verificado:
               userData.phone_verificado ?? data?.data?.phone_verificado,
+            refinanciamento:
+              userData.refinanciamento ?? data?.data?.refinanciamento ?? null,
+            refinanciamento_v2:
+              userData.refinanciamento_v2 ??
+              data?.data?.refinanciamento_v2 ??
+              null,
             type,
             isLoggedIn: true,
           };

@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import LoadingDots from "./LoadingDots";
@@ -11,13 +11,16 @@ interface Props {
   iconRight?:
     | keyof typeof Ionicons.glyphMap
     | keyof typeof FontAwesome.glyphMap
+    | keyof typeof MaterialIcons.glyphMap
     | null;
   iconLeft?:
     | keyof typeof Ionicons.glyphMap
     | keyof typeof FontAwesome.glyphMap
+    | keyof typeof MaterialIcons.glyphMap
     | null;
   disabled?: boolean;
   outline?: boolean;
+  mutedDisabled?: boolean;
 }
 
 const ButtonComponent: React.FC<Props> = ({
@@ -28,9 +31,17 @@ const ButtonComponent: React.FC<Props> = ({
   iconLeft = "arrow-back",
   disabled = false,
   outline = false,
+  mutedDisabled = false,
 }) => {
   const renderIcon = (iconName: string, style: any) => {
-    const color = outline ? Colors.green.button : Colors.white;
+    let color: string;
+    if (disabled && mutedDisabled) {
+      color = Colors.gray.text;
+    } else if (outline) {
+      color = Colors.green.button;
+    } else {
+      color = Colors.white;
+    }
 
     if (Object.prototype.hasOwnProperty.call(Ionicons.glyphMap, iconName)) {
       return (
@@ -52,6 +63,18 @@ const ButtonComponent: React.FC<Props> = ({
         />
       );
     }
+    if (
+      Object.prototype.hasOwnProperty.call(MaterialIcons.glyphMap, iconName)
+    ) {
+      return (
+        <MaterialIcons
+          name={iconName as keyof typeof MaterialIcons.glyphMap}
+          size={18}
+          color={color}
+          style={style}
+        />
+      );
+    }
     return null;
   };
 
@@ -60,6 +83,7 @@ const ButtonComponent: React.FC<Props> = ({
       style={[
         styles.button,
         disabled && styles.buttonDisabled,
+        disabled && mutedDisabled && styles.buttonMutedDisabled,
         outline && styles.buttonOutline,
       ]}
       onPress={onPress}
@@ -75,7 +99,11 @@ const ButtonComponent: React.FC<Props> = ({
         )}
         {!loading && (
           <Text
-            style={[styles.buttonText, outline && styles.buttonTextOutline]}
+            style={[
+              styles.buttonText,
+              outline && styles.buttonTextOutline,
+              disabled && mutedDisabled && styles.buttonTextMutedDisabled,
+            ]}
           >
             {title}
           </Text>
@@ -98,6 +126,11 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: Colors.gray.primary,
+    borderWidth: 1,
+    borderColor: Colors.borderColor,
+  },
+  buttonMutedDisabled: {
+    backgroundColor: "#F3F4F6",
   },
   buttonOutline: {
     backgroundColor: Colors.white,
@@ -116,6 +149,9 @@ const styles = StyleSheet.create({
   },
   buttonTextOutline: {
     color: Colors.green.button,
+  },
+  buttonTextMutedDisabled: {
+    color: "#94A3B8",
   },
   iconRight: {
     marginLeft: 8,

@@ -29,8 +29,17 @@ const getFaqContent = (
   renew: RenewProps,
   gateActive: boolean,
   gateBlocked: boolean,
+  gateRefinBlocked: boolean,
   isRenewReady: boolean,
 ) => {
+  if (gateRefinBlocked) {
+    return {
+      title: "Paguei as parcelas, por que ainda não posso renovar?",
+      description:
+        "A renovação depende de duas coisas juntas: ter quitado as parcelas em aberto do contrato atual e aguardado a data de liberação informada acima.",
+    };
+  }
+
   const overdueCount = renew.gate?.x_a_pagar ?? 0;
   const overdueText =
     overdueCount > 0
@@ -160,23 +169,40 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
 
   const gateActive = !!renew.gate?.ativo;
   const gateBlocked = gateActive && !!renew.gate?.bloqueado;
-  const isRenewReady = renew.can_renew && !gateBlocked;
+
+  const gateRefinAtivo = !!renew.gate_refin?.ativo;
+  const gateRefinBloqueado = gateRefinAtivo && !!renew.gate_refin?.bloqueado;
+  const refinParcelasAberto = renew.gate_refin?.parcelas_em_aberto ?? 0;
+  const refinDataLiberacao = renew.gate_refin?.data_liberacao_br ?? releaseDate;
+  const refinHideOverdue = !!renew.hide_overdue_step;
+
+  const isRenewReady = renew.can_renew && !gateBlocked && !gateRefinBloqueado;
+
   const canPromiseRelease =
     gateBlocked &&
     renew.can_renew &&
     remainingPaid <= (renew.gate?.x_a_pagar ?? 0);
-  const usesLegacyFlow = !gateActive;
+
+  const usesLegacyFlow = !gateActive && !gateRefinAtivo;
 
   const statusTitle = isRenewReady
-    ? "Renovação liberada"
+    ? "Nova oferta de crédito"
     : "Renovação em breve";
   const statusDescription = isRenewReady
     ? "Você pode renovar seu empréstimo agora mesmo."
-    : gateBlocked && renew.can_renew
-      ? "Falta um passo: veja abaixo como liberar."
-      : "A renovação estará disponível a partir da data abaixo.";
+    : gateRefinBloqueado
+      ? "Veja abaixo o que falta para liberar sua nova oferta de crédito."
+      : gateBlocked && renew.can_renew
+        ? "Falta um passo: veja abaixo como liberar."
+        : "A renovação estará disponível a partir da data abaixo.";
 
-  const faq = getFaqContent(renew, gateActive, gateBlocked, isRenewReady);
+  const faq = getFaqContent(
+    renew,
+    gateActive,
+    gateBlocked,
+    gateRefinBloqueado,
+    isRenewReady,
+  );
 
   const renderLegacyChecklist = () => {
     if (isRenewReady) {
@@ -213,6 +239,55 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
           <Text style={styles.warningText}>
             Pagar as parcelas restantes não libera a renovação antes da data. É
             preciso quitar as parcelas e aguardar a data de liberação.
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderGateRefinChecklist = () => {
+    if (isRenewReady) {
+      return (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>TUDO PRONTO</Text>
+
+          <ChecklistItem
+            title="Parcelas do contrato atual quitadas"
+            variant="success"
+          />
+
+          <View style={styles.divider} />
+
+          <ChecklistItem title="Data de liberação atingida" variant="success" />
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>O QUE FALTA PARA LIBERAR</Text>
+
+        <ChecklistItem
+          title={`Parcelas restantes: ${refinParcelasAberto}`}
+          description="Quitar as parcelas que ainda faltam do seu contrato atual."
+          step={1}
+          variant="pending"
+        />
+
+        <View style={styles.divider} />
+
+        <ChecklistItem
+          title="Aguardar a data de liberação"
+          description={`Disponível a partir de ${refinDataLiberacao}.`}
+          step={2}
+          variant="pending"
+        />
+
+        <View style={styles.warningBox}>
+          <Ionicons name="warning" size={18} color="#92400E" />
+          <Text style={styles.warningText}>
+            Pagar as parcelas restantes não libera a renovação. É preciso ter
+            pago as parcelas e aguardar a data de liberação.
           </Text>
         </View>
       </View>
@@ -265,6 +340,8 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
       );
     }
 
+    const showOverdueStep = !refinHideOverdue;
+
     return (
       <View style={styles.sectionCard}>
         <Text style={styles.sectionLabel}>O QUE FALTA PARA LIBERAR</Text>
@@ -280,21 +357,25 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
           variant="pending"
         />
 
-        <View style={styles.divider} />
+        {showOverdueStep ? (
+          <>
+            <View style={styles.divider} />
 
-        {gateBlocked ? (
-          <ChecklistItem
-            title="Realize o pagamento das parcelas em atraso"
-            description="Esse item será liberado quando as demais etapas estiverem concluídas."
-            variant="muted"
-          />
-        ) : (
-          <ChecklistItem
-            title="Parcelas em dia"
-            variant="success"
-            badge="NOVO"
-          />
-        )}
+            {gateBlocked ? (
+              <ChecklistItem
+                title="Realize o pagamento das parcelas em atraso"
+                description="Esse item será liberado quando as demais etapas estiverem concluídas."
+                variant="muted"
+              />
+            ) : (
+              <ChecklistItem
+                title="Parcelas em dia"
+                variant="success"
+                badge="NOVO"
+              />
+            )}
+          </>
+        ) : null}
 
         <View style={styles.warningBox}>
           <Ionicons name="warning" size={18} color="#92400E" />
@@ -308,32 +389,40 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
     );
   };
 
-  const showPrimaryButton =
-    isRenewReady || !gateActive || !gateBlocked || canPromiseRelease;
+  const showPrimaryButton = true;
 
-  const primaryButton = isRenewReady ? (
-    <ButtonComponent
-      title="Renovar agora"
-      onPress={onRenewPress}
-      iconLeft="refresh"
-      iconRight={null}
-    />
-  ) : gateActive && gateBlocked && canPromiseRelease ? (
-    <ButtonComponent
-      title="Pagar parcelas e liberar"
-      onPress={onPayPress}
-      iconLeft="cash-outline"
-      iconRight={null}
-    />
-  ) : (
-    <ButtonComponent
-      title="Renovação indisponível"
-      onPress={() => null}
-      iconLeft="lock-closed"
-      iconRight={null}
-      disabled
-    />
-  );
+  let primaryButton;
+
+  if (isRenewReady) {
+    primaryButton = (
+      <ButtonComponent
+        title="Renovar agora"
+        onPress={onRenewPress}
+        iconLeft="refresh"
+        iconRight={null}
+      />
+    );
+  } else if (gateActive && gateBlocked && canPromiseRelease) {
+    primaryButton = (
+      <ButtonComponent
+        title="Pagar parcelas e liberar"
+        onPress={onPayPress}
+        iconLeft="cash-outline"
+        iconRight={null}
+      />
+    );
+  } else {
+    primaryButton = (
+      <ButtonComponent
+        title="🔒 Renovação Indisponível"
+        onPress={() => null}
+        iconLeft={null}
+        iconRight={null}
+        disabled
+        mutedDisabled
+      />
+    );
+  }
 
   return (
     <View style={styles.screenContent}>
@@ -356,20 +445,26 @@ const RenewStatusPanel: React.FC<RenewStatusPanelProps> = ({
           <Text style={styles.heroTitle}>{statusTitle}</Text>
           <Text style={styles.heroDescription}>{statusDescription}</Text>
 
-          {!renew.can_renew ? (
+          {!renew.can_renew || gateRefinBloqueado ? (
             <View style={styles.dateHighlightCard}>
               <Ionicons name="calendar" size={18} color="#F6E7A1" />
               <View>
                 <Text style={styles.dateHighlightLabel}>
                   DISPONÍVEL A PARTIR DE
                 </Text>
-                <Text style={styles.dateHighlightValue}>{releaseDate}</Text>
+                <Text style={styles.dateHighlightValue}>
+                  {gateRefinBloqueado ? refinDataLiberacao : releaseDate}
+                </Text>
               </View>
             </View>
           ) : null}
         </View>
 
-        {usesLegacyFlow ? renderLegacyChecklist() : renderGateChecklist()}
+        {gateRefinBloqueado
+          ? renderGateRefinChecklist()
+          : usesLegacyFlow
+            ? renderLegacyChecklist()
+            : renderGateChecklist()}
       </View>
 
       <View style={styles.actionsSection}>

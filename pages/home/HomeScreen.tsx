@@ -1,4 +1,3 @@
-import { ANALYTICS_FLOWS, TAB_ANALYTICS_SOURCES } from "@/analytics/events";
 import { Colors } from "@/constants/Colors";
 import HeaderHome from "@/pages/home/components/header";
 import HistoryRecent from "@/pages/home/components/history-recent";
@@ -27,10 +26,7 @@ const HomeScreen: React.FC = () => {
 
   const loadAcordo = useCallback(async (openModal = false) => {
     try {
-      const data = await getAcordo({
-        flow: ANALYTICS_FLOWS.APP,
-        source: TAB_ANALYTICS_SOURCES.HOME_LOAD_AGREEMENT,
-      });
+      const data = await getAcordo();
       setAcordo(data);
 
       if (openModal) {
@@ -50,7 +46,9 @@ const HomeScreen: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      if (typeof user?.refinanciamento === "string") {
+      const temRefiLegado = typeof user?.refinanciamento === "string";
+      const temRefiV2 = !!user?.refinanciamento_v2;
+      if (temRefiLegado || temRefiV2) {
         setModalVisible("refinanciamento");
       }
 
@@ -107,6 +105,7 @@ const HomeScreen: React.FC = () => {
         onClose={() => setModalVisible(null)}
         amount={user?.lastLoan?.installment_amount ?? 0}
         installments={1}
+        refinanciamentoV2={user?.refinanciamento_v2 ?? null}
       />
       <MenssagemModal
         visible={user?.lastLoan?.blocked ?? false}

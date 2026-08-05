@@ -1,3 +1,24 @@
+export type RefinanciamentoV2Bloco =
+  | {
+      tipo: "info" | "aviso";
+      titulo: string;
+      itens: string[];
+    }
+  | {
+      tipo: "destaque";
+      titulo: string;
+      texto: string;
+    };
+
+export type RefinanciamentoV2 = {
+  titulo: string;
+  lead: string;
+  blocos: RefinanciamentoV2Bloco[];
+  cta_pagar: string;
+  cta_fechar: string;
+  valor_parcela?: number | string | null;
+};
+
 export interface ApiUserData {
   bairro?: string | null;
   cep?: string | null;
@@ -71,6 +92,7 @@ export interface ApiUserData {
   placa?: string | null;
   profissao?: string | null;
   refinanciamento?: string | null;
+  refinanciamento_v2?: RefinanciamentoV2 | null;
   repescagem?: string | null;
   signature?: string | null;
   status?: string;

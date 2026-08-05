@@ -12,12 +12,33 @@ export interface RenewGate {
   gates_versao: number;
 }
 
+export type RefinMotivo =
+  | "refin_parcelas_abertas"
+  | "refin_periodo_carencia"
+  | "refin_ok"
+  | "refin_desligado"
+  | "fora_faixa"
+  | "fail_open";
+
+export interface RenewGateRefin {
+  ativo: boolean;
+  bloqueado: boolean;
+  motivo: RefinMotivo;
+  parcelas_em_aberto: number;
+  data_liberacao: string;
+  data_liberacao_br: string;
+  sandbox: boolean;
+}
+
 export interface RenewProps {
   can_renew: boolean;
   date: string;
+  date_info?: string;
   message: string;
   remaining_paid: number;
   gate?: RenewGate | null;
+  gate_refin?: RenewGateRefin | null;
+  hide_overdue_step?: boolean | null;
 }
 
 interface RenewState {

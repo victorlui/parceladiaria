@@ -28,7 +28,7 @@ const InsertPasswordScreen: React.FC = () => {
   const { AlertDisplay, showWarning, showError } = useAlerts();
   const { loginMutation } = useLoginHook();
   const { data } = useRegisterStore();
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("Teste@123");
   const [showPassword, setShowPassword] = useState(false);
 
   const senhaRef = useRef<TextInput>(null);

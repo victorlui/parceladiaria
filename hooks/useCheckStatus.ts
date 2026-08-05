@@ -43,6 +43,8 @@ export function useCheckStatus(currentRoute: string) {
               observacoes: userData.observacoes,
               email_verificado: userData.email_verificado,
               phone_verificado: userData.phone_verificado,
+              refinanciamento: userData.refinanciamento ?? null,
+              refinanciamento_v2: userData.refinanciamento_v2 ?? null,
             };
             const token = useRegisterStore.getState().token || "";
             await useAuthStore.getState().login(token, user);
